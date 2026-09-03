@@ -34,3 +34,12 @@ Thumbs.db
 
 # Docker logs
 *.log
+
+
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.webp
