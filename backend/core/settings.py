@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'drf_spectacular',
     'api.apps.ApiConfig'
 ]
 
@@ -122,3 +123,29 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# Configuration de drf-spectacular
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'OpenSMR API',
+    'DESCRIPTION': 'Documentation interactive de l\'API OpenSMR (Système de Management des Risques).',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    # Prise en charge de l'authentification Bearer JWT dans Swagger UI
+    'SECURITY': [{'jwt_auth': []}],
+    'SECURITY_DEFINITIONS': {
+        'jwt_auth': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization',
+            'description': 'Entrez votre token au format: Bearer <votre_token_jwt>',
+        }
+    },
+}
