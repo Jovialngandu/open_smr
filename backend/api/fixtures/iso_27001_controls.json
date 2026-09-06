@@ -1,0 +1,560 @@
+[
+  {
+    "code": "A.5.1",
+    "title": "Politiques de sécurité de l'information",
+    "theme": "ORGANIZATIONAL",
+    "description": "Les politiques de sécurité de l'information et les politiques spécifiques à chaque thème doivent être définies, approuvées par la direction, publiées, communiquées et portées à la connaissance du personnel concerné et des parties intéressées."
+  },
+  {
+    "code": "A.5.2",
+    "title": "Rôles et responsabilités liés à la sécurité de l'information",
+    "theme": "ORGANIZATIONAL",
+    "description": "Les rôles et responsabilités liés à la sécurité de l'information doivent être définis et attribués conformément aux besoins de l'organisation."
+  },
+  {
+    "code": "A.5.3",
+    "title": "Séparation des devoirs",
+    "theme": "ORGANIZATIONAL",
+    "description": "Les devoirs et les domaines de responsabilité conflictuels doivent être séparés afin de réduire les risques de modification non autorisée ou involontaire, ou de mauvaise utilisation des actifs de l'organisation."
+  },
+  {
+    "code": "A.5.4",
+    "title": "Responsabilités de la direction",
+    "theme": "ORGANIZATIONAL",
+    "description": "La direction doit exiger du personnel qu'il applique la sécurité de l'information conformément à la politique et aux procédures établies par l'organisation."
+  },
+  {
+    "code": "A.5.5",
+    "title": "Contact avec les autorités",
+    "theme": "ORGANIZATIONAL",
+    "description": "L'organisation doit maintenir des contacts appropriés avec les autorités compétentes."
+  },
+  {
+    "code": "A.5.6",
+    "title": "Contact avec des groupes d'intérêts spéciaux",
+    "theme": "ORGANIZATIONAL",
+    "description": "L'organisation doit maintenir des contacts appropriés avec des groupes d'intérêts spéciaux, d'autres associations professionnelles ou des forums spécialisés dans la sécurité."
+  },
+  {
+    "code": "A.5.7",
+    "title": "Renseignement sur les menaces (Threat Intelligence)",
+    "theme": "ORGANIZATIONAL",
+    "description": "Des informations relatives aux menaces pesant sur la sécurité de l'information doivent être collectées et analysées pour produire des renseignements sur les menaces."
+  },
+  {
+    "code": "A.5.8",
+    "title": "Sécurité de l'information dans la gestion de projet",
+    "theme": "ORGANIZATIONAL",
+    "description": "La sécurité de l'information doit être intégrée dans la gestion de projet."
+  },
+  {
+    "code": "A.5.9",
+    "title": "Inventaire des informations et des autres actifs associés",
+    "theme": "ORGANIZATIONAL",
+    "description": "Un inventaire des informations et des autres actifs associés, y compris leurs propriétaires, doit être établi et maintenu."
+  },
+  {
+    "code": "A.5.10",
+    "title": "Utilisation correcte des informations et des autres actifs associés",
+    "theme": "ORGANIZATIONAL",
+    "description": "Des règles d'utilisation acceptable et des procédures de manipulation des informations et des autres actifs associés doivent être définies, documentées et mises en œuvre."
+  },
+  {
+    "code": "A.5.11",
+    "title": "Restitution des actifs",
+    "theme": "ORGANIZATIONAL",
+    "description": "Le personnel et les autres parties prenantes doivent restituer tous les actifs de l'organisation en leur possession à la fin de leur contrat, mandat ou accord."
+  },
+  {
+    "code": "A.5.12",
+    "title": "Classification de l'information",
+    "theme": "ORGANIZATIONAL",
+    "description": "Les informations doivent être classifiées conformément aux besoins de sécurité de l'organisation en se basant sur la confidentialité, l'intégrité, la disponibilité et les exigences des parties prenantes."
+  },
+  {
+    "code": "A.5.13",
+    "title": "Marquage de l'information",
+    "theme": "ORGANIZATIONAL",
+    "description": "Un ensemble approprié de procédures de marquage des informations doit être élaboré et mis en œuvre conformément au schéma de classification adopté par l'organisation."
+  },
+  {
+    "code": "A.5.14",
+    "title": "Transfert de l'information",
+    "theme": "ORGANIZATIONAL",
+    "description": "Des règles, procédures et accords de transfert d'informations doivent être mis en place pour tous les types de moyens de transfert au sein de l'organisation et avec les parties externes."
+  },
+  {
+    "code": "A.5.15",
+    "title": "Contrôle d'accès",
+    "theme": "ORGANIZATIONAL",
+    "description": "Des règles d'autorisation d'accès physique et logique aux informations et autres actifs associés doivent être définies et mises en œuvre sur la base des exigences métier et de sécurité."
+  },
+  {
+    "code": "A.5.16",
+    "title": "Gestion des identités",
+    "theme": "ORGANIZATIONAL",
+    "description": "Le cycle de vie complet des identités doit être géré."
+  },
+  {
+    "code": "A.5.17",
+    "title": "Informations d'authentification",
+    "theme": "ORGANIZATIONAL",
+    "description": "L'attribution et la gestion des informations d'authentification doivent être contrôlées par un processus de gestion, y compris la sensibilisation des utilisateurs à la manipulation appropriée."
+  },
+  {
+    "code": "A.5.18",
+    "title": "Droits d'accès",
+    "theme": "ORGANIZATIONAL",
+    "description": "Les droits d'accès aux informations et aux actifs associés doivent être attribués, révisés, modifiés et supprimés conformément à la politique de contrôle d'accès de l'organisation."
+  },
+  {
+    "code": "A.5.19",
+    "title": "Sécurité de l'information dans les relations avec les fournisseurs",
+    "theme": "ORGANIZATIONAL",
+    "description": "Des exigences en matière de sécurité de l'information relatives à l'utilisation des produits ou services des fournisseurs doivent être définies et convenues avec ces derniers."
+  },
+  {
+    "code": "A.5.20",
+    "title": "Traitement de la sécurité de l'information dans les accords avec les fournisseurs",
+    "theme": "ORGANIZATIONAL",
+    "description": "Les exigences pertinentes en matière de sécurité de l'information doivent être établies et convenues avec chaque fournisseur susceptible d'accéder, de stocker, de traiter, de transmettre ou de fournir des composants d'infrastructure informatique."
+  },
+  {
+    "code": "A.5.21",
+    "title": "Gestion de la sécurité de l'information dans la chaîne d'approvisionnement des TIC",
+    "theme": "ORGANIZATIONAL",
+    "description": "Des processus et des procédures doivent être définis et mis en œuvre pour gérer les risques liés à la sécurité de l'information associés à la chaîne d'approvisionnement des produits et services TIC."
+  },
+  {
+    "code": "A.5.22",
+    "title": "Surveillance, revue et gestion des modifications des services fournisseurs",
+    "theme": "ORGANIZATIONAL",
+    "description": "L'organisation doit régulièrement surveiller, revoir, évaluer et gérer les modifications apportées aux pratiques de sécurité de l'information et à la prestation de services des fournisseurs."
+  },
+  {
+    "code": "A.5.23",
+    "title": "Sécurité de l'information pour l'utilisation des services en nuage (Cloud)",
+    "theme": "ORGANIZATIONAL",
+    "description": "Les processus d'acquisition, d'utilisation, de gestion et de sortie des services en nuage doivent être établis conformément aux exigences de sécurité de l'information de l'organisation."
+  },
+  {
+    "code": "A.5.24",
+    "title": "Planification et préparation de la gestion des incidents de sécurité de l'information",
+    "theme": "ORGANIZATIONAL",
+    "description": "L'organisation doit planifier et préparer la gestion des incidents de sécurité de l'information en définissant, établissant et communiquant des processus, rôles et responsabilités de gestion des incidents."
+  },
+  {
+    "code": "A.5.25",
+    "title": "Évaluation et décision sur les événements de sécurité de l'information",
+    "theme": "ORGANIZATIONAL",
+    "description": "L'organisation doit évaluer les événements de sécurité de l'information et décider s'ils doivent être classés comme incidents de sécurité de l'information."
+  },
+  {
+    "code": "A.5.26",
+    "title": "Réponse aux incidents de sécurité de l'information",
+    "theme": "ORGANIZATIONAL",
+    "description": "Il convient de répondre aux incidents de sécurité de l'information conformément aux procédures documentées."
+  },
+  {
+    "code": "A.5.27",
+    "title": "Tirer les enseignements des incidents de sécurité de l'information",
+    "theme": "ORGANIZATIONAL",
+    "description": "Les connaissances acquises lors de l'analyse et de la résolution des incidents de sécurité de l'information doivent être utilisées pour renforcer et améliorer les mesures de sécurité."
+  },
+  {
+    "code": "A.5.28",
+    "title": "Collecte de preuves",
+    "theme": "ORGANIZATIONAL",
+    "description": "L'organisation doit établir et appliquer des procédures pour l'identification, la collecte, l'acquisition et la préservation des preuves relatives aux événements de sécurité de l'information."
+  },
+  {
+    "code": "A.5.29",
+    "title": "Sécurité de l'information lors de la disruption",
+    "theme": "ORGANIZATIONAL",
+    "description": "L'organisation doit planifier la manière de maintenir la sécurité de l'information à un niveau approprié lors de perturbations ou d'interruptions d'activité."
+  },
+  {
+    "code": "A.5.30",
+    "title": "Préparation des TIC pour la continuité d'activité",
+    "theme": "ORGANIZATIONAL",
+    "description": "La préparation des TIC doit être planifiée, mise en œuvre, maintenue et testée en fonction des objectifs de continuité d'activité et des exigences de continuité des TIC."
+  },
+  {
+    "code": "A.5.31",
+    "title": "Exigences légales, réglementaires et contractuelles",
+    "theme": "ORGANIZATIONAL",
+    "description": "Les exigences légales, réglementaires, statutaires et contractuelles relatives à la sécurité de l'information et à l'approche de l'organisation pour satisfaire à ces exigences doivent être documentées et tenues à jour."
+  },
+  {
+    "code": "A.5.32",
+    "title": "Droits de propriété intellectuelle",
+    "theme": "ORGANIZATIONAL",
+    "description": "Des procédures appropriées doivent être mises en œuvre pour garantir le respect des exigences légales, réglementaires et contractuelles relatives aux droits de propriété intellectuelle et à l'utilisation de logiciels propriétaires."
+  },
+  {
+    "code": "A.5.33",
+    "title": "Protection des enregistrements",
+    "theme": "ORGANIZATIONAL",
+    "description": "Les enregistrements doivent être protégés contre la perte, la destruction, la falsification, l'accès non autorisé et la divulgation non autorisée conformément aux exigences légales, réglementaires et métier."
+  },
+  {
+    "code": "A.5.34",
+    "title": "Protection des données et de la vie privée des données à caractère personnel (DCP)",
+    "theme": "ORGANIZATIONAL",
+    "description": "L'organisation doit garantir la protection des données et de la vie privée des données à caractère personnel conformément aux lois et réglementations applicables."
+  },
+  {
+    "code": "A.5.35",
+    "title": "Revue indépendante de la sécurité de l'information",
+    "theme": "ORGANIZATIONAL",
+    "description": "L'approche de l'organisation en matière de gestion de la sécurité de l'information et sa mise en œuvre doivent faire l'objet de revues indépendantes à des intervalles planifiés ou lors de changements significatifs."
+  },
+  {
+    "code": "A.5.36",
+    "title": "Conformité aux politiques et normes de sécurité de l'information",
+    "theme": "ORGANIZATIONAL",
+    "description": "Les responsables doivent vérifier régulièrement la conformité du traitement des informations et des procédures dans leur domaine de responsabilité avec les politiques et normes de sécurité."
+  },
+  {
+    "code": "A.5.37",
+    "title": "Procédures d'exploitation documentées",
+    "theme": "ORGANIZATIONAL",
+    "description": "Les procédures d'exploitation des installations de traitement de l'information doivent être documentées et mises à la disposition du personnel qui en a besoin."
+  },
+  {
+    "code": "A.6.1",
+    "title": "Sélection des candidats",
+    "theme": "PEOPLE",
+    "description": "Des vérifications des antécédents de tous les candidats à un emploi doivent être effectuées conformément aux lois, réglementations et éthiques applicables, proportionnellement aux exigences métier et aux risques perçus."
+  },
+  {
+    "code": "A.6.2",
+    "title": "Conditions d'embauche",
+    "theme": "PEOPLE",
+    "description": "Les contrats de travail doivent énoncer les responsabilités des employés et de l'organisation en matière de sécurité de l'information."
+  },
+  {
+    "code": "A.6.3",
+    "title": "Sensibilisation, enseignement et formation à la sécurité de l'information",
+    "theme": "PEOPLE",
+    "description": "Le personnel de l'organisation et les parties prenantes pertinentes doivent recevoir une sensibilisation, un enseignement et une formation appropriés en matière de sécurité de l'information."
+  },
+  {
+    "code": "A.6.4",
+    "title": "Processus disciplinaire",
+    "theme": "PEOPLE",
+    "description": "Un processus disciplinaire doit être formalisé et communiqué pour prendre des mesures à l'encontre du personnel qui a commis une violation de la sécurité de l'information."
+  },
+  {
+    "code": "A.6.5",
+    "title": "Responsabilités après la fin ou le changement d'emploi",
+    "theme": "PEOPLE",
+    "description": "Les responsabilités et devoirs en matière de sécurité de l'information qui restent valables après la fin ou le changement d'emploi doivent être définis, appliqués et communiqués."
+  },
+  {
+    "code": "A.6.6",
+    "title": "Accords de confidentialité ou de non-divulgation",
+    "theme": "PEOPLE",
+    "description": "Des accords de confidentialité ou de non-divulgation reflétant les besoins de l'organisation en matière de protection des informations doivent être identifiés, documentés, révisés régulièrement et signés par le personnel."
+  },
+  {
+    "code": "A.6.7",
+    "title": "Travail à distance",
+    "theme": "PEOPLE",
+    "description": "Des mesures de sécurité et des politiques appropriées doivent être mises en œuvre lors du travail à distance pour protéger les informations traitées, stockées ou transmises."
+  },
+  {
+    "code": "A.6.8",
+    "title": "Signalement des événements de sécurité de l'information",
+    "theme": "PEOPLE",
+    "description": "L'organisation doit fournir un mécanisme permettant au personnel de signaler en temps utile les événements de sécurité observés ou suspectés via des canaux appropriés."
+  },
+  {
+    "code": "A.7.1",
+    "title": "Périmètres de sécurité physique",
+    "theme": "PHYSICAL",
+    "description": "Des périmètres de sécurité doivent être définis et utilisés pour protéger les zones contenant des informations et d'autres actifs associés."
+  },
+  {
+    "code": "A.7.2",
+    "title": "Entrée physique",
+    "theme": "PHYSICAL",
+    "description": "Les zones sécurisées doivent être protégées par des contrôles d'accès appropriés afin de garantir que seul le personnel autorisé y a accès."
+  },
+  {
+    "code": "A.7.3",
+    "title": "Sécurisation des bureaux, des salles et des équipements",
+    "theme": "PHYSICAL",
+    "description": "Une sécurité physique des bureaux, pièces et installations doit être conçue et appliquée."
+  },
+  {
+    "code": "A.7.4",
+    "title": "Surveillance de la sécurité physique",
+    "theme": "PHYSICAL",
+    "description": "Les locaux doivent faire l'objet d'une surveillance continue afin de détecter tout accès physique non autorisé."
+  },
+  {
+    "code": "A.7.5",
+    "title": "Protection contre les menaces physiques et environnementales",
+    "theme": "PHYSICAL",
+    "description": "Une protection physique contre les catastrophes naturelles, les attaques malveillantes ou les accidents environnementaux doit être conçue et appliquée."
+  },
+  {
+    "code": "A.7.6",
+    "title": "Travail dans les zones sécurisées",
+    "theme": "PHYSICAL",
+    "description": "Des mesures de sécurité physiques pour le travail dans les zones sécurisées doivent être conçues et appliquées."
+  },
+  {
+    "code": "A.7.7",
+    "title": "Bureau propre et écran propre",
+    "theme": "PHYSICAL",
+    "description": "Des règles relatives au nettoyage du bureau (documents papier) et à la neutralisation des écrans doivent être définies et appliquées de façon rigoureuse."
+  },
+  {
+    "code": "A.7.8",
+    "title": "Emplacement et protection des équipements",
+    "theme": "PHYSICAL",
+    "description": "Les équipements doivent être positionnés en lieu sûr et protégés afin de réduire les risques découlant des menaces physiques et environnementales."
+  },
+  {
+    "code": "A.7.9",
+    "title": "Sécurité des actifs hors des locaux",
+    "theme": "PHYSICAL",
+    "description": "Les actifs situés en dehors des locaux de l'organisation doivent être protégés en tenant compte des différents risques liés au travail hors site."
+  },
+  {
+    "code": "A.7.10",
+    "title": "Supports de stockage",
+    "theme": "PHYSICAL",
+    "description": "Les supports de stockage doivent être gérés, manipulés, transportés et détruits de manière sécurisée conformément à leur classification."
+  },
+  {
+    "code": "A.7.11",
+    "title": "Services généraux (Services d'alimentation et de soutien)",
+    "theme": "PHYSICAL",
+    "description": "Les installations de traitement de l'information doivent être protégées contre les pannes d'électricité et autres interruptions causées par des défaillances des services généraux."
+  },
+  {
+    "code": "A.7.12",
+    "title": "Sécurité du câblage",
+    "theme": "PHYSICAL",
+    "description": "Les câbles de transport de données ou d'alimentation électrique doivent être protégés contre l'interception, l'interférence ou les dommages physiques."
+  },
+  {
+    "code": "A.7.13",
+    "title": "Maintenance des équipements",
+    "theme": "PHYSICAL",
+    "description": "Les équipements doivent être correctement entretenus pour assurer leur disponibilité, leur intégrité et leur sécurité de fonctionnement continues."
+  },
+  {
+    "code": "A.7.14",
+    "title": "Élimination ou recyclage sécurisé des équipements",
+    "theme": "PHYSICAL",
+    "description": "Tous les éléments contenant des supports de stockage doivent être vérifiés avant élimination ou réutilisation afin de s'assurer que les données sensibles ont été détruites ou écrasées."
+  },
+  {
+    "code": "A.8.1",
+    "title": "Dispositifs d'extrémité des utilisateurs",
+    "theme": "TECHNOLOGICAL",
+    "description": "Les informations stockées sur, traitées par ou accessibles via les dispositifs d'extrémité des utilisateurs doivent être protégées."
+  },
+  {
+    "code": "A.8.2",
+    "title": "Droits d'accès privilégiés",
+    "theme": "TECHNOLOGICAL",
+    "description": "L'attribution et l'utilisation des droits d'accès privilégiés doivent être strictement restreintes et gérées."
+  },
+  {
+    "code": "A.8.3",
+    "title": "Restriction d'accès à l'information",
+    "theme": "TECHNOLOGICAL",
+    "description": "L'accès aux informations et à d'autres actifs associés doit être restreint conformément à la politique de contrôle d'accès établie."
+  },
+  {
+    "code": "A.8.4",
+    "title": "Accès au code source",
+    "theme": "TECHNOLOGICAL",
+    "description": "L'accès en lecture et en écriture au code source des applications, aux outils de développement et aux bibliothèques doit être strictement géré."
+  },
+  {
+    "code": "A.8.5",
+    "title": "Authentification sécurisée",
+    "theme": "TECHNOLOGICAL",
+    "description": "Des technologies et des procédures d'authentification sécurisée doivent être mises en œuvre sur la base des exigences d'accès et de classification de l'information."
+  },
+  {
+    "code": "A.8.6",
+    "title": "Gestion des capacités",
+    "theme": "TECHNOLOGICAL",
+    "description": "L'utilisation des ressources doit être surveillée et ajustée conformément aux exigences de capacité futures afin de garantir les performances système requises."
+  },
+  {
+    "code": "A.8.7",
+    "title": "Protection contre les logiciels malveillants (Malware)",
+    "theme": "TECHNOLOGICAL",
+    "description": "Une protection contre les logiciels malveillants doit être mise en œuvre et appuyée par une sensibilisation appropriée des utilisateurs."
+  },
+  {
+    "code": "A.8.8",
+    "title": "Gestion des vulnérabilités techniques",
+    "theme": "TECHNOLOGICAL",
+    "description": "Des informations sur les vulnérabilités techniques des systèmes d'information utilisés doivent être obtenues en temps utile, l'exposition évaluée et des mesures appropriées prises."
+  },
+  {
+    "code": "A.8.9",
+    "title": "Gestion de la configuration",
+    "theme": "TECHNOLOGICAL",
+    "description": "Des configurations, y compris des configurations de sécurité, du matériel, des logiciels, des services réseau et des systèmes doivent être établies, documentées, appliquées, surveillées et révisées."
+  },
+  {
+    "code": "A.8.10",
+    "title": "Suppression des informations",
+    "theme": "TECHNOLOGICAL",
+    "description": "Les informations conservées dans les systèmes d'information, les dispositifs ou tout autre support de stockage doivent être supprimées lorsqu'elles ne sont plus nécessaires."
+  },
+  {
+    "code": "A.8.11",
+    "title": "Masquage des données",
+    "theme": "TECHNOLOGICAL",
+    "description": "Le masquage des données doit être utilisé conformément à la politique de contrôle d'accès de l'organisation et aux exigences légales ou réglementaires."
+  },
+  {
+    "code": "A.8.12",
+    "title": "Prévention de la fuite de données (DLP)",
+    "theme": "TECHNOLOGICAL",
+    "description": "Des mesures de prévention des fuites de données doivent être appliquées aux systèmes, réseaux et tout autre dispositif qui traite, stocke ou transmet des informations sensibles."
+  },
+  {
+    "code": "A.8.13",
+    "title": "Sauvegarde des informations",
+    "theme": "TECHNOLOGICAL",
+    "description": "Des copies de sauvegarde des informations, logiciels et systèmes doivent être effectuées et testées régulièrement conformément à la politique de sauvegarde."
+  },
+  {
+    "code": "A.8.14",
+    "title": "Redondance des installations de traitement de l'information",
+    "theme": "TECHNOLOGICAL",
+    "description": "Les installations de traitement de l'information doivent être mises en œuvre avec une redondance suffisante pour répondre aux exigences de disponibilité."
+  },
+  {
+    "code": "A.8.15",
+    "title": "Journalisation (Logging)",
+    "theme": "TECHNOLOGICAL",
+    "description": "Des journaux d'événements enregistrant les activités des utilisateurs, les exceptions, les fautes et les événements de sécurité doivent être produits, conservés, protégés et analysés."
+  },
+  {
+    "code": "A.8.16",
+    "title": "Activités de surveillance (Monitoring)",
+    "theme": "TECHNOLOGICAL",
+    "description": "Les réseaux, systèmes et applications doivent faire l'objet d'une surveillance afin de détecter les comportements anormaux et de prendre les mesures appropriées pour évaluer les potentiels incidents."
+  },
+  {
+    "code": "A.8.17",
+    "title": "Synchronisation de l'horloge",
+    "theme": "TECHNOLOGICAL",
+    "description": "Les horloges de tous les systèmes de traitement de l'information pertinents au sein de l'organisation doivent être synchronisées avec une source de temps de référence approuvée."
+  },
+  {
+    "code": "A.8.18",
+    "title": "Utilisation de programmes utilitaires à privilèges",
+    "theme": "TECHNOLOGICAL",
+    "description": "L'utilisation de programmes utilitaires capables de passer outre les contrôles système et applicatifs doit être strictement restreinte et contrôlée."
+  },
+  {
+    "code": "A.8.19",
+    "title": "Installation de logiciels sur les systèmes opérationnels",
+    "theme": "TECHNOLOGICAL",
+    "description": "Des procédures doivent être établies et appliquées pour régir l'installation de logiciels sur les systèmes d'exploitation."
+  },
+  {
+    "code": "A.8.20",
+    "title": "Sécurité des réseaux",
+    "theme": "TECHNOLOGICAL",
+    "description": "Les réseaux et les dispositifs réseau doivent être sécurisés, gérés et contrôlés afin de protéger les informations contenues dans les systèmes et applications."
+  },
+  {
+    "code": "A.8.21",
+    "title": "Sécurité des services réseau",
+    "theme": "TECHNOLOGICAL",
+    "description": "Les mécanismes de sécurité, les niveaux de service et les exigences de gestion de tous les services réseau doivent être identifiés, mis en œuvre et surveillés."
+  },
+  {
+    "code": "A.8.22",
+    "title": "Segment de réseau",
+    "theme": "TECHNOLOGICAL",
+    "description": "Les groupes de services d'information, d'utilisateurs et de systèmes d'information doivent être séparés sur les réseaux de l'organisation."
+  },
+  {
+    "code": "A.8.23",
+    "title": "Filtrage web",
+    "theme": "TECHNOLOGICAL",
+    "description": "L'accès aux sites web externes doit être géré afin de réduire l'exposition de l'organisation aux contenus malveillants."
+  },
+  {
+    "code": "A.8.24",
+    "title": "Utilisation de la cryptographie",
+    "theme": "TECHNOLOGICAL",
+    "description": "Des règles relatives à l'utilisation appropriée de la cryptographie, y compris la gestion des clés cryptographiques, doivent être définies et appliquées."
+  },
+  {
+    "code": "A.8.25",
+    "title": "Cycle de vie du développement sécurisé",
+    "theme": "TECHNOLOGICAL",
+    "description": "Des règles pour le développement sécurisé de logiciels et de systèmes doivent être établies et appliquées tout au long du cycle de vie du développement."
+  },
+  {
+    "code": "A.8.26",
+    "title": "Exigences de sécurité des applications",
+    "theme": "TECHNOLOGICAL",
+    "description": "Les exigences de sécurité de l'information doivent être identifiées, spécifiées et approuvées lors du développement ou de l'acquisition d'applications."
+  },
+  {
+    "code": "A.8.27",
+    "title": "Principes d'architecture et d'ingénierie des systèmes sécurisés",
+    "theme": "TECHNOLOGICAL",
+    "description": "Des principes d'ingénierie de systèmes sécurisés doivent être établis, documentés, appliqués et intégrés dans toutes les activités de développement de systèmes d'information."
+  },
+  {
+    "code": "A.8.28",
+    "title": "Codage sécurisé (Secure Coding)",
+    "theme": "TECHNOLOGICAL",
+    "description": "Des principes de codage sécurisé doivent être appliqués au développement de logiciels."
+  },
+  {
+    "code": "A.8.29",
+    "title": "Tests de sécurité lors du développement et de la recette",
+    "theme": "TECHNOLOGICAL",
+    "description": "Des processus de test de sécurité doivent être définis et mis en œuvre tout au long du cycle de vie du développement."
+  },
+  {
+    "code": "A.8.30",
+    "title": "Développement sous-traité",
+    "theme": "TECHNOLOGICAL",
+    "description": "L'organisation doit superviser, surveiller et vérifier le développement de logiciels effectué par des tiers sous-traitants."
+  },
+  {
+    "code": "A.8.31",
+    "title": "Séparation des environnements de développement, de test et de production",
+    "theme": "TECHNOLOGICAL",
+    "description": "Les environnements de développement, de test et de production doivent être séparés et sécurisés pour éviter les accès non autorisés et les modifications en production."
+  },
+  {
+    "code": "A.8.32",
+    "title": "Gestion des modifications (Change Management)",
+    "theme": "TECHNOLOGICAL",
+    "description": "Les modifications apportées aux installations de traitement de l'information et aux systèmes d'information doivent faire l'objet de procédures formelles de gestion des modifications."
+  },
+  {
+    "code": "A.8.33",
+    "title": "Informations de test",
+    "theme": "TECHNOLOGICAL",
+    "description": "Les données de test doivent être sélectionnées, protégées et gérées de façon sécurisée. L'utilisation de données réelles de production pour les tests doit être évité."
+  },
+  {
+    "code": "A.8.34",
+    "title": "Protection des systèmes d'information pendant les tests de recette",
+    "theme": "TECHNOLOGICAL",
+    "description": "Les tests d'audit et autres activités d'évaluation impliquant la vérification des systèmes opérationnels doivent être planifiés et convenus afin de minimiser les perturbations sur les processus métier."
+  }
+]
