@@ -2,130 +2,123 @@
 
 Backend Django REST Framework pour la gestion du Système de Management de la Sécurité de l'Information (SMSI) conforme à la norme **ISO/IEC 27001:2022**.
 
-Actuellement, l'application est en phase de définition de l'architecture des données, de mise en place des modèles ORM avec gestion du **Soft Delete (`deleted_at`)** et d'alimentation automatique de la base de données par scripts de **Seeding**.
+Le projet repose sur une architecture **Selector / Service**, une gestion fine des droits **RBAC Multi-tenant** (Organisation & Scope) via JWT, et un suivi automatisé de la conformité normative.
 
 ---
 
-## 🏗️ Structure Actuelle du Module `api`
+## 🏗️ Structure du Projet
 
-Les modèles de données et les commandes d'administration ont été structurés dans le module `api/` :
+L'application est structurée de manière modulaire au sein du dossier `api/` :
 
 ```text
 backend/
 ├── api/
-│   ├── apps.py                  # Configuration de l'application API & enregistrement des signals
+│   ├── apps.py                  # Configuration de l'API & enregistrement des signals
 │   ├── fixtures/
-│   │   └── iso_27001_controls.json # Jeu de données des 93 contrôles ISO 27001:2022
+│   │   └── iso_27001_controls.json # Référentiel des 93 contrôles ISO 27001:2022
 │   ├── management/
 │   │   └── commands/
-│   │       ├── seed_iso_controls.py # Seeder du référentiel ISO 27001
-│   │       └── seed_demo_data.py    # Seeder dynamique multi-modèles (Faker)
-│   ├── models/                  # Modèles de données ORM
-│   │   ├── __init__.py          # Export centralisé des modèles
-│   │   ├── base.py              # TimeStampedUUIDModel, SoftDeleteQuerySet, SoftDeleteManager
+│   │       ├── seed_iso_controls.py # Seeder du référentiel ISO
+│   │       └── seed_demo_data.py    # Seeder dynamique d'environnement de dev (Faker)
+│   ├── models/                  # Modèles de données ORM avec Soft Delete
+│   │   ├── base.py              # TimeStampedUUIDModel, SoftDeleteManager
 │   │   ├── organization.py      # Organization, Scope, UserOrganizationRole, UserScopeAccess
 │   │   ├── iso27001.py          # Asset, Risk, IsoControl, SoaEntry, TreatmentTask, Evidence, SoaVersion
 │   │   └── support.py           # UserPreference, SystemSetting
-│   └── signals.py               # Instanciation automatique des SoaEntry à la création d'un Scope
-├── core/                        # Configuration globale du projet Django
-│   ├── settings.py              # Configuration INSTALLED_APPS, DATABASES, etc.
-│   └── urls.py
+│   ├── modules/
+│   │   └── v1/                  # API v1 (pattern Selector / Service)
+│   │       ├── auth/            # Authentification, Inscription & JWT Context Switch
+│   │       │   ├── selectors.py
+│   │       │   ├── services.py
+│   │       │   ├── serializers.py
+│   │       │   ├── views.py
+│   │       │   └── urls.py
+│   │       └── permissions.py   # Rôles RBAC (ADMIN, RSSI, RISK_OWNER, AUDITOR)
+│   └── signals.py               # Génération automatique du SoA à la création d'un Scope
+├── core/                        # Configuration globale Django (settings, urls)
 └── manage.py
 ```
 
-### 🗄️ Modèles de Données Mis en Place
+---
 
-#### 1. Socle Commun (`api/models/base.py`)
-* **TimeStampedUUIDModel** : Modèle abstrait fournissant :
-  * `id` : Clef primaire UUIDv4.
-  * `created_at` / `updated_at` : Horodatages automatiques.
-  * `deleted_at` : Champ pour le Soft Delete.
-  * `objects` : Custom SoftDeleteManager filtrant automatiquement les éléments supprimés (`deleted_at__isnull=True`).
-  * `all_objects` : Manager standard Django pour accéder à l'ensemble des données (y compris archivées).
+## 🔑 Authentification & Architecture Multi-tenant (JWT)
 
-#### 2. Organisation & Sécurité RBAC (`api/models/organization.py`)
-* **Organization** : Entité juridique (champs `name`, `code`, `description`).
-* **Scope** : Périmètre d'application ISO 27001 rattaché à une organisation.
-* **UserOrganizationRole** : Rôle d'un utilisateur au sein d'une organisation (`ADMIN`, `RSSI`, `RISK_OWNER`, `AUDITOR`) avec statut `is_active` et date d'affiliation `joined_at`.
-* **UserScopeAccess** : Accès granulaire d'un membre d'organisation à un périmètre (`Scope`) spécifique.
+L'authentification est basée sur SimpleJWT avec injection dynamique du contexte d'exécution dans les tokens.
 
-#### 3. Core ISO 27001 (`api/models/iso27001.py`)
-* **Asset** : Patrimoine à protéger lié à un périmètre. Contient l'évaluation DIC (1 à 3) (`confidentiality`, `integrity`, `availability`).
-* **Risk** : Scénarios d'incidents identifiés sur un actif (Vraisemblance 1-5, Impact 1-5, statut : `OPEN`, `IN_MITIGATION`, `ACCEPTED`, `CLOSED`).
-* **IsoControl** : Catalogue global des 93 mesures ISO 27001:2022 réparties par thème (`ORGANIZATIONAL`, `PEOPLE`, `PHYSICAL`, `TECHNOLOGICAL`).
-* **SoaEntry** : Déclaration d'applicabilité (SoA) liée à un périmètre et à une mesure (`NOT_IMPLEMENTED`, `IN_PROGRESS`, `IMPLEMENTED`).
-* **TreatmentTask** : Plan de traitement des risques. La complétion d'une tâche met automatiquement à jour le statut du contrôle SoA correspondant via la surcharge de `save()`.
-* **Evidence** : Stockage des fichiers de preuves liées aux tâches de traitement.
-* **SoaVersion** : Instantané (snapshot JSON) figé d'une SoA pour audit (`DRAFT`, `APPROVED`).
-
-#### 4. Support & Configuration (`api/models/support.py`)
-* **UserPreference** : Langue, thème (`LIGHT`, `DARK`, `SYSTEM`), fuseau horaire, notifications email.
-* **SystemSetting** : Clef/valeur dynamique (stockage au format `JSONField`).
+### Features Authentification & RBAC :
+* **Payload JWT enrichi** : Le token d'accès contient `organization_id`, `role` et `scope_id` actifs.
+* **Context Switching (`/switch-context/`)** : Permet à un utilisateur appartenant à plusieurs organisations ou périmètres (Scopes) de basculer de contexte en régénérant ses tokens sans se re-connecter.
+* **Tolérance aux comptes sans périmètre** : Un utilisateur sans organisation ou sans scope attribué peut se connecter (claims positionnés à `null`) et accéder à son profil.
+* **Rôles RBAC gérés** : `ADMIN`, `RSSI`, `RISK_OWNER`, `AUDITOR`.
 
 ---
 
-## 🚀 Initialisation, Migrations & Seeding
+## 📚 Documentation OpenAPI & Swagger UI
 
-### 1. Activer l'environnement virtuel
+L'API est documentée de manière interactive avec `drf-spectacular`.
+
+Une fois le serveur démarré, accédez à la documentation via :
+* **Swagger UI** : `http://127.0.0.1:8000/api/docs/`
+* **ReDoc** : `http://127.0.0.1:8000/api/redoc/`
+* **Schéma OpenAPI (JSON)** : `http://127.0.0.1:8000/api/schema/`
+
+*Note : L'interface Swagger prend en charge l'authentification Bearer `<votre_token_jwt>`.*
+
+---
+
+## ⚡ Prise en Main Rapide
+
+### 1. Cloner & Activer l'Environnement Virtuel
 ```bash
 cd backend
+python3 -m venv venv
 source venv/bin/activate
 ```
 
-### 2. Configuration dans `core/settings.py`
-S'assurer que l'application `api` est bien déclarée dans `INSTALLED_APPS` :
-```python
-INSTALLED_APPS = [
-    # ...
-    'api.apps.ApiConfig',
-]
+### 2. Installer les Dépendances
+```bash
+pip install -r requirements.txt
 ```
 
-### 3. Génération et application des migrations
-Exécuter la création du schéma de base de données à partir des modèles :
+### 3. Exécuter les Migrations Base de Données
 ```bash
-# Générer le fichier de migration initial pour l'application api
-python manage.py makemigrations api
-
-# Appliquer les migrations dans la base de données
+python manage.py makemigrations
 python manage.py migrate
 ```
 
-### 🌱 Alimentation de la Base de Données (Seeders)
-Le projet utilise une approche à deux niveaux pour le peuplement de la base de données : un seeder pour le référentiel normatif fixe et un seeder dynamique pour les données métier.
+### 4. Alimenter la Base de Données (Seeding)
 
-#### 1. Charger le Référentiel ISO 27001:2022
-Cette commande importe les 93 mesures officielles de l'Annexe A (titres, thèmes et descriptions) depuis le fichier JSON `api/fixtures/iso_27001_controls.json`.
+#### A. Charger le référentiel normatif ISO 27001:2022 (93 mesures)
 ```bash
 python manage.py seed_iso_controls
 ```
-*Note : Cette commande est idempotente (`update_or_create`). Elle peut être exécutée plusieurs fois sans créer de doublons.*
 
-#### 2. Générer les Données de Démonstration Multi-Modèles
-Cette commande peuple dynamiquement l'intégralité de la BDD avec la bibliothèque `Faker` (Organisations, Utilisateurs, Rôles RBAC, Périmètres, Actifs, Risques, Tâches de traitement, Préférences) ainsi que le compte d'administration global `admin_global` (mot de passe : `Admin1234!`).
+#### B. Générer des données de démonstration (Organisations, Utilisateurs, Risques...)
+```bash
+# Génération standard (3 organisations)
+python manage.py seed_demo_data
 
-##### 🔹 Options et Paramètres disponibles :
+# Réinitialiser complètement la base métier et générer 5 organisations
+python manage.py seed_demo_data --clear --count 5
+```
 
-| Option | Description | Valeur par défaut | Exemple d'utilisation |
-| :--- | :--- | :--- | :--- |
-| `--count` | Nombre d'organisations virtuelles à générer | `3` | `--count 5` |
-| `--clear` | Purge l'ensemble des données métiers existantes avant d'exécuter le seeder | Désactivé | `--clear` |
+**Compte Administrateur Global généré par le seeder :**
+* **Username** : `admin_global`
+* **Password** : `Admin1234!`
 
-##### 💡 Exemples d'utilisation :
-* Générer des données par défaut (cumulatif) :
-  ```bash
-  python manage.py seed_demo_data
-  ```
-* Définir un nombre spécifique d'organisations à ajouter :
-  ```bash
-  python manage.py seed_demo_data --count 5
-  ```
-* Réinitialiser et recommencer à zéro (Reset complet des données métiers) :
-  ```bash
-  python manage.py seed_demo_data --clear --count 3
-  ```
-
-### 4. Lancer le serveur local
+### 5. Lancer le Serveur de Développement
 ```bash
 python manage.py runserver
 ```
+
+---
+
+## 🔌 Endpoints de l'API (`/api/v1/auth/`)
+
+| Méthode | Endpoint | Description | Accès |
+| :--- | :--- | :--- | :--- |
+| **POST** | `/api/v1/auth/register/` | Inscription utilisateur (crée l'utilisateur + optionnellement son organisation) | Public |
+| **POST** | `/api/v1/auth/login/` | Connexion et émission des tokens JWT (`access` & `refresh`) | Public |
+| **POST** | `/api/v1/auth/refresh/` | Rafraîchissement du token d'accès JWT | Public |
+| **POST** | `/api/v1/auth/switch-context/` | Régénération des tokens pour cibler un autre `organization_id` ou `scope_id` | Authentifié |
+| **GET** | `/api/v1/auth/me/` | Profil de l'utilisateur connecté et liste de ses rôles | Authentifié |
