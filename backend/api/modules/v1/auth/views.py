@@ -103,6 +103,11 @@ class RegisterView(APIView):
     """
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        summary="Inscription utilisateur",
+        request=RegisterSerializer,
+        responses={201: RegisterResponseSerializer}
+    )
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -113,14 +118,16 @@ class RegisterView(APIView):
             password=serializer.validated_data['password'],
             first_name=serializer.validated_data.get('first_name', ''),
             last_name=serializer.validated_data.get('last_name', ''),
-            organization_name=serializer.validated_data.get('organization_name')
+            organization_name=serializer.validated_data.get('organization_name'),
+            organization_code=serializer.validated_data.get('organization_code')
         )
 
-        # Génération directe des tokens après inscription réussie
         refresh = build_jwt_payload_for_user(user)
 
-        return Response({
+        response_data = {
             'user': UserProfileSerializer(user).data,
             'access': str(refresh.access_token),
             'refresh': str(refresh),
-        }, status=status.HTTP_201_CREATED)
+        }
+
+        return Response(response_data, status=status.HTTP_201_CREATED)
