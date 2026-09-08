@@ -103,6 +103,7 @@ class RegisterView(APIView):
     """
     permission_classes = [AllowAny]
 
+    @extend_schema(
         summary="Inscription utilisateur",
         request=RegisterSerializer,
         responses={201: RegisterResponseSerializer}
