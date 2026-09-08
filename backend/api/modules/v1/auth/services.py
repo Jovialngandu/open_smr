@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
 from api.models import Organization, UserOrganizationRole
+from api.modules.v1.organizations.helpers import generate_unique_org_code
 
 User = get_user_model()
 
@@ -19,12 +20,13 @@ def register_user(
     password: str, 
     first_name: str = "", 
     last_name: str = "",
-    organization_name: str = None
+    organization_name: str = None,
+    organization_code: str = None
 ) -> User:
     """
     Crée un utilisateur dans la base de données.
-    Si `organization_name` est fourni, crée également l'organisation et 
-    attribue le rôle ADMIN à l'utilisateur au sein de cette organisation.
+    Si `organization_name` est fourni, crée également l'organisation (avec code unique)
+    et attribue le rôle ADMIN à l'utilisateur au sein de cette organisation.
     """
     email = email.lower().strip()
     username = username.strip()
@@ -35,7 +37,7 @@ def register_user(
     if User.objects.filter(username=username).exists():
         raise ValidationError({"username": "Ce nom d'utilisateur est déjà pris."})
 
-    # Création du compte utilisateur
+    # Création du compte utilisateur Django
     user = User.objects.create_user(
         username=username,
         email=email,
@@ -45,9 +47,15 @@ def register_user(
         is_active=True
     )
 
-    # Optionnel : Création automatique d'une première organisation si spécifiée lors du register
+    # Création optionnelle de l'organisation
     if organization_name:
-        org = Organization.objects.create(name=organization_name)
+        final_code = organization_code if organization_code else generate_unique_org_code(organization_name)
+
+        org = Organization.objects.create(
+            name=organization_name,
+            code=final_code
+        )
+
         UserOrganizationRole.objects.create(
             user=user,
             organization=org,
