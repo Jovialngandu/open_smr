@@ -113,7 +113,7 @@ python manage.py runserver
 
 ---
 
-## 🔌 Endpoints de l'API (`/api/v1/auth/`)
+## 🔌 Endpoints de l'API (`/api/v1/auth`)
 
 | Méthode | Endpoint | Description | Accès |
 | :--- | :--- | :--- | :--- |
