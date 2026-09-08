@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
-from api.models import UserOrganizationRole, UserScopeAccess
+from api.models import UserOrganizationRole, UserScopeAccess,Organization
 from django.contrib.auth.password_validation import validate_password
 
 User = get_user_model()
@@ -112,9 +112,21 @@ class RegisterSerializer(serializers.Serializer):
     
     # Champ optionnel si l'utilisateur veut directement créer sa structure/organisation à l'inscription
     organization_name = serializers.CharField(max_length=255, required=False, allow_null=True, allow_blank=True)
+    organization_code = serializers.CharField(max_length=50, required=False, allow_null=True, allow_blank=True)
+
+    def validate_organization_code(self, value):
+        """Valide l'unicité du code si fourni pour éviter une erreur 500 serveur."""
+        if value:
+            code_formatted = value.strip().upper()
+            if Organization.objects.filter(code=code_formatted).exists():
+                raise serializers.ValidationError("Ce code d'organisation est déjà utilisé.")
+            return code_formatted
+        return value
 
 
 class RegisterResponseSerializer(serializers.Serializer):
     user = UserProfileSerializer()
     access = serializers.CharField()
     refresh = serializers.CharField()
+    
+    
