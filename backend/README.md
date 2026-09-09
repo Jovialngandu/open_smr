@@ -113,6 +113,33 @@ python manage.py runserver
 
 ---
 
+## 🧪 Exécution des tests backend
+
+Les tests backend du projet utilisent Django natif via `APITestCase` (pas de `pytest`).
+
+Depuis le dossier `backend`, vous pouvez exécuter les tests des modules actuels :
+
+```bash
+# Tests du module organisations
+python manage.py test api.modules.v1.organizations.tests
+
+# Tests du module scopes
+python manage.py test api.modules.v1.scopes.tests
+
+# Tous les tests de ces modules en une seule commande
+python manage.py test api.modules.v1.organizations.tests api.modules.v1.scopes.tests
+```
+
+Si vous voulez seulement valider un test précis :
+
+```bash
+python manage.py test api.modules.v1.scopes.tests.ScopeAccessTests.test_list_scope_accesses
+```
+
+> Avant de lancer les tests, assurez-vous que les migrations sont à jour : `python manage.py migrate`
+
+---
+
 ## 🔌 Endpoints de l'API (`/api/v1/auth`)
 
 | Méthode | Endpoint | Description | Accès |
