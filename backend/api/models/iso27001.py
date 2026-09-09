@@ -125,7 +125,7 @@ class TreatmentTask(TimeStampedUUIDModel):
 class Evidence(TimeStampedUUIDModel):
     task = models.ForeignKey(TreatmentTask, on_delete=models.CASCADE, related_name='evidences')
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
-    file_path = models.FileField(upload_to='evidences/%Y/%m/')
+    file_path = models.FileField(upload_to='media/evidences/%Y/%m/')
     description = models.CharField(max_length=255, blank=True, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
