@@ -1,8 +1,10 @@
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import NotFound, ValidationError
+from django.db import transaction
+from rest_framework.exceptions import NotFound, ValidationError
 
-from api.models.iso27001 import TreatmentTask, Evidence, Risk, IsoControl
+from api.models.iso27001 import TreatmentTask, Evidence, Risk, IsoControl,SoaEntry
 
 User = get_user_model()
 
@@ -37,10 +39,11 @@ def create_treatment_task(
     return task
 
 
+@transaction.atomic
 def update_task_status(*, task_id: str, new_status: str) -> TreatmentTask:
     """
-    Met à jour le statut. 
-    Le passage à 'COMPLETED' déclenche le hook save() du modèle qui met à jour SoaEntry.
+    Met à jour le statut d'une tâche et synchronise le statut d'implémentation
+    du contrôle SoA associé uniquement si toutes les tâches liées sont terminées.
     """
     try:
         task = TreatmentTask.objects.select_related('risk__asset__scope', 'iso_control').get(id=task_id)
@@ -51,12 +54,18 @@ def update_task_status(*, task_id: str, new_status: str) -> TreatmentTask:
     if new_status not in valid_statuses:
         raise ValidationError(f"Statut invalide : {new_status}. Choix possibles: {valid_statuses}")
 
+    # Mise à jour des champs de la tâche
     task.status = new_status
     if new_status == 'COMPLETED':
         task.completed_at = timezone.now()
-        
-    # Le save() du modèle gère le passage automatique du SoaEntry à IMPLEMEMTED
+    else:
+        task.completed_at = None
+
     task.save()
+
+    # Evaluation et synchronisation automatique du SoA
+    _sync_soa_implementation_status(scope=task.risk.asset.scope, iso_control=task.iso_control)
+
     return task
 
 
@@ -82,3 +91,38 @@ def upload_evidence_file(
     evidence.full_clean()
     evidence.save()
     return evidence
+
+def _sync_soa_implementation_status(*, scope, iso_control) -> None:
+    """
+    Vérifie l'état de l'ensemble des tâches pour un (Scope, IsoControl)
+    et aligne le statut de la SoaEntry.
+    """
+    if not scope or not iso_control:
+        return
+
+    # Récupération de toutes les tâches rattachées à ce contrôle pour ce périmètre
+    related_tasks = TreatmentTask.objects.filter(
+        risk__asset__scope=scope,
+        iso_control=iso_control
+    )
+
+    total_tasks = related_tasks.count()
+    if total_tasks == 0:
+        return
+
+    completed_tasks = related_tasks.filter(status='COMPLETED').count()
+
+    # Si TOUTES les tâches sont COMPLETED -> IMPLEMEMTED
+    if completed_tasks == total_tasks:
+        SoaEntry.objects.filter(
+            scope=scope,
+            iso_control=iso_control
+        ).update(implementation_status='IMPLEMENTED')
+    
+    # Si une ou plusieurs tâches ne sont pas finies alors que c'était marqué IMPLEMENTED -> IN_PROGRESS
+    else:
+        SoaEntry.objects.filter(
+            scope=scope,
+            iso_control=iso_control,
+            implementation_status='IMPLEMENTED'
+        ).update(implementation_status='IN_PROGRESS')
