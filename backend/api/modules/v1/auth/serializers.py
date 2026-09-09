@@ -129,4 +129,8 @@ class RegisterResponseSerializer(serializers.Serializer):
     access = serializers.CharField()
     refresh = serializers.CharField()
     
+class  SimpleUserSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = User
+		fields = ['id', 'username']	
     
