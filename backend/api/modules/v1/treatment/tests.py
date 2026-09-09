@@ -26,12 +26,12 @@ class TreatmentTaskApiTests(APITestCase):
             password="Password123!"
         )
 
-        # Création de l'organisation obligatoire pour le Scope
+        # Création de l'organisation
         self.organization = Organization.objects.create(
             name="Entreprise Test"
         )
 
-        # Création des entités de base ISO 27001
+        # Création des entités ISO 27001
         self.scope = Scope.objects.create(
             organization=self.organization,
             name="Périmètre SI principal"
@@ -62,7 +62,7 @@ class TreatmentTaskApiTests(APITestCase):
             implementation_status='NOT_IMPLEMENTED'
         )
 
-        # Tâche de traitement de test
+        # Première tâche de traitement de test
         self.task = TreatmentTask.objects.create(
             risk=self.risk,
             iso_control=self.iso_control,
@@ -129,22 +129,56 @@ class TreatmentTaskApiTests(APITestCase):
         self.assertEqual(response.data['title'], 'Nouvelle tâche')
         self.assertEqual(response.data['status'], 'TODO')
 
-    def test_update_task_status_and_triggers_soa_update(self):
+    def test_multi_task_soa_synchronization(self):
         """
-        Vérifie la mise à jour du statut d'une tâche et s'assure que le passage à 'COMPLETED'
-        déclenche la mise à jour automatique du SoaEntry lié vers 'IMPLEMENTED'.
+        Vérifie que :
+        1. Le SoaEntry ne passe à 'IMPLEMENTED' QUE lorsque TOUTES les tâches rattachées sont 'COMPLETED'.
+        2. La réouverture d'une tâche repasse le SoaEntry à 'IN_PROGRESS'.
         """
         self.client.force_authenticate(user=self.user)
-        payload = {'status': 'COMPLETED'}
-        
-        response = self.client.patch(self.url_status, data=payload, format='json')
 
+        # Création d'une deuxième tâche liée au même contrôle ISO et même Scope
+        second_task = TreatmentTask.objects.create(
+            risk=self.risk,
+            iso_control=self.iso_control,
+            assignee=self.user,
+            title="Valider la politique",
+            description="Deuxième étape obligatoire"
+        )
+        url_status_second = reverse('treatment-task-update-status', kwargs={'pk': second_task.id})
+
+        # Step 1: Compléter la 1ère tâche -> La SoA doit rester inchangée (ou passer à IN_PROGRESS)
+        response = self.client.patch(self.url_status, data={'status': 'COMPLETED'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['status'], 'COMPLETED')
-        self.assertIsNotNone(response.data['completed_at'])
 
         self.soa_entry.refresh_from_db()
-        self.assertEqual(self.soa_entry.implementation_status, 'IMPLEMENTED')
+        self.assertNotEqual(
+            self.soa_entry.implementation_status, 
+            'IMPLEMENTED', 
+            "La SoA ne doit pas être IMPLEMENTED tant que la 2ème tâche reste en TODO/IN_PROGRESS"
+        )
+
+        # Step 2: Compléter la 2ème tâche -> Toutes les tâches sont COMPLETED, la SoA doit basculer à IMPLEMENTED
+        response = self.client.patch(url_status_second, data={'status': 'COMPLETED'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.soa_entry.refresh_from_db()
+        self.assertEqual(
+            self.soa_entry.implementation_status, 
+            'IMPLEMENTED', 
+            "La SoA doit passer à IMPLEMENTED car toutes les tâches sont finies"
+        )
+
+        # Step 3: Réouvrir la 1ère tâche (COMPLETED -> IN_PROGRESS) -> La SoA doit repasser à IN_PROGRESS
+        response = self.client.patch(self.url_status, data={'status': 'IN_PROGRESS'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.soa_entry.refresh_from_db()
+        self.assertEqual(
+            self.soa_entry.implementation_status, 
+            'IN_PROGRESS', 
+            "La SoA doit repasser à IN_PROGRESS lorsqu'une tâche est réouverte"
+        )
 
 
 class EvidenceApiTests(APITestCase):
