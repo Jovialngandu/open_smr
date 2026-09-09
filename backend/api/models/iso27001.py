@@ -112,15 +112,6 @@ class TreatmentTask(TimeStampedUUIDModel):
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='TODO')
     completed_at = models.DateTimeField(null=True, blank=True)
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        # Innovation : passage automatique du contrôle SoA à IMPLEMEMTED lors de la complétion
-        if self.status == 'COMPLETED':
-            scope = self.risk.asset.scope
-            SoaEntry.objects.filter(scope=scope, iso_control=self.iso_control).update(
-                implementation_status='IMPLEMENTED'
-            )
-
 
 class Evidence(TimeStampedUUIDModel):
     task = models.ForeignKey(TreatmentTask, on_delete=models.CASCADE, related_name='evidences')
