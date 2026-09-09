@@ -43,3 +43,5 @@ Thumbs.db
 *.bmp
 *.tiff
 *.webp
+export_project.sh
+project_dump.txt
