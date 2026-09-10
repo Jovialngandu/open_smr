@@ -167,6 +167,7 @@ Les pages sont chargées à la demande avec `loadComponent` afin de limiter le J
 ```bash
 # Serveur local
 npm start
+ng serve
 
 # Build de production
 npm run build
@@ -216,8 +217,6 @@ Exemple de route privée :
 - afficher des messages compréhensibles par l'utilisateur ;
 - préserver la navigation au clavier et les attributs ARIA ;
 - ne jamais ajouter de secret ou de vrai token au dépôt ;
-- utiliser des messages de commit en français ;
-- limiter chaque commit à deux fichiers ;
 - lancer les tests et le build avant de partager les modifications.
 
 ## État actuel
@@ -232,5 +231,3 @@ Fonctionnalités terminées :
 - topbar globale ;
 - guards d'authentification et de rôles ;
 - backend d'authentification mocké.
-
-Prochain module prévu : inventaire des actifs dans `/assets`.
