@@ -1,5 +1,7 @@
+# api/modules/v1/permissions.py
 from rest_framework.permissions import BasePermission
-from api.models import UserOrganizationRole
+from api.models import UserOrganizationRole, UserScopeAccess, TreatmentTask
+
 
 
 class IsAccountActive(BasePermission):
@@ -77,3 +79,23 @@ class IsRiskOwnerRole(HasRole):
 
 class IsAuditorRole(HasRole):
     allowed_roles = ['ADMIN', 'RSSI', 'AUDITOR']
+    
+
+class CanUpdateTaskStatusPermission(BasePermission):
+    """
+    Vérifie les accès spécifiques à l'objet TreatmentTask (Assigné direct ou accès au Scope).
+    Les accès globaux (Superuser, Admin Org) sont gérés par combinaison dans la vue.
+    """
+    def has_object_permission(self, request, view, obj: TreatmentTask):
+        user = request.user
+
+        # 1. Assignee direct de la tâche
+        if obj.assignee_id == user.id:
+            return True
+
+        # 2. Accès au Scope de la tâche
+        return UserScopeAccess.objects.filter(
+            scope=obj.risk.asset.scope,
+            user_organization_role__user=user,
+            user_organization_role__is_active=True
+        ).exists()
