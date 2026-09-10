@@ -3,25 +3,35 @@ from api.models import UserOrganizationRole
 
 
 class IsAccountActive(BasePermission):
-    """Vérifie que l'utilisateur est actif aux niveaux global et organisationnel."""
+    """
+    Vérifie que le compte utilisateur global est actif (Django user.is_active).
+    Permet aux utilisateurs sans organisation/scope d'accéder aux endpoints
+    d'initialisation (ex: création d'organisation, liste de leurs orgs).
+    """
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
         
+        # Le compte Django global doit être actif
         if not request.user.is_active:
             return False
 
-        # Si l'utilisateur est un superadmin, accès direct
+        # Un superuser a un accès global
         if request.user.is_superuser:
             return True
 
-        # Vérification du statut au niveau organisationnel
-        active_role = UserOrganizationRole.objects.filter(user=request.user, is_active=True).exists()
-        return active_role
+        # Si l'utilisateur n'a aucune organisation, on le laisse quand même accéder 
+        # aux fonctionnalités de base (ex: créer ou lister ses orgs).
+        # On ne le bloque pas au niveau global.
+        return True
 
 
 class HasRole(BasePermission):
-    """Permission générique basée sur les rôles RBAC."""
+    """
+    Permission RBAC dynamique par organisation.
+    Si l'utilisateur n'a pas encore d'organisation ou de rôle pour l'organisation ciblée,
+    l'accès aux ressources dépendantes de cette organisation est refusé.
+    """
     allowed_roles = []
 
     def has_permission(self, request, view):
@@ -31,15 +41,26 @@ class HasRole(BasePermission):
         if request.user.is_superuser:
             return True
 
-        user_role = UserOrganizationRole.objects.filter(
-            user=request.user, 
-            is_active=True
-        ).first()
+        # Récupération de l'org_id depuis les paramètres de l'URL (ex: /organizations/<org_id>/...)
+        org_id = view.kwargs.get('org_id') or view.kwargs.get('pk')
 
-        if not user_role:
+        # Si l'action ne cible pas une organisation spécifique (ex: /organizations/ en POST ou GET),
+        # on autorise tout utilisateur authentifié à interagir avec le point d'entrée.
+        if not org_id:
+            return True
+
+        # Si un org_id est présent, l'utilisateur DOIT avoir un rôle actif au sein de CETTE organisation
+        user_roles = UserOrganizationRole.objects.filter(
+            user=request.user,
+            organization_id=org_id,
+            is_active=True
+        ).values_list('role', flat=True)
+
+        if not user_roles:
             return False
 
-        return user_role.role in self.allowed_roles
+        # Vérification si le rôle dans l'organisation correspond aux autorisations requises
+        return any(role in self.allowed_roles for role in user_roles)
 
 
 class IsAdminRole(HasRole):
