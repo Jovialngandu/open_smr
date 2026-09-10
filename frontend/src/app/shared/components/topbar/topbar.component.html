@@ -1,0 +1,52 @@
+<header class="topbar">
+  <a class="brand" routerLink="/dashboard" aria-label="OpenSMR, tableau de bord">
+    <span class="brand__mark" aria-hidden="true">
+      <svg viewBox="0 0 32 32"><path d="M16 3 27 8v7c0 7.1-4.6 11.7-11 14-6.4-2.3-11-6.9-11-14V8l11-5Z"/><path d="m11.5 16 3 3 6.5-7"/></svg>
+    </span>
+    <span>OpenSMR</span>
+  </a>
+
+  <div class="context-picker" [class.context-picker--busy]="switching()">
+    <div class="context-field">
+      <label for="organization-select">Organisation</label>
+      <select id="organization-select" [value]="context.activeOrganizationId() ?? ''" (change)="changeOrganization($event)" [disabled]="switching()">
+        @if (!context.organizations().length) { <option value="">Aucune organisation</option> }
+        @for (organization of context.organizations(); track organization.organization_id) {
+          <option [value]="organization.organization_id">{{ organization.organization_name }}</option>
+        }
+      </select>
+    </div>
+    <span class="context-separator" aria-hidden="true">/</span>
+    <div class="context-field">
+      <label for="scope-select">Périmètre</label>
+      <select id="scope-select" [value]="context.activeScopeId() ?? ''" (change)="changeScope($event)" [disabled]="switching() || !context.activeOrganization()?.scopes?.length">
+        @if (!context.activeOrganization()?.scopes?.length) { <option value="">Aucun périmètre</option> }
+        @for (scope of context.activeOrganization()?.scopes ?? []; track scope.id) {
+          <option [value]="scope.id">{{ scope.name }}</option>
+        }
+      </select>
+    </div>
+    @if (switching()) { <span class="context-loader" aria-label="Changement de contexte en cours"></span> }
+  </div>
+
+  <div class="profile-menu">
+    <button class="profile-menu__trigger" type="button" (click)="menuOpen.set(!menuOpen())" [attr.aria-expanded]="menuOpen()" aria-controls="profile-dropdown">
+      <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+      <span class="profile-menu__identity">
+        <strong>{{ auth.user()?.first_name }} {{ auth.user()?.last_name }}</strong>
+        <small>{{ context.activeRole() }}</small>
+      </span>
+      <span aria-hidden="true">⌄</span>
+    </button>
+    @if (menuOpen()) {
+      <div class="profile-dropdown" id="profile-dropdown">
+        <p>{{ auth.user()?.email }}</p>
+        <button type="button" (click)="logout()">Se déconnecter</button>
+      </div>
+    }
+  </div>
+</header>
+
+@if (contextError()) {
+  <div class="context-error" role="alert">{{ contextError() }}</div>
+}
