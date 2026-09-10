@@ -151,6 +151,13 @@ Le fichier TypeScript gère l'état et les actions. Le fichier HTML gère la str
 | `/login` | Public | Connexion |
 | `/register` | Public | Inscription |
 | `/dashboard` | Authentifié | Accueil temporaire et contexte actif |
+| `/assets` | ADMIN, RSSI, RISK_OWNER | Inventaire des actifs |
+| `/risks` | ADMIN, RSSI, AUDITOR | Registre des risques |
+| `/treatments` | ADMIN, RSSI, RISK_OWNER | Plans de traitement |
+| `/soa` | Tous les rôles | Déclaration d'applicabilité |
+| `/users` | ADMIN, RSSI | Utilisateurs et habilitations |
+| `/my-tasks` | RISK_OWNER | Tâches assignées |
+| `/audit-view` | AUDITOR | Portail d'audit en lecture seule |
 | `/access-denied` | Authentifié | Erreur d'autorisation 403 |
 
 Les pages sont chargées à la demande avec `loadComponent` afin de limiter le JavaScript initial.
