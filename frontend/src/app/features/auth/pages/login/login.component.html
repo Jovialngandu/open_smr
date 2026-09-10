@@ -8,17 +8,17 @@
     </a>
 
     <div class="auth-story__content">
-      <p class="eyebrow eyebrow--light">SÃ©curitÃ© de l'information, maÃ®trisÃ©e</p>
-      <h1 id="story-title">Pilotez vos risques.<br />DÃ©montrez votre conformitÃ©.</h1>
+      <p class="eyebrow eyebrow--light">Sécurité de l'information maîtrisée</p>
+      <h1 id="story-title">Pilotez vos risques.<br />Démontrez votre conformité.</h1>
       <p>Un espace unique pour transformer ISO 27001 en actions claires, suivies et auditables.</p>
-      <ul class="value-list" aria-label="FonctionnalitÃ©s principales">
-        <li><span>âœ“</span> Vue consolidÃ©e de vos risques et actifs</li>
-        <li><span>âœ“</span> Suivi des actions et preuves en temps rÃ©el</li>
-        <li><span>âœ“</span> DonnÃ©es isolÃ©es par organisation et pÃ©rimÃ¨tre</li>
+      <ul class="value-list" aria-label="Fonctionnalités principales">
+        <li><span>✓</span> Vue consolidée de vos risques et de vos actifs</li>
+        <li><span>✓</span> Suivi des actions et des preuves en temps réel</li>
+        <li><span>✓</span> Données isolées par organisation et par périmètre</li>
       </ul>
     </div>
 
-    <p class="auth-story__foot">ConÃ§u pour les Ã©quipes RSSI exigeantes.</p>
+    <p class="auth-story__foot">Conçu pour les équipes RSSI exigeantes.</p>
   </section>
 
   <section class="auth-panel" aria-labelledby="login-title">
@@ -30,8 +30,8 @@
         OpenSMR
       </div>
       <p class="eyebrow">Ravi de vous revoir</p>
-      <h2 id="login-title">Connectez-vous Ã  votre espace</h2>
-      <p class="auth-intro">Retrouvez le pilotage de votre SMSI en toute sÃ©curitÃ©.</p>
+      <h2 id="login-title">Connectez-vous à votre espace</h2>
+      <p class="auth-intro">Retrouvez le pilotage de votre SMSI en toute sécurité.</p>
 
       @if (errorMessage()) {
         <div class="alert alert--error" role="alert">
@@ -60,7 +60,7 @@
         <div class="field">
           <div class="field__label-row">
             <label for="password">Mot de passe</label>
-            <button class="text-button" type="button" (click)="showRecoveryMessage()">Mot de passe oubliÃ© ?</button>
+            <button class="text-button" type="button" (click)="showRecoveryMessage()">Mot de passe oublié&nbsp;?</button>
           </div>
           <div class="password-input">
             <input
@@ -86,18 +86,17 @@
         </label>
 
         <button class="button button--primary button--full" type="submit" [disabled]="auth.busy()">
-          @if (auth.busy()) { <span class="spinner" aria-hidden="true"></span> Connexion en coursâ€¦ }
-          @else { Se connecter <span aria-hidden="true">â†’</span> }
+          @if (auth.busy()) { <span class="spinner" aria-hidden="true"></span> Connexion en cours… }
+          @else { Se connecter <span aria-hidden="true">→</span> }
         </button>
       </form>
 
       <div class="demo-note">
-        <span class="demo-note__icon" aria-hidden="true">âœ¦</span>
-        <div><strong>Mode dÃ©monstration</strong><br /><code>demo&#64;opensmr.fr</code> Â· <code>Demo1234!</code></div>
+        <span class="demo-note__icon" aria-hidden="true">✦</span>
+        <div><strong>Mode démonstration</strong><br /><code>demo&#64;opensmr.fr</code> · <code>Demo1234!</code></div>
       </div>
 
-      <p class="auth-switch">PremiÃ¨re visite ? <a routerLink="/register">CrÃ©er un compte</a></p>
+      <p class="auth-switch">Première visite&nbsp;? <a routerLink="/register">Créer un compte</a></p>
     </div>
   </section>
 </main>
-

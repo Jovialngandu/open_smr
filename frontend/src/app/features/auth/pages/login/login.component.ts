@@ -44,7 +44,7 @@ export class LoginComponent {
   }
 
   protected showRecoveryMessage(): void {
-    this.errorMessage.set('La rÃ©initialisation sera disponible avec le prochain endpoint du backend.');
+    this.errorMessage.set('La réinitialisation sera disponible dès que le prochain endpoint du backend sera prêt.');
   }
 
   constructor() {
@@ -52,5 +52,4 @@ export class LoginComponent {
     if (savedIdentity) this.form.controls.identity.setValue(savedIdentity);
   }
 }
-
 
