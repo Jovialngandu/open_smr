@@ -7,15 +7,15 @@
       <span>OpenSMR</span>
     </a>
     <div class="auth-story__content">
-      <p class="eyebrow eyebrow--light">DÃ©marrez sur de bonnes bases</p>
-      <h1 id="story-title">Votre SMSI,<br />simplement structurÃ©.</h1>
-      <p>CrÃ©ez votre espace de travail et posez les fondations d'une gouvernance durable.</p>
+      <p class="eyebrow eyebrow--light">Démarrez sur de bonnes bases</p>
+      <h1 id="story-title">Votre SMSI,<br />simplement structuré.</h1>
+      <p>Créez votre espace de travail et posez les fondations d'une gouvernance durable.</p>
       <div class="trust-card">
-        <span aria-hidden="true">â€œ</span>
-        <p>La conformitÃ© devient plus simple lorsqu'elle est reliÃ©e au travail quotidien.</p>
+        <span aria-hidden="true">“</span>
+        <p>La conformité devient plus simple lorsqu'elle est reliée au travail quotidien.</p>
       </div>
     </div>
-    <p class="auth-story__foot">Isolation multi-tenant Â· ContrÃ´le d'accÃ¨s par rÃ´le</p>
+    <p class="auth-story__foot">Isolation multi-tenant · Contrôle d'accès par rôle</p>
   </section>
 
   <section class="auth-panel" aria-labelledby="register-title">
@@ -26,9 +26,9 @@
         </span>
         OpenSMR
       </div>
-      <p class="eyebrow">CrÃ©er votre espace</p>
-      <h2 id="register-title">Commencez votre parcours de conformitÃ©</h2>
-      <p class="auth-intro">Quelques informations suffisent. Vous pourrez inviter votre Ã©quipe ensuite.</p>
+      <p class="eyebrow">Créez votre espace</p>
+      <h2 id="register-title">Commencez votre parcours de conformité</h2>
+      <p class="auth-intro">Quelques informations suffisent. Vous pourrez ensuite inviter votre équipe.</p>
 
       @if (errorMessage()) {
         <div class="alert alert--error" role="alert"><span aria-hidden="true">!</span><p>{{ errorMessage() }}</p></div>
@@ -37,7 +37,7 @@
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <div class="form-grid">
           <div class="field">
-            <label for="firstName">PrÃ©nom</label>
+            <label for="firstName">Prénom</label>
             <input id="firstName" formControlName="firstName" autocomplete="given-name" placeholder="Camille" />
           </div>
           <div class="field">
@@ -56,7 +56,7 @@
           <div class="field">
             <label for="username">Identifiant</label>
             <input id="username" formControlName="username" autocomplete="username" placeholder="camille.durand" [attr.aria-invalid]="invalid('username')" />
-            @if (invalid('username')) { <small class="field__error">3 caractÃ¨res minimum.</small> }
+            @if (invalid('username')) { <small class="field__error">Saisissez au moins 3 caractères.</small> }
           </div>
           <div class="field">
             <label for="organization">Organisation <span>(facultatif)</span></label>
@@ -67,18 +67,18 @@
         <div class="field">
           <label for="password">Mot de passe</label>
           <div class="password-input">
-            <input id="password" [type]="passwordVisible() ? 'text' : 'password'" formControlName="password" autocomplete="new-password" placeholder="12 caractÃ¨res minimum" [attr.aria-invalid]="invalid('password')" />
+            <input id="password" [type]="passwordVisible() ? 'text' : 'password'" formControlName="password" autocomplete="new-password" placeholder="12 caractères minimum" [attr.aria-invalid]="invalid('password')" />
             <button type="button" (click)="passwordVisible.set(!passwordVisible())">{{ passwordVisible() ? 'Masquer' : 'Afficher' }}</button>
           </div>
           <div class="password-meter" [attr.data-strength]="passwordStrength()">
             <span></span><span></span><span></span><span></span>
           </div>
-          <small class="field__hint">12 caractÃ¨res, avec majuscule, minuscule et chiffre.</small>
+          <small class="field__hint">Utilisez au moins 12 caractères, dont une majuscule, une minuscule et un chiffre.</small>
         </div>
 
         <div class="field">
           <label for="confirmation">Confirmer le mot de passe</label>
-          <input id="confirmation" type="password" formControlName="confirmation" autocomplete="new-password" placeholder="RÃ©pÃ©tez votre mot de passe" [attr.aria-invalid]="invalid('confirmation') || form.hasError('passwordMismatch')" />
+          <input id="confirmation" type="password" formControlName="confirmation" autocomplete="new-password" placeholder="Répétez votre mot de passe" [attr.aria-invalid]="invalid('confirmation') || form.hasError('passwordMismatch')" />
           @if ((form.controls.confirmation.touched || form.controls.confirmation.dirty) && form.hasError('passwordMismatch')) {
             <small class="field__error">Les mots de passe ne correspondent pas.</small>
           }
@@ -86,17 +86,16 @@
 
         <label class="checkbox checkbox--top">
           <input type="checkbox" formControlName="terms" />
-          <span>J'accepte les conditions d'utilisation et la politique de confidentialitÃ©.</span>
+          <span>J'accepte les conditions d'utilisation et la politique de confidentialité.</span>
         </label>
         @if (invalid('terms')) { <small class="field__error field__error--standalone">Votre accord est requis.</small> }
 
         <button class="button button--primary button--full" type="submit" [disabled]="auth.busy()">
-          @if (auth.busy()) { <span class="spinner" aria-hidden="true"></span> CrÃ©ation en coursâ€¦ }
-          @else { CrÃ©er mon espace <span aria-hidden="true">â†’</span> }
+          @if (auth.busy()) { <span class="spinner" aria-hidden="true"></span> Création en cours… }
+          @else { Créer mon espace <span aria-hidden="true">→</span> }
         </button>
       </form>
-      <p class="auth-switch">DÃ©jÃ  inscrit ? <a routerLink="/login">Se connecter</a></p>
+      <p class="auth-switch">Déjà inscrit&nbsp;? <a routerLink="/login">Se connecter</a></p>
     </div>
   </section>
 </main>
-
