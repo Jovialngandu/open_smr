@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, finalize, map, Observable, switchMap, tap, throwError } from 'rxjs';
+import { catchError, finalize, Observable, of, switchMap, tap, throwError } from 'rxjs';
 
 import { AUTH_ENDPOINTS } from '../config/api.config';
 import {
@@ -77,10 +77,7 @@ export class AuthService {
     this.context.setProfile(profile);
     this.context.syncClaims();
     this.statusState.set('authenticated');
-    return new Observable((subscriber) => {
-      subscriber.next(profile);
-      subscriber.complete();
-    });
+    return of(profile);
   }
 
   private endSession(redirect: boolean): void {
