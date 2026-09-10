@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../../core/services/auth.service';
 
@@ -13,6 +13,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 export class LoginComponent {
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly formBuilder = inject(FormBuilder);
   protected readonly passwordVisible = signal(false);
   protected readonly errorMessage = signal('');
@@ -38,7 +39,7 @@ export class LoginComponent {
     else localStorage.removeItem('opensmr.saved_identity');
 
     this.auth.login({ username: identity.trim(), password }).subscribe({
-      next: () => void this.router.navigate(['/dashboard']),
+      next: () => void this.router.navigateByUrl(this.safeReturnUrl()),
       error: (error: Error) => this.errorMessage.set(error.message),
     });
   }
@@ -47,9 +48,15 @@ export class LoginComponent {
     this.errorMessage.set('La réinitialisation sera disponible dès que le prochain endpoint du backend sera prêt.');
   }
 
+  private safeReturnUrl(): string {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    return returnUrl?.startsWith('/') && !returnUrl.startsWith('//')
+      ? returnUrl
+      : '/dashboard';
+  }
+
   constructor() {
     const savedIdentity = localStorage.getItem('opensmr.saved_identity');
     if (savedIdentity) this.form.controls.identity.setValue(savedIdentity);
   }
 }
-
