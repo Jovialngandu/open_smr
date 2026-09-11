@@ -67,7 +67,7 @@ export const routes: Routes = [
       featureTitle: 'Plans de traitement',
       featureDescription: 'Planification et suivi des actions destinées à réduire les risques.',
     },
-    loadComponent: loadFeaturePlaceholder,
+    loadComponent: () => import('./features/treatments/pages/treatments-page/treatments-page.component').then((module) => module.TreatmentsPageComponent),
   },
   {
     path: 'soa',
@@ -78,7 +78,7 @@ export const routes: Routes = [
       featureTitle: "Déclaration d'applicabilité",
       featureDescription: 'Suivi de l\'applicabilité et de la mise en œuvre des 93 mesures ISO 27001:2022.',
     },
-    loadComponent: loadFeaturePlaceholder,
+    loadComponent: () => import('./features/soa/pages/soa-page/soa-page.component').then((module) => module.SoaPageComponent),
   },
   {
     path: 'users',
@@ -89,7 +89,7 @@ export const routes: Routes = [
       featureTitle: 'Utilisateurs et auditeurs',
       featureDescription: 'Gestion des comptes, des rôles et des habilitations par périmètre.',
     },
-    loadComponent: loadFeaturePlaceholder,
+    loadComponent: () => import('./features/users/pages/users-page/users-page.component').then((module) => module.UsersPageComponent),
   },
   {
     path: 'my-tasks',
@@ -100,7 +100,7 @@ export const routes: Routes = [
       featureTitle: 'Mes tâches',
       featureDescription: 'Suivi des actions assignées et dépôt des preuves de réalisation.',
     },
-    loadComponent: loadFeaturePlaceholder,
+    loadComponent: () => import('./features/my-tasks/pages/my-tasks-page/my-tasks-page.component').then((module) => module.MyTasksPageComponent),
   },
   {
     path: 'audit-view',
@@ -111,7 +111,7 @@ export const routes: Routes = [
       featureTitle: "Portail d'audit externe",
       featureDescription: 'Consultation en lecture seule des risques, de la SoA et des preuves.',
     },
-    loadComponent: loadFeaturePlaceholder,
+    loadComponent: () => import('./features/audit/pages/audit-view-page/audit-view-page.component').then((module) => module.AuditViewPageComponent),
   },
   {
     path: 'access-denied',
@@ -125,9 +125,3 @@ export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   { path: '**', redirectTo: 'login' },
 ];
-
-function loadFeaturePlaceholder() {
-  return import('./shared/pages/feature-placeholder/feature-placeholder.component').then(
-    (module) => module.FeaturePlaceholderComponent,
-  );
-}

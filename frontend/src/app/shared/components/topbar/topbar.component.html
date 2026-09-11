@@ -65,6 +65,9 @@
   @if (context.activeRole() === 'AUDITOR') {
     <a routerLink="/audit-view" routerLinkActive="module-nav__link--active">Portail d'audit</a>
   }
+  @if (context.activeRole() === 'ADMIN' || context.activeRole() === 'RSSI') {
+    <a routerLink="/users" routerLinkActive="module-nav__link--active">Utilisateurs</a>
+  }
 </nav>
 
 @if (contextError()) {
