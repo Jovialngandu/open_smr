@@ -1,0 +1,87 @@
+<main class="workspace-page">
+  <app-topbar />
+  <section class="workspace-content">
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">Périmètre actif · {{ activeScopeName() }}</p>
+        <h1>Registre des risques</h1>
+        <p>Identifiez les scénarios redoutés, mesurez leur niveau brut et suivez leur traitement.</p>
+      </div>
+      <button class="button button--primary" type="button" (click)="openCreate()" [disabled]="!context.activeScopeId() || !assetsService.assets().length">
+        <span aria-hidden="true">+</span> Ajouter un risque
+      </button>
+    </header>
+
+    @if (!context.activeScopeId()) {
+      <section class="empty-state">
+        <span aria-hidden="true">◇</span>
+        <h2>Aucun périmètre actif</h2>
+        <p>Sélectionnez un périmètre pour consulter son registre des risques.</p>
+      </section>
+    } @else {
+      <section class="metric-strip" aria-label="Synthèse du registre">
+        <div><small>Risques recensés</small><strong>{{ risksService.count() }}</strong></div>
+        <div><small>Risques critiques</small><strong class="metric-strip__danger">{{ risksService.criticalCount() }}</strong></div>
+        <div><small>Périmètre</small><strong class="metric-strip__text">{{ activeScopeName() }}</strong></div>
+      </section>
+
+      <section class="data-panel">
+        <div class="table-toolbar">
+          <label class="search-field">
+            <span aria-hidden="true">⌕</span>
+            <span class="sr-only">Rechercher un risque</span>
+            <input type="search" placeholder="Rechercher par code, actif, menace…" [value]="search()" (input)="search.set($any($event.target).value)" />
+          </label>
+          <label class="filter-field">
+            <span>Statut</span>
+            <select [value]="status()" (change)="status.set($any($event.target).value)">
+              <option value="ALL">Tous</option>
+              @for (item of statuses; track item[0]) { <option [value]="item[0]">{{ item[1] }}</option> }
+            </select>
+          </label>
+          <span class="result-count">{{ filteredRisks().length }} résultat(s)</span>
+        </div>
+
+        @if (actionError() || risksService.error()) {
+          <div class="inline-error" role="alert">{{ actionError() || risksService.error() }}</div>
+        }
+
+        @if (risksService.loading()) {
+          <div class="table-loading"><span class="spinner spinner--dark"></span> Chargement du registre…</div>
+        } @else if (!filteredRisks().length) {
+          <div class="empty-state empty-state--compact">
+            <h2>Aucun risque trouvé</h2>
+            <p>Modifiez les filtres ou ajoutez le premier scénario de ce périmètre.</p>
+          </div>
+        } @else {
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Code</th><th>Actif</th><th>Menace</th><th>Vraisemblance</th><th>Impact</th><th>Score</th><th>Statut</th><th><span class="sr-only">Actions</span></th></tr></thead>
+              <tbody>
+                @for (risk of filteredRisks(); track risk.id) {
+                  <tr>
+                    <td><strong class="risk-code">{{ risk.code }}</strong></td>
+                    <td>{{ risk.asset_name }}</td>
+                    <td class="threat-cell">{{ risk.threat_description }}</td>
+                    <td class="numeric-cell">{{ risk.likelihood }}</td>
+                    <td class="numeric-cell">{{ risk.impact }}</td>
+                    <td><app-risk-score-badge [likelihood]="risk.likelihood" [impact]="risk.impact" /></td>
+                    <td><span class="status-chip" [attr.data-status]="risk.status">{{ statusLabels[risk.status] }}</span></td>
+                    <td class="row-actions">
+                      <button type="button" (click)="openEdit(risk)" [attr.aria-label]="'Modifier ' + risk.code">Modifier</button>
+                      <button class="danger-link" type="button" (click)="deleteRisk(risk)" [attr.aria-label]="'Supprimer ' + risk.code">Supprimer</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    }
+  </section>
+</main>
+
+@if (modalOpen()) {
+  <app-risk-form-modal [risk]="selectedRisk()" (closed)="closeModal()" (saved)="closeModal()" />
+}
