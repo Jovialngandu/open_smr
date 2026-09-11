@@ -6,18 +6,18 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.exceptions import NotFound
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 
-from api.modules.v1.treatment.selectors import (
+from api.modules.v1.treatments.selectors import (
     list_tasks_by_risk,
     list_tasks_by_assignee,
     get_task_by_id,
     get_task_evidences
 )
-from api.modules.v1.treatment.services import (
+from api.modules.v1.treatments.services import (
     create_treatment_task,
     update_task_status,
     upload_evidence_file
 )
-from api.modules.v1.treatment.serializers import (
+from api.modules.v1.treatments.serializers import (
     TreatmentTaskSerializer,
     CreateTreatmentTaskSerializer,
     UpdateTaskStatusSerializer,
