@@ -1,0 +1,73 @@
+import { Component, computed, effect, inject, signal } from '@angular/core';
+
+import { ASSET_CATEGORY_LABELS, Asset, AssetCategory } from '../../../../core/models/governance.models';
+import { ContextService } from '../../../../core/services/context.service';
+import { TopbarComponent } from '../../../../shared/components/topbar/topbar.component';
+import { DicBadgeComponent } from '../../../../shared/components/dic-badge/dic-badge.component';
+import { AssetFormModalComponent } from '../../components/asset-form-modal/asset-form-modal.component';
+import { AssetsService } from '../../services/assets.service';
+
+@Component({
+  selector: 'app-assets-page',
+  imports: [TopbarComponent, DicBadgeComponent, AssetFormModalComponent],
+  templateUrl: './assets-page.component.html',
+})
+export class AssetsPageComponent {
+  protected readonly assetsService = inject(AssetsService);
+  protected readonly context = inject(ContextService);
+  protected readonly search = signal('');
+  protected readonly category = signal<AssetCategory | 'ALL'>('ALL');
+  protected readonly modalOpen = signal(false);
+  protected readonly selectedAsset = signal<Asset | null>(null);
+  protected readonly actionError = signal('');
+  protected readonly categoryLabels = ASSET_CATEGORY_LABELS;
+  protected readonly categories = Object.entries(ASSET_CATEGORY_LABELS) as [AssetCategory, string][];
+
+  protected readonly filteredAssets = computed(() => {
+    const query = this.search().trim().toLocaleLowerCase('fr');
+    const category = this.category();
+    return this.assetsService.assets().filter((asset) => {
+      const matchesCategory = category === 'ALL' || asset.category === category;
+      const matchesSearch = !query || [asset.name, asset.owner_name, asset.description]
+        .some((value) => value.toLocaleLowerCase('fr').includes(query));
+      return matchesCategory && matchesSearch;
+    });
+  });
+  protected readonly highCriticalityCount = computed(() =>
+    this.assetsService.assets().filter((asset) => asset.criticality === 3).length,
+  );
+  protected readonly activeScopeName = computed(() => {
+    const scopeId = this.context.activeScopeId();
+    return this.context.activeOrganization()?.scopes?.find((scope) => scope.id === scopeId)?.name ?? '—';
+  });
+
+  constructor() {
+    effect(() => {
+      const scopeId = this.context.activeScopeId();
+      if (scopeId) this.assetsService.fetchAssets(scopeId);
+    });
+  }
+
+  protected openCreate(): void {
+    this.selectedAsset.set(null);
+    this.modalOpen.set(true);
+  }
+
+  protected openEdit(asset: Asset): void {
+    this.selectedAsset.set(asset);
+    this.modalOpen.set(true);
+  }
+
+  protected closeModal(): void {
+    this.modalOpen.set(false);
+    this.selectedAsset.set(null);
+  }
+
+  protected deleteAsset(asset: Asset): void {
+    if (!confirm(`Supprimer l'actif « ${asset.name} » et les risques qui lui sont rattachés ?`)) return;
+    this.actionError.set('');
+    this.assetsService.deleteAsset(asset.id).subscribe({
+      error: (error: Error) => this.actionError.set(error.message),
+    });
+  }
+}
