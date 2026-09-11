@@ -6,6 +6,7 @@ import { routes } from './app.routes';
 import { jwtInterceptor } from './core/interceptors/jwt.interceptor';
 import { mockAuthInterceptor } from './core/interceptors/mock-auth.interceptor';
 import { mockGovernanceInterceptor } from './core/interceptors/mock-governance.interceptor';
+import { mockWorkspaceInterceptor } from './core/interceptors/mock-workspace.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -15,6 +16,7 @@ export const appConfig: ApplicationConfig = {
       jwtInterceptor,
       mockAuthInterceptor,
       mockGovernanceInterceptor,
+      mockWorkspaceInterceptor,
     ])),
   ],
 };
