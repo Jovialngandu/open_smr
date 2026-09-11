@@ -1,6 +1,6 @@
+# api/modules/v1/permissions.py
 from rest_framework.permissions import BasePermission
-from api.models import UserOrganizationRole
-
+from api.models import UserOrganizationRole, UserScopeAccess, TreatmentTask, Scope
 
 class IsAccountActive(BasePermission):
     """
@@ -77,3 +77,60 @@ class IsRiskOwnerRole(HasRole):
 
 class IsAuditorRole(HasRole):
     allowed_roles = ['ADMIN', 'RSSI', 'AUDITOR']
+    
+
+class CanUpdateTaskStatusPermission(BasePermission):
+    """
+    Vérifie les accès spécifiques à l'objet TreatmentTask (Assigné direct ou accès au Scope).
+    Les accès globaux (Superuser, Admin Org) sont gérés par combinaison dans la vue.
+    """
+    def has_object_permission(self, request, view, obj: TreatmentTask):
+        user = request.user
+
+        # 1. Assignee direct de la tâche
+        if obj.assignee_id == user.id:
+            return True
+
+        # 2. Accès au Scope de la tâche
+        return UserScopeAccess.objects.filter(
+            scope=obj.risk.asset.scope,
+            user_organization_role__user=user,
+            user_organization_role__is_active=True
+        ).exists()
+
+
+
+
+class HasScopeAccessPermission(BasePermission):
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        if request.user.is_superuser:
+            return True
+
+        scope_id = view.kwargs.get('scope_id') or view.kwargs.get('pk')
+        if not scope_id:
+            return True
+
+        # Si le scope n'existe pas du tout, laisse la vue gérer la 404
+        if not Scope.objects.filter(id=scope_id).exists():
+            return True
+
+        # Accès si ADMIN/RSSI dans l'organisation parente
+        is_org_admin_or_rssi = UserOrganizationRole.objects.filter(
+            user=request.user,
+            organization__scopes__id=scope_id,
+            is_active=True,
+            role__in=['ADMIN', 'RSSI']
+        ).exists()
+
+        if is_org_admin_or_rssi:
+            return True
+
+        # Accès si affectation directe dans UserScopeAccess
+        return UserScopeAccess.objects.filter(
+            scope_id=scope_id,
+            user_organization_role__user=request.user,
+            user_organization_role__is_active=True
+        ).exists()

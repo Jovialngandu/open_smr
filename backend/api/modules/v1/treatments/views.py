@@ -6,25 +6,25 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.exceptions import NotFound
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 
-from api.modules.v1.treatment.selectors import (
+from api.modules.v1.treatments.selectors import (
     list_tasks_by_risk,
     list_tasks_by_assignee,
     get_task_by_id,
     get_task_evidences
 )
-from api.modules.v1.treatment.services import (
+from api.modules.v1.treatments.services import (
     create_treatment_task,
     update_task_status,
     upload_evidence_file
 )
-from api.modules.v1.treatment.serializers import (
+from api.modules.v1.treatments.serializers import (
     TreatmentTaskSerializer,
     CreateTreatmentTaskSerializer,
     UpdateTaskStatusSerializer,
     EvidenceSerializer,
     EvidenceUploadSerializer
 )
-
+from api.modules.v1.permissions import IsAccountActive, IsAdminRole, CanUpdateTaskStatusPermission
 
 class TreatmentTaskListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -81,23 +81,6 @@ class TreatmentTaskDetailView(APIView):
         return Response(TreatmentTaskSerializer(task).data, status=status.HTTP_200_OK)
 
 
-class TreatmentTaskStatusView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    @extend_schema(
-        summary="Mettre à jour le statut d'une tâche",
-        request=UpdateTaskStatusSerializer,
-        responses={200: TreatmentTaskSerializer}
-    )
-    def patch(self, request, pk):
-        serializer = UpdateTaskStatusSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        task = update_task_status(
-            task_id=pk,
-            new_status=serializer.validated_data['status']
-        )
-        return Response(TreatmentTaskSerializer(task).data, status=status.HTTP_200_OK)
 
 
 class EvidenceUploadView(APIView):
@@ -132,3 +115,56 @@ class TaskEvidenceListView(APIView):
     def get(self, request, task_id):
         evidences = get_task_evidences(task_id=task_id)
         return Response(EvidenceSerializer(evidences, many=True).data, status=status.HTTP_200_OK)
+    
+    
+# class TreatmentTaskStatusView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     @extend_schema(
+#         summary="Mettre à jour le statut d'une tâche",
+#         request=UpdateTaskStatusSerializer,
+#         responses={200: TreatmentTaskSerializer}
+#     )
+#     def patch(self, request, pk):
+#         serializer = UpdateTaskStatusSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+
+#         task = update_task_status(
+#             task_id=pk,
+#             new_status=serializer.validated_data['status']
+#         )
+#         return Response(TreatmentTaskSerializer(task).data, status=status.HTTP_200_OK)
+
+
+
+class TreatmentTaskStatusView(APIView):
+    # Combinaison DRF : Compte actif AND (Admin de l'Org OR Assigné/Scope)
+    permission_classes = [IsAccountActive & (IsAdminRole | CanUpdateTaskStatusPermission)]
+
+    @extend_schema(
+        summary="Mettre à jour le statut d'une tâche",
+        request=UpdateTaskStatusSerializer,
+        responses={200: TreatmentTaskSerializer}
+    )
+    def patch(self, request, pk):
+        # 1. Récupération de l'objet
+        task = get_task_by_id(task_id=pk)
+        if not task:
+            raise NotFound("Tâche de traitement introuvable.")
+
+        # Injection dynamique de l'org_id pour les permissions globales (ex: IsAdminRole)
+        self.kwargs['org_id'] = task.risk.asset.scope.organization_id
+
+        # 2. Vérification des permissions objet (Déclenche has_object_permission)
+        self.check_object_permissions(request, task)
+
+        # 3. Validation des données du serializer
+        serializer = UpdateTaskStatusSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # 4. Exécution du service de mise à jour
+        updated_task = update_task_status(
+            task_id=pk,
+            new_status=serializer.validated_data['status']
+        )
+        return Response(TreatmentTaskSerializer(updated_task).data, status=status.HTTP_200_OK)

@@ -179,7 +179,28 @@ class TreatmentTaskApiTests(APITestCase):
             'IN_PROGRESS', 
             "La SoA doit repasser à IN_PROGRESS lorsqu'une tâche est réouverte"
         )
+ 
+    def test_unauthorized_user_cannot_update_task_status(self):
+        """Vérifie qu'un utilisateur non assigné et sans accès au scope reçoit un 403 HTTP."""
+        self.client.force_authenticate(user=self.other_user)
+        response = self.client.patch(
+            self.url_status,
+            data={'status': 'COMPLETED'},
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_assignee_can_update_task_status(self):
+        """Vérifie que l'utilisateur assigné peut mettre à jour le statut."""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            self.url_status,
+            data={'status': 'COMPLETED'},
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.status, 'COMPLETED')
 
 class EvidenceApiTests(APITestCase):
 
@@ -244,3 +265,4 @@ class EvidenceApiTests(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['description'], "Preuve existante")
         self.assertEqual(response.data[0]['uploaded_by_email'], self.user.email)
+   
