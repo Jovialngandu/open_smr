@@ -41,7 +41,7 @@ Le serveur recharge automatiquement l'application après une modification du cod
 
 ## Mode de démonstration
 
-Le frontend fonctionne actuellement sans le backend grâce à un mock d'authentification activé dans `src/app/core/config/api.config.ts`.
+Le frontend fonctionne actuellement sans le backend grâce aux mocks d'authentification, d'actifs et de risques activés dans `src/app/core/config/api.config.ts`.
 
 Compte disponible :
 
@@ -58,6 +58,8 @@ Le mode mock permet de tester :
 - le changement d'organisation et de périmètre ;
 - la protection des routes ;
 - les autorisations par rôle.
+- l'inventaire des actifs, son filtrage par périmètre et son CRUD ;
+- le registre des risques, son filtrage par périmètre et son CRUD.
 
 ## Connexion au backend Django
 
@@ -87,6 +89,10 @@ POST /api/v1/auth/register/
 POST /api/v1/auth/refresh/
 GET  /api/v1/auth/me/
 POST /api/v1/auth/switch-context/
+GET|POST /api/v1/assets/
+PUT|DELETE /api/v1/assets/{id}/
+GET|POST /api/v1/risks/
+PUT|DELETE /api/v1/risks/{id}/
 ```
 
 Attention : le formulaire accepte un email ou un identifiant, mais le contrat Django actuel utilise la propriété `username` pour la connexion.
@@ -110,7 +116,9 @@ frontend/
 │       │   ├── models/             contrats TypeScript
 │       │   └── services/           état et logique globale
 │       ├── features/               fonctionnalités métier
-│       │   └── auth/               connexion et inscription
+│       │   ├── auth/               connexion et inscription
+│       │   ├── assets/             inventaire des actifs
+│       │   └── risks/              registre des risques
 │       └── shared/                 composants réutilisables
 │           ├── components/          topbar et composants communs
 │           └── pages/               pages transversales
@@ -230,4 +238,7 @@ Fonctionnalités terminées :
 - connexion et inscription ;
 - topbar globale ;
 - guards d'authentification et de rôles ;
-- backend d'authentification mocké.
+- backend d'authentification mocké ;
+- inventaire des actifs avec badge DIC et formulaire de création/édition ;
+- registre des risques avec score coloré et rattachement aux actifs ;
+- mocks CRUD des actifs et des risques, filtrés par le périmètre actif.
