@@ -1,0 +1,68 @@
+<div class="modal-backdrop" (mousedown)="$event.target === $event.currentTarget && close()">
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="asset-modal-title">
+    <header class="modal-card__header">
+      <div>
+        <p class="eyebrow">Inventaire</p>
+        <h2 id="asset-modal-title">{{ asset() ? "Modifier l'actif" : 'Ajouter un actif' }}</h2>
+      </div>
+      <button class="icon-button" type="button" (click)="close()" aria-label="Fermer la fenêtre">×</button>
+    </header>
+
+    @if (submitError()) {
+      <div class="alert alert--error" role="alert"><span aria-hidden="true">!</span><p>{{ submitError() }}</p></div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="field">
+        <label for="asset-name">Nom de l'actif</label>
+        <input id="asset-name" formControlName="name" placeholder="Ex. Plateforme de paiement" autofocus [attr.aria-invalid]="invalid('name')" />
+        @if (invalid('name')) { <small class="field__error">Le nom de l'actif est obligatoire.</small> }
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="asset-category">Catégorie</label>
+          <select id="asset-category" formControlName="category">
+            @for (category of categories; track category[0]) { <option [value]="category[0]">{{ category[1] }}</option> }
+          </select>
+        </div>
+        <div class="field">
+          <label for="asset-owner">Responsable</label>
+          <select id="asset-owner" formControlName="ownerId">
+            <option value="">Non attribué</option>
+            @for (member of members; track member.id) { <option [value]="member.id">{{ member.name }}</option> }
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="asset-description">Description <span>(facultatif)</span></label>
+        <textarea id="asset-description" formControlName="description" rows="3" placeholder="Usage, emplacement ou données traitées"></textarea>
+      </div>
+
+      <fieldset class="score-fieldset">
+        <legend>Évaluation DIC</legend>
+        <p>Attribuez une valeur de 1 (faible) à 3 (élevée) pour chaque critère.</p>
+        <div class="score-grid">
+          <label>Confidentialité
+            <select formControlName="confidentiality">@for (score of scores; track score) { <option [value]="score">{{ score }}</option> }</select>
+          </label>
+          <label>Intégrité
+            <select formControlName="integrity">@for (score of scores; track score) { <option [value]="score">{{ score }}</option> }</select>
+          </label>
+          <label>Disponibilité
+            <select formControlName="availability">@for (score of scores; track score) { <option [value]="score">{{ score }}</option> }</select>
+          </label>
+        </div>
+      </fieldset>
+
+      <footer class="modal-card__actions">
+        <button class="button button--ghost" type="button" (click)="close()">Annuler</button>
+        <button class="button button--primary" type="submit" [disabled]="assetsService.saving()">
+          @if (assetsService.saving()) { <span class="spinner" aria-hidden="true"></span> Enregistrement… }
+          @else { {{ asset() ? 'Enregistrer les modifications' : "Ajouter l'actif" }} }
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>
