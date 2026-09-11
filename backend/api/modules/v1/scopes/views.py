@@ -11,6 +11,10 @@ from .serializers import (
 from .selectors import list_scopes_by_organization, get_scope_by_id
 from .services import create_scope, update_scope, grant_scope_access, revoke_scope_access
 
+from api.models import Scope
+from api.modules.v1.scopes.selectors import get_scope_dashboard_metrics
+from api.modules.v1.scopes.serializers import ScopeDashboardMetricsSerializer
+from api.modules.v1.permissions import IsAccountActive, HasScopeAccessPermission
 
 class ScopeListCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -114,3 +118,19 @@ class RemoveScopeAccessView(APIView):
             user_id=serializer.validated_data['user_id']
         )
         return Response({"detail": "Accès retiré avec succès."}, status=status.HTTP_200_OK)
+    
+    
+class ScopeDashboardMetricsView(APIView):
+    permission_classes = [IsAccountActive & HasScopeAccessPermission]
+
+    def get(self, request, scope_id):
+        # Vérification de l'existence du scope
+        if not Scope.objects.filter(id=scope_id).exists():
+            return Response(
+                {"detail": "Scope non trouvé."}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        metrics = get_scope_dashboard_metrics(scope_id)
+        serializer = ScopeDashboardMetricsSerializer(metrics)
+        return Response(serializer.data, status=status.HTTP_200_OK)
