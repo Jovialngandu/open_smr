@@ -11,3 +11,8 @@ export const AUTH_ENDPOINTS = {
   profile: `${API_CONFIG.baseUrl}/auth/me/`,
   switchContext: `${API_CONFIG.baseUrl}/auth/switch-context/`,
 } as const;
+
+export const DOMAIN_ENDPOINTS = {
+  assets: `${API_CONFIG.baseUrl}/assets/`,
+  risks: `${API_CONFIG.baseUrl}/risks/`,
+} as const;
