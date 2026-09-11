@@ -39,6 +39,16 @@ const DEMO_PROFILE: UserProfile = {
   roles: ORGANIZATIONS,
 };
 
+const OWNER_PROFILE: UserProfile = {
+  id: 'member-001',
+  username: 'demo.owner',
+  email: 'owner@opensmr.fr',
+  first_name: 'Camille',
+  last_name: 'Durand',
+  is_active: true,
+  roles: [{ ...ORGANIZATIONS[0], role: 'RISK_OWNER' }],
+};
+
 let currentProfile = DEMO_PROFILE;
 let activeOrganizationId = ORGANIZATIONS[0].organization_id;
 let activeScopeId = ORGANIZATIONS[0].scopes[0].id;
@@ -50,10 +60,13 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
 
   if (request.url === AUTH_ENDPOINTS.login && request.method === 'POST') {
     const body = request.body as { username?: string; password?: string };
-    const validIdentity = ['demo@opensmr.fr', 'demo.rssi'].includes(body.username ?? '');
+    const validIdentity = ['demo@opensmr.fr', 'demo.rssi', 'owner@opensmr.fr', 'demo.owner'].includes(body.username ?? '');
     if (!validIdentity || body.password !== 'Demo1234!') {
       return mockError(401, 'Identifiant ou mot de passe incorrect.');
     }
+    currentProfile = ['owner@opensmr.fr', 'demo.owner'].includes(body.username ?? '') ? OWNER_PROFILE : DEMO_PROFILE;
+    activeOrganizationId = currentProfile.roles[0].organization_id;
+    activeScopeId = currentProfile.roles[0].scopes?.[0]?.id ?? '';
     return mockOk(tokensFor(currentProfile));
   }
 
