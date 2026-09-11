@@ -1,5 +1,5 @@
 from django.urls import path
-from api.modules.v1.treatment.views import (
+from api.modules.v1.treatments.views import (
     TreatmentTaskListView,
     TreatmentTaskDetailView,
     TreatmentTaskStatusView,

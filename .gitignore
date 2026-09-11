@@ -45,3 +45,5 @@ Thumbs.db
 *.webp
 export_project.sh
 project_dump.txt
+
+.angular
