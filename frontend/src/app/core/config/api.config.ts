@@ -15,4 +15,13 @@ export const AUTH_ENDPOINTS = {
 export const DOMAIN_ENDPOINTS = {
   assets: `${API_CONFIG.baseUrl}/assets/`,
   risks: `${API_CONFIG.baseUrl}/risks/`,
+  heatmap: `${API_CONFIG.baseUrl}/heatmap/`,
+  treatments: `${API_CONFIG.baseUrl}/treatments/`,
+  evidences: `${API_CONFIG.baseUrl}/treatment/evidences/`,
+  soa: `${API_CONFIG.baseUrl}/soa/`,
+  users: `${API_CONFIG.baseUrl}/users/`,
 } as const;
+
+export function soaExportEndpoint(scopeId: string, format: 'pdf' | 'csv'): string {
+  return `${API_CONFIG.baseUrl}/scopes/${scopeId}/soa/export/?format=${format}`;
+}

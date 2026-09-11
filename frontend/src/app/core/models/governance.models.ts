@@ -47,6 +47,81 @@ export interface MemberOption {
   name: string;
 }
 
+export type TreatmentStatus = 'TODO' | 'IN_PROGRESS' | 'COMPLETED';
+export type ImplementationStatus = 'NOT_IMPLEMENTED' | 'IN_PROGRESS' | 'IMPLEMENTED';
+export type ControlTheme = 'ORGANIZATIONAL' | 'PEOPLE' | 'PHYSICAL' | 'TECHNOLOGICAL';
+
+export interface IsoControl {
+  id: string;
+  code: string;
+  title: string;
+  theme: ControlTheme;
+}
+
+export interface Evidence {
+  id: string;
+  task_id: string;
+  file_name: string;
+  file_type: string;
+  description: string;
+  uploaded_by_name: string;
+  uploaded_at: string;
+  download_url?: string;
+}
+
+export interface TreatmentTask {
+  id: string;
+  scope_id: string;
+  risk_id: string;
+  risk_code: string;
+  iso_control_id: string;
+  control_code: string;
+  assignee_id: string;
+  assignee_name: string;
+  title: string;
+  description: string;
+  due_date: string;
+  status: TreatmentStatus;
+  completed_at: string | null;
+  evidences: Evidence[];
+}
+
+export type TreatmentPayload = Pick<TreatmentTask, 'risk_id' | 'iso_control_id' | 'assignee_id' | 'title' | 'description' | 'due_date'>;
+
+export interface SoaEntry {
+  id: string;
+  scope_id: string;
+  control: IsoControl;
+  is_applicable: boolean;
+  justification: string;
+  implementation_status: ImplementationStatus;
+  updated_at: string;
+  updated_by_name: string;
+}
+
+export interface DashboardSummary {
+  asset_count: number;
+  critical_risk_count: number;
+  soa_compliance_percent: number;
+  overdue_tasks: TreatmentTask[];
+}
+
+export interface HeatmapCell {
+  likelihood: 1 | 2 | 3 | 4 | 5;
+  impact: 1 | 2 | 3 | 4 | 5;
+  risk_count: number;
+  risk_ids: string[];
+}
+
+export interface ManagedUser {
+  id: string;
+  name: string;
+  email: string;
+  role: 'RSSI' | 'RISK_OWNER' | 'AUDITOR';
+  is_active: boolean;
+  scope_ids: string[];
+}
+
 export const ASSET_CATEGORY_LABELS: Record<AssetCategory, string> = {
   HARDWARE: 'Matériel',
   SOFTWARE: 'Logiciel',
@@ -60,4 +135,23 @@ export const RISK_STATUS_LABELS: Record<RiskStatus, string> = {
   IN_MITIGATION: 'En traitement',
   ACCEPTED: 'Accepté',
   CLOSED: 'Clôturé',
+};
+
+export const TREATMENT_STATUS_LABELS: Record<TreatmentStatus, string> = {
+  TODO: 'À faire',
+  IN_PROGRESS: 'En cours',
+  COMPLETED: 'Terminée',
+};
+
+export const IMPLEMENTATION_STATUS_LABELS: Record<ImplementationStatus, string> = {
+  NOT_IMPLEMENTED: 'Non mise en œuvre',
+  IN_PROGRESS: 'En cours',
+  IMPLEMENTED: 'Mise en œuvre',
+};
+
+export const CONTROL_THEME_LABELS: Record<ControlTheme, string> = {
+  ORGANIZATIONAL: 'Organisationnel',
+  PEOPLE: 'Personnel',
+  PHYSICAL: 'Physique',
+  TECHNOLOGICAL: 'Technologique',
 };
