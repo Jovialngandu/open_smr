@@ -39,7 +39,10 @@ export const routes: Routes = [
       featureTitle: 'Inventaire des actifs',
       featureDescription: 'Recensement et suivi de la criticité DIC des actifs du périmètre actif.',
     },
-    loadComponent: loadFeaturePlaceholder,
+    loadComponent: () =>
+      import('./features/assets/pages/assets-page/assets-page.component').then(
+        (module) => module.AssetsPageComponent,
+      ),
   },
   {
     path: 'risks',
@@ -50,7 +53,10 @@ export const routes: Routes = [
       featureTitle: 'Registre des risques',
       featureDescription: 'Identification, évaluation et suivi des scénarios de risque du périmètre actif.',
     },
-    loadComponent: loadFeaturePlaceholder,
+    loadComponent: () =>
+      import('./features/risks/pages/risks-page/risks-page.component').then(
+        (module) => module.RisksPageComponent,
+      ),
   },
   {
     path: 'treatments',
