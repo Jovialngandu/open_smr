@@ -41,7 +41,7 @@ Le serveur recharge automatiquement l'application après une modification du cod
 
 ## Mode de démonstration
 
-Le frontend fonctionne actuellement sans le backend grâce aux mocks d'authentification, d'actifs et de risques activés dans `src/app/core/config/api.config.ts`.
+Le frontend fonctionne actuellement sans le backend grâce aux mocks couvrant l'ensemble du parcours MVP, activés dans `src/app/core/config/api.config.ts`.
 
 Compte disponible :
 
@@ -49,6 +49,8 @@ Compte disponible :
 Identifiant : demo@opensmr.fr
 Mot de passe : Demo1234!
 ```
+
+Le compte `owner@opensmr.fr` avec le même mot de passe permet de tester directement le rôle `RISK_OWNER` et la page `/my-tasks`. Le compte principal peut basculer vers l'organisation Novacare pour tester le rôle `AUDITOR` et le portail d'audit.
 
 Le mode mock permet de tester :
 
@@ -60,6 +62,13 @@ Le mode mock permet de tester :
 - les autorisations par rôle.
 - l'inventaire des actifs, son filtrage par périmètre et son CRUD ;
 - le registre des risques, son filtrage par périmètre et son CRUD.
+- le dashboard, ses indicateurs et la heatmap interactive 5 × 5 ;
+- les plans de traitement et leur suivi ;
+- le dépôt de preuves et la clôture des tâches ;
+- les 93 mesures de la SoA, leur édition et leur synchronisation simulée ;
+- les exports PDF/CSV simulés ;
+- le portail auditeur en lecture seule ;
+- les comptes, rôles et statuts des utilisateurs.
 
 ## Connexion au backend Django
 
@@ -93,6 +102,16 @@ GET|POST /api/v1/assets/
 PUT|DELETE /api/v1/assets/{id}/
 GET|POST /api/v1/risks/
 PUT|DELETE /api/v1/risks/{id}/
+GET /api/v1/heatmap/?scope_id={scope_id}
+GET|POST /api/v1/treatments/
+PATCH /api/v1/treatments/{id}/
+PATCH /api/v1/treatments/{id}/complete/
+POST /api/v1/treatment/evidences/
+GET /api/v1/soa/?scope_id={scope_id}
+PATCH /api/v1/soa/{id}/
+GET /api/v1/scopes/{scope_id}/soa/export/?format=pdf|csv
+GET|POST /api/v1/users/
+PATCH /api/v1/users/{id}/
 ```
 
 Attention : le formulaire accepte un email ou un identifiant, mais le contrat Django actuel utilise la propriété `username` pour la connexion.
@@ -118,7 +137,13 @@ frontend/
 │       ├── features/               fonctionnalités métier
 │       │   ├── auth/               connexion et inscription
 │       │   ├── assets/             inventaire des actifs
-│       │   └── risks/              registre des risques
+│       │   ├── risks/              registre des risques
+│       │   ├── dashboard/          matrice des risques
+│       │   ├── treatments/         plans de traitement
+│       │   ├── my-tasks/           tâches et preuves
+│       │   ├── soa/                déclaration d'applicabilité
+│       │   ├── audit/              portail auditeur
+│       │   └── users/              comptes et habilitations
 │       └── shared/                 composants réutilisables
 │           ├── components/          topbar et composants communs
 │           └── pages/               pages transversales
@@ -135,7 +160,7 @@ Contient les éléments instanciés globalement : authentification, stockage des
 
 ### `features`
 
-Chaque domaine fonctionnel possède son propre dossier. Les futurs modules `assets`, `risks`, `treatments`, `soa` et `my-tasks` doivent rester isolés dans ce dossier.
+Chaque domaine fonctionnel possède son propre dossier : `assets`, `risks`, `dashboard`, `treatments`, `soa`, `my-tasks`, `audit` et `users`.
 
 ### `shared`
 
@@ -158,7 +183,7 @@ Le fichier TypeScript gère l'état et les actions. Le fichier HTML gère la str
 |---|---|---|
 | `/login` | Public | Connexion |
 | `/register` | Public | Inscription |
-| `/dashboard` | Authentifié | Accueil temporaire et contexte actif |
+| `/dashboard` | Authentifié | Indicateurs, heatmap et priorités |
 | `/assets` | ADMIN, RSSI, RISK_OWNER | Inventaire des actifs |
 | `/risks` | ADMIN, RSSI, AUDITOR | Registre des risques |
 | `/treatments` | ADMIN, RSSI, RISK_OWNER | Plans de traitement |
@@ -242,3 +267,23 @@ Fonctionnalités terminées :
 - inventaire des actifs avec badge DIC et formulaire de création/édition ;
 - registre des risques avec score coloré et rattachement aux actifs ;
 - mocks CRUD des actifs et des risques, filtrés par le périmètre actif.
+- dashboard avec indicateurs, tâches urgentes et heatmap filtrante ;
+- plans de traitement avec mesure ISO, responsable et échéance ;
+- espace Mes tâches avec dépôt de preuves PDF/image et clôture ;
+- SoA de 93 mesures avec édition en ligne et exports ;
+- portail auditeur en lecture seule avec téléchargement des preuves ;
+- gestion des utilisateurs et révocation des accès ;
+- mocks HTTP pour tous les modules du MVP.
+
+## Travail restant : connexion au backend réel
+
+Le frontend du MVP est fonctionnel en mode mock. Pour le raccorder à Django :
+
+1. vérifier chaque URL et chaque nom de champ avec les serializers DRF ;
+2. implémenter côté backend les endpoints encore absents, notamment les exports, les preuves et la heatmap ;
+3. garantir l'isolation par `organization_id` et `scope_id` côté serveur ;
+4. implémenter côté Django les snapshots `SoaVersion` et la notification quotidienne des tâches en retard ;
+5. remplacer `useMocks: true` par `useMocks: false` ;
+6. exécuter les tests d'intégration avec le backend et vérifier les téléchargements réels.
+
+Les guards et filtres frontend améliorent l'expérience utilisateur, mais les permissions RBAC doivent toujours être appliquées par Django.
