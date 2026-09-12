@@ -35,6 +35,6 @@ describe('authGuard', () => {
     );
     const tree = await firstValueFrom(result as Observable<boolean | UrlTree>);
 
-    expect(tree.toString()).toBe('/dashboard');
+    expect(tree.toString()).toBe('/select-context');
   });
 });
