@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { map, Observable, tap } from 'rxjs';
+import { forkJoin, map, Observable, of, tap } from 'rxjs';
 
-import { organizationMembersEndpoint, organizationMemberStatusEndpoint } from '../../../core/config/api.config';
+import { organizationMembersEndpoint, organizationMemberStatusEndpoint, scopeAccessEndpoint, scopeAccessRemovalEndpoint } from '../../../core/config/api.config';
 import { UserRole } from '../../../core/models/auth.models';
 import { ManagedUser } from '../../../core/models/governance.models';
 import { ContextService } from '../../../core/services/context.service';
@@ -16,17 +16,33 @@ export class UsersService {
   fetch(): void {
     const organizationId = this.context.activeOrganizationId();
     if (!organizationId) return;
-    this.http.get<BackendMemberRole[]>(organizationMembersEndpoint(organizationId)).pipe(map((members) => members.map(toManagedUser))).subscribe((users) => this.usersState.set(users));
+    const scopeId = this.context.activeScopeId();
+    forkJoin({
+      members: this.http.get<BackendMemberRole[]>(organizationMembersEndpoint(organizationId)),
+      accesses: scopeId ? this.http.get<BackendScopeAccess[]>(scopeAccessEndpoint(scopeId)) : of([]),
+    }).pipe(map(({ members, accesses }) => members.map((member) => toManagedUser(member, accesses, scopeId)))).subscribe((users) => this.usersState.set(users));
   }
   assign(userId: number, role: Exclude<UserRole, 'ADMIN'>): Observable<ManagedUser> {
     const organizationId = this.context.activeOrganizationId();
     if (!organizationId) throw new Error('Aucune organisation active.');
-    return this.http.post<BackendMemberRole>(organizationMembersEndpoint(organizationId), { user_id: userId, role }).pipe(map(toManagedUser), tap((created) => this.usersState.update((users) => [...users.filter((user) => user.id !== created.id), created])));
+    return this.http.post<BackendMemberRole>(organizationMembersEndpoint(organizationId), { user_id: userId, role }).pipe(map((member) => toManagedUser(member, [], this.context.activeScopeId())), tap((created) => this.usersState.update((users) => [...users.filter((user) => user.id !== created.id), created])));
   }
   toggle(user: ManagedUser): void {
     const organizationId = this.context.activeOrganizationId();
     if (!organizationId || !user.role_assignment_id) return;
-    this.http.patch<BackendMemberRole>(organizationMemberStatusEndpoint(organizationId, user.role_assignment_id), { is_active: !user.is_active }).pipe(map(toManagedUser)).subscribe((updated) => this.usersState.update((users) => users.map((item) => item.id === updated.id ? updated : item)));
+    this.http.patch<BackendMemberRole>(organizationMemberStatusEndpoint(organizationId, user.role_assignment_id), { is_active: !user.is_active }).pipe(map((member) => toManagedUser(member, [], this.context.activeScopeId()))).subscribe((updated) => this.usersState.update((users) => users.map((item) => item.id === updated.id ? { ...updated, scope_ids: item.scope_ids } : item)));
+  }
+
+  setScopeAccess(user: ManagedUser, granted: boolean): void {
+    const scopeId = this.context.activeScopeId();
+    if (!scopeId) return;
+    const endpoint = granted ? scopeAccessEndpoint(scopeId) : scopeAccessRemovalEndpoint(scopeId);
+    this.http.post(endpoint, { user_id: Number(user.id) }).subscribe(() =>
+      this.usersState.update((users) => users.map((item) => item.id === user.id ? {
+        ...item,
+        scope_ids: granted ? [...new Set([...item.scope_ids, scopeId])] : item.scope_ids.filter((id) => id !== scopeId),
+      } : item)),
+    );
   }
 }
 
@@ -37,7 +53,10 @@ interface BackendMemberRole {
   is_active: boolean;
 }
 
-function toManagedUser(member: BackendMemberRole): ManagedUser {
+interface BackendScopeAccess { user: { id: number | string } }
+
+function toManagedUser(member: BackendMemberRole, accesses: BackendScopeAccess[], scopeId: string | null): ManagedUser {
   const fullName = `${member.user.first_name} ${member.user.last_name}`.trim();
-  return { id: String(member.user.id), role_assignment_id: member.id, name: fullName || member.user.username, email: member.user.email, role: member.role, is_active: member.is_active, scope_ids: [] };
+  const activeScopeId = accesses.some((access) => String(access.user.id) === String(member.user.id));
+  return { id: String(member.user.id), role_assignment_id: member.id, name: fullName || member.user.username, email: member.user.email, role: member.role, is_active: member.is_active, scope_ids: activeScopeId && scopeId ? [scopeId] : [] };
 }

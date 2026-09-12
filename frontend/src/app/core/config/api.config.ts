@@ -37,6 +37,14 @@ export function scopeDashboardEndpoint(scopeId: string): string {
   return `${DOMAIN_ENDPOINTS.scopes}${scopeId}/dashboard/`;
 }
 
+export function scopeAccessEndpoint(scopeId: string): string {
+  return `${DOMAIN_ENDPOINTS.scopes}${scopeId}/access/`;
+}
+
+export function scopeAccessRemovalEndpoint(scopeId: string): string {
+  return `${scopeAccessEndpoint(scopeId)}remove/`;
+}
+
 export function taskEvidencesEndpoint(taskId: string): string {
   return `${DOMAIN_ENDPOINTS.treatments}${taskId}/evidences/`;
 }
