@@ -46,6 +46,7 @@ export interface RegisterRequest extends LoginRequest {
   last_name: string;
   organization_name?: string;
   organization_code?: string;
+  join_organization_code?: string;
 }
 
 export interface JwtClaims {

@@ -22,7 +22,9 @@ export class RegisterComponent {
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       username: ['', [Validators.required, Validators.minLength(3)]],
+      organizationMode: ['CREATE' as 'CREATE' | 'JOIN' | 'LATER'],
       organization: [''],
+      organizationCode: [''],
       password: ['', [Validators.required, Validators.minLength(12), Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)]],
       confirmation: ['', Validators.required],
       terms: [false, Validators.requiredTrue],
@@ -46,13 +48,24 @@ export class RegisterComponent {
       return;
     }
     const value = this.form.getRawValue();
+    if (value.organizationMode === 'CREATE' && !value.organization.trim()) {
+      this.form.controls.organization.setErrors({ required: true });
+      this.form.controls.organization.markAsTouched();
+      return;
+    }
+    if (value.organizationMode === 'JOIN' && !value.organizationCode.trim()) {
+      this.form.controls.organizationCode.setErrors({ required: true });
+      this.form.controls.organizationCode.markAsTouched();
+      return;
+    }
     this.auth.register({
       first_name: value.firstName.trim(),
       last_name: value.lastName.trim(),
       email: value.email.trim().toLowerCase(),
       username: value.username.trim(),
       password: value.password,
-      organization_name: value.organization.trim() || undefined,
+      organization_name: value.organizationMode === 'CREATE' ? value.organization.trim() : undefined,
+      join_organization_code: value.organizationMode === 'JOIN' ? value.organizationCode.trim().toUpperCase() : undefined,
     }).subscribe({
       next: () => void this.router.navigate(['/select-context']),
       error: (error: Error) => this.errorMessage.set(error.message),
@@ -65,4 +78,3 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
     ? null
     : { passwordMismatch: true };
 }
-
