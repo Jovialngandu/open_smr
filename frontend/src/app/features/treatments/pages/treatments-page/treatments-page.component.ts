@@ -5,6 +5,7 @@ import { ContextService } from '../../../../core/services/context.service';
 import { TopbarComponent } from '../../../../shared/components/topbar/topbar.component';
 import { RisksService } from '../../../risks/services/risks.service';
 import { SoaService } from '../../../soa/services/soa.service';
+import { UsersService } from '../../../users/services/users.service';
 import { TreatmentFormModalComponent } from '../../components/treatment-form-modal/treatment-form-modal.component';
 import { TreatmentsService } from '../../services/treatments.service';
 
@@ -14,6 +15,7 @@ export class TreatmentsPageComponent {
   protected readonly service = inject(TreatmentsService);
   protected readonly risks = inject(RisksService);
   protected readonly soa = inject(SoaService);
+  protected readonly users = inject(UsersService);
   protected readonly modalOpen = signal(false);
   protected readonly statusFilter = signal<TreatmentStatus | 'ALL'>('ALL');
   protected readonly search = signal('');
@@ -40,7 +42,7 @@ export class TreatmentsPageComponent {
     { status: 'COMPLETED', title: 'Terminées', hint: 'Actions justifiées' },
   ];
 
-  constructor() { effect(() => { const id = this.context.activeScopeId(); if (id) { this.service.fetch(id); this.risks.fetchRisks(id); this.soa.fetch(id); } }); }
+  constructor() { effect(() => { const id = this.context.activeScopeId(); if (id) { this.service.fetch(id); this.risks.fetchRisks(id); this.soa.fetch(id); this.users.fetch(); } }); }
   protected tasksFor(status: TreatmentStatus): TreatmentTask[] { return this.visible().filter((item) => item.status === status); }
   protected updateStatus(id: string, event: Event): void { this.move(id, (event.target as HTMLSelectElement).value as TreatmentStatus); }
   protected dragStart(task: TreatmentTask, event: DragEvent): void { this.draggingId.set(task.id); event.dataTransfer?.setData('text/plain', task.id); if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'; }
