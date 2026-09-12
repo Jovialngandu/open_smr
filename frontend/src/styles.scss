@@ -324,8 +324,23 @@ td > small { display: block; max-width: 310px; margin-top: .25rem; overflow: hid
 .risk-score[data-severity="high"] { color: #9a3412; background: #ffedd5; }
 .risk-score[data-severity="critical"] { color: #991b1b; background: #fee2e2; }
 
-.modal-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 1rem; overflow-y: auto; background: rgba(9,31,23,.55); backdrop-filter: blur(5px); }
-.modal-card { width: min(100%, 680px); max-height: calc(100dvh - 2rem); padding: clamp(1.2rem, 3vw, 2rem); overflow-y: auto; border-radius: 1.15rem; background: white; box-shadow: 0 30px 90px rgba(8,31,23,.28); }
+app-asset-form-modal,
+app-risk-form-modal,
+app-treatment-form-modal,
+app-evidence-upload-modal {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: block;
+  pointer-events: auto;
+  isolation: isolate;
+}
+.modal-backdrop { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 1rem; overflow-y: auto; pointer-events: auto; background: rgba(9,31,23,.55); backdrop-filter: blur(5px); }
+.modal-card { position: relative; z-index: 1; width: min(100%, 680px); max-height: calc(100dvh - 2rem); padding: clamp(1.2rem, 3vw, 2rem); overflow-y: auto; pointer-events: auto; border-radius: 1.15rem; background: white; box-shadow: 0 30px 90px rgba(8,31,23,.28); }
+.modal-card input,
+.modal-card select,
+.modal-card textarea,
+.modal-card button { pointer-events: auto; }
 .modal-card__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.4rem; }
 .modal-card__header h2 { margin: 0; font-size: 1.65rem; letter-spacing: -.035em; }
 .icon-button { display: grid; place-items: center; flex: 0 0 2.3rem; height: 2.3rem; color: #52635b; border: 1px solid #dce3df; border-radius: .6rem; background: white; font-size: 1.3rem; }
