@@ -1,5 +1,5 @@
-<div class="modal-backdrop" (mousedown)="$event.target === $event.currentTarget && close()">
-  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="risk-modal-title">
+<div class="modal-backdrop" (click)="$event.target === $event.currentTarget && close()">
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="risk-modal-title" (click)="$event.stopPropagation()">
     <header class="modal-card__header">
       <div>
         <p class="eyebrow">Registre des risques</p>

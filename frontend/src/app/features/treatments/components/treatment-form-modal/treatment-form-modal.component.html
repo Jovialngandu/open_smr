@@ -1,4 +1,4 @@
-<div class="modal-backdrop" role="presentation" (mousedown)="$event.target === $event.currentTarget && closed.emit()"><section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="treatment-title">
+<div class="modal-backdrop" role="presentation" (click)="$event.target === $event.currentTarget && closed.emit()"><section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="treatment-title" (click)="$event.stopPropagation()">
   <header class="modal-card__header"><div><p class="eyebrow">Plan de traitement</p><h2 id="treatment-title">Créer une tâche</h2></div><button class="icon-button" type="button" (click)="closed.emit()" aria-label="Fermer">×</button></header>
   <form [formGroup]="form" (ngSubmit)="submit()">
     <div class="field"><label for="task-title">Action à réaliser</label><input id="task-title" formControlName="title" placeholder="Ex. Corriger les vulnérabilités critiques" [attr.aria-invalid]="form.controls.title.invalid && form.controls.title.touched">@if (form.controls.title.invalid && form.controls.title.touched) { <small class="field__error">Décrivez l’action à réaliser.</small> }</div>
