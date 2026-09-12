@@ -141,7 +141,7 @@ export interface ManagedUser {
   role_assignment_id?: string;
   name: string;
   email: string;
-  role: 'RSSI' | 'RISK_OWNER' | 'AUDITOR';
+  role: 'ADMIN' | 'RSSI' | 'RISK_OWNER' | 'AUDITOR';
   is_active: boolean;
   scope_ids: string[];
 }

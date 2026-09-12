@@ -27,6 +27,10 @@ export class UsersService {
     if (!organizationId) throw new Error('Aucune organisation active.');
     return this.http.post<BackendMemberRole>(organizationMembersEndpoint(organizationId), { user_id: userId, role }).pipe(map((member) => toManagedUser(member, [], this.context.activeScopeId())), tap((created) => this.usersState.update((users) => [...users.filter((user) => user.id !== created.id), created])));
   }
+  changeRole(user: ManagedUser, role: ManagedUser['role']): void {
+    if (role === 'ADMIN') return;
+    this.assign(Number(user.id), role).subscribe();
+  }
   toggle(user: ManagedUser): void {
     const organizationId = this.context.activeOrganizationId();
     if (!organizationId || !user.role_assignment_id) return;
