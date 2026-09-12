@@ -1,7 +1,7 @@
 import { HttpErrorResponse, HttpInterceptorFn, HttpResponse } from '@angular/common/http';
 import { delay, of, throwError } from 'rxjs';
 
-import { API_CONFIG, AUTH_ENDPOINTS } from '../config/api.config';
+import { API_CONFIG, AUTH_ENDPOINTS, DOMAIN_ENDPOINTS } from '../config/api.config';
 import {
   AuthResponse,
   JwtClaims,
@@ -54,9 +54,20 @@ let activeOrganizationId = ORGANIZATIONS[0].organization_id;
 let activeScopeId = ORGANIZATIONS[0].scopes[0].id;
 
 export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
-  if (!API_CONFIG.useMocks || !request.url.startsWith(`${API_CONFIG.baseUrl}/auth/`)) {
+  if (!API_CONFIG.useMocks) {
     return next(request);
   }
+
+  if (request.url === DOMAIN_ENDPOINTS.scopes && request.method === 'POST') {
+    const body = request.body as { organization_id: string; name: string; description?: string };
+    const role = currentProfile.roles.find((item) => item.organization_id === body.organization_id);
+    if (!role || !['ADMIN', 'RSSI'].includes(role.role)) return mockError(403, 'Vous ne pouvez pas créer de périmètre dans cette organisation.');
+    const scope = { id: crypto.randomUUID(), organization_id: body.organization_id, name: body.name, description: body.description ?? '' };
+    role.scopes = [...(role.scopes ?? []), { id: scope.id, name: scope.name }];
+    return mockOk(scope, 201);
+  }
+
+  if (!request.url.startsWith(`${API_CONFIG.baseUrl}/auth/`)) return next(request);
 
   if (request.url === AUTH_ENDPOINTS.login && request.method === 'POST') {
     const body = request.body as { username?: string; password?: string };

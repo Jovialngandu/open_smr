@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { tap } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 
-import { AUTH_ENDPOINTS } from '../config/api.config';
+import { AUTH_ENDPOINTS, DOMAIN_ENDPOINTS } from '../config/api.config';
 import {
   OrganizationRole,
   SwitchContextRequest,
@@ -42,6 +42,12 @@ export class ContextService {
         this.tokens.save(response);
         this.syncClaims();
       }),
+    );
+  }
+
+  createScope(organizationId: string, name: string, description: string): Observable<{ id: string; organization_id: string; name: string; description: string }> {
+    return this.http.post<{ id: string; organization_id: string; name: string; description: string }>(DOMAIN_ENDPOINTS.scopes, { organization_id: organizationId, name, description }).pipe(
+      tap((scope) => this.profileState.update((profile) => profile ? { ...profile, roles: profile.roles.map((role) => role.organization_id === organizationId ? { ...role, scopes: [...(role.scopes ?? []), { id: scope.id, name: scope.name }] } : role) } : profile)),
     );
   }
 
