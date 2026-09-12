@@ -22,6 +22,7 @@ export class RisksPageComponent {
   protected readonly modalOpen = signal(false);
   protected readonly selectedRisk = signal<Risk | null>(null);
   protected readonly actionError = signal('');
+  protected readonly successMessage = signal('');
   protected readonly statusLabels = RISK_STATUS_LABELS;
   protected readonly statuses = Object.entries(RISK_STATUS_LABELS) as [RiskStatus, string][];
 
@@ -52,6 +53,7 @@ export class RisksPageComponent {
   }
 
   protected openCreate(): void {
+    this.successMessage.set('');
     this.selectedRisk.set(null);
     this.modalOpen.set(true);
   }
@@ -64,6 +66,13 @@ export class RisksPageComponent {
   protected closeModal(): void {
     this.modalOpen.set(false);
     this.selectedRisk.set(null);
+  }
+
+  protected riskSaved(risk: Risk): void {
+    this.search.set('');
+    this.status.set('ALL');
+    this.successMessage.set(`Le risque « ${risk.code} » a bien été enregistré.`);
+    this.closeModal();
   }
 
   protected deleteRisk(risk: Risk): void {

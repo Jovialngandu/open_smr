@@ -19,6 +19,7 @@
         <p>Sélectionnez un périmètre pour consulter son registre des risques.</p>
       </section>
     } @else {
+      @if (successMessage()) { <div class="alert alert--success" role="status"><span aria-hidden="true">✓</span><p>{{ successMessage() }}</p></div> }
       <section class="metric-strip" aria-label="Synthèse du registre">
         <div><small>Risques recensés</small><strong>{{ risksService.count() }}</strong></div>
         <div><small>Risques critiques</small><strong class="metric-strip__danger">{{ risksService.criticalCount() }}</strong></div>
@@ -83,5 +84,5 @@
 </main>
 
 @if (modalOpen()) {
-  <app-risk-form-modal [risk]="selectedRisk()" (closed)="closeModal()" (saved)="closeModal()" />
+  <app-risk-form-modal [risk]="selectedRisk()" (closed)="closeModal()" (saved)="riskSaved($event)" />
 }
