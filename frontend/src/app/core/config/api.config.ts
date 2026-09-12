@@ -13,6 +13,7 @@ export const AUTH_ENDPOINTS = {
 } as const;
 
 export const DOMAIN_ENDPOINTS = {
+  organizations: `${API_CONFIG.baseUrl}/organizations/`,
   scopes: `${API_CONFIG.baseUrl}/scopes/`,
   assets: `${API_CONFIG.baseUrl}/assets/`,
   risks: `${API_CONFIG.baseUrl}/risks/`,
@@ -23,6 +24,22 @@ export const DOMAIN_ENDPOINTS = {
   soaVersions: `${API_CONFIG.baseUrl}/soa/versions/`,
   users: `${API_CONFIG.baseUrl}/users/`,
 } as const;
+
+export function organizationMembersEndpoint(organizationId: string): string {
+  return `${DOMAIN_ENDPOINTS.organizations}${organizationId}/members/`;
+}
+
+export function organizationMemberStatusEndpoint(organizationId: string, roleId: string): string {
+  return `${organizationMembersEndpoint(organizationId)}${roleId}/toggle-status/`;
+}
+
+export function scopeDashboardEndpoint(scopeId: string): string {
+  return `${DOMAIN_ENDPOINTS.scopes}${scopeId}/dashboard/`;
+}
+
+export function taskEvidencesEndpoint(taskId: string): string {
+  return `${DOMAIN_ENDPOINTS.treatments}${taskId}/evidences/`;
+}
 
 export function soaExportEndpoint(scopeId: string, format: 'pdf' | 'csv'): string {
   return `${API_CONFIG.baseUrl}/scopes/${scopeId}/soa/export/?format=${format}`;

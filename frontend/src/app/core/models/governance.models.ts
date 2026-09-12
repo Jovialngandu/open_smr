@@ -138,11 +138,18 @@ export interface HeatmapApiResponse {
 
 export interface ManagedUser {
   id: string;
+  role_assignment_id?: string;
   name: string;
   email: string;
   role: 'RSSI' | 'RISK_OWNER' | 'AUDITOR';
   is_active: boolean;
   scope_ids: string[];
+}
+
+export interface ScopeDashboardMetrics {
+  risks_by_level: { high: number; medium: number; low: number };
+  soa_completion: { total_applicable: number; implemented: number; percentage: number };
+  overdue_tasks_count: number;
 }
 
 export const ASSET_CATEGORY_LABELS: Record<AssetCategory, string> = {
