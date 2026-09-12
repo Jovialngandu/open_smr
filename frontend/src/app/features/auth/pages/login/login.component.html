@@ -42,18 +42,18 @@
 
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <div class="field">
-          <label for="identity">Email ou identifiant</label>
+          <label for="identity">Identifiant</label>
           <input
             id="identity"
             type="text"
             formControlName="identity"
             autocomplete="username"
-            placeholder="vous@entreprise.com"
+            placeholder="camille.durand"
             [attr.aria-invalid]="showError('identity')"
             aria-describedby="identity-hint"
           />
           @if (showError('identity')) {
-            <small id="identity-hint" class="field__error">Saisissez votre email ou identifiant.</small>
+            <small id="identity-hint" class="field__error">Saisissez votre identifiant OpenSMR.</small>
           }
         </div>
 
@@ -93,7 +93,7 @@
 
       <div class="demo-note">
         <span class="demo-note__icon" aria-hidden="true">✦</span>
-        <div><strong>Mode démonstration</strong><br /><code>demo&#64;opensmr.fr</code> · <code>Demo1234!</code></div>
+        <div><strong>Mode démonstration</strong><br /><code>demo.rssi</code> · <code>Demo1234!</code></div>
       </div>
 
       <p class="auth-switch">Première visite&nbsp;? <a routerLink="/register">Créer un compte</a></p>
