@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { ContextService } from '../../../core/services/context.service';
@@ -13,7 +14,7 @@ import { TreatmentsService } from '../../treatments/services/treatments.service'
 
 @Component({
   selector: 'app-authenticated-home',
-  imports: [TopbarComponent, HeatmapComponent, RiskScoreBadgeComponent],
+  imports: [TopbarComponent, HeatmapComponent, RiskScoreBadgeComponent, RouterLink],
   templateUrl: './authenticated-home.component.html',
 })
 export class AuthenticatedHomeComponent {
@@ -30,17 +31,24 @@ export class AuthenticatedHomeComponent {
     return selected ? this.risks.risks().filter((risk) => risk.likelihood === selected.likelihood && risk.impact === selected.impact) : this.risks.risks().filter((risk) => risk.score >= 12);
   });
   protected readonly urgentTasks = computed(() => this.treatments.items().filter((task) => task.status !== 'COMPLETED').sort((a, b) => a.due_date.localeCompare(b.due_date)).slice(0, 4));
+  protected readonly personalTasks = computed(() => this.treatments.items().filter((task) => task.assignee_id === this.auth.user()?.id));
+  protected readonly personalOpenCount = computed(() => this.personalTasks().filter((task) => task.status !== 'COMPLETED').length);
+  protected readonly personalEvidenceCount = computed(() => this.personalTasks().reduce((sum, task) => sum + task.evidences.length, 0));
 
   constructor() {
     effect(() => {
       const scopeId = this.context.activeScopeId();
       if (!scopeId) return;
       this.selectedCell.set(null);
-      this.assets.fetchAssets(scopeId);
+      this.treatments.fetch(scopeId);
+      if (this.context.activeRole() === 'RISK_OWNER') {
+        this.assets.fetchAssets(scopeId);
+        return;
+      }
       this.risks.fetchRisks(scopeId);
       this.heatmap.fetch(scopeId);
-      this.treatments.fetch(scopeId);
       this.soa.fetch(scopeId);
+      if (this.context.activeRole() !== 'AUDITOR') this.assets.fetchAssets(scopeId);
     });
   }
 }
