@@ -18,15 +18,15 @@ const ORGANIZATIONS = [
     organization_name: 'Asteria Finance',
     role: 'RSSI' as UserRole,
     scopes: [
-      { id: '8f4b8400-e29b-41d4-a716-446655440101', name: 'Services numériques' },
-      { id: '8f4b8400-e29b-41d4-a716-446655440102', name: 'Datacenter Europe' },
+      { id: '8f4b8400-e29b-41d4-a716-446655440101', organization_id: '8f4b8400-e29b-41d4-a716-446655440001', name: 'Services numériques', description: 'Services numériques critiques.' },
+      { id: '8f4b8400-e29b-41d4-a716-446655440102', organization_id: '8f4b8400-e29b-41d4-a716-446655440001', name: 'Datacenter Europe', description: 'Infrastructure européenne.' },
     ],
   },
   {
     organization_id: '8f4b8400-e29b-41d4-a716-446655440002',
     organization_name: 'Novacare Groupe',
     role: 'AUDITOR' as UserRole,
-    scopes: [{ id: '8f4b8400-e29b-41d4-a716-446655440201', name: 'SI clinique' }],
+    scopes: [{ id: '8f4b8400-e29b-41d4-a716-446655440201', organization_id: '8f4b8400-e29b-41d4-a716-446655440002', name: 'SI clinique', description: 'Système d’information clinique.' }],
   },
 ];
 
@@ -64,8 +64,15 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
     const role = currentProfile.roles.find((item) => item.organization_id === body.organization_id);
     if (!role || !['ADMIN', 'RSSI'].includes(role.role)) return mockError(403, 'Vous ne pouvez pas créer de périmètre dans cette organisation.');
     const scope = { id: createMockId('scope'), organization_id: body.organization_id, name: body.name, description: body.description ?? '' };
-    role.scopes = [...(role.scopes ?? []), { id: scope.id, name: scope.name }];
+    role.scopes = [...role.scopes, scope];
     return mockOk(scope, 201);
+  }
+
+  if (request.url === DOMAIN_ENDPOINTS.scopes && request.method === 'GET') {
+    const organizationId = request.params.get('organization_id');
+    if (!organizationId) return mockError(400, "Le paramètre organization_id est requis.");
+    const role = currentProfile.roles.find((item) => item.organization_id === organizationId);
+    return mockOk(role?.scopes ?? []);
   }
 
   if (!request.url.startsWith(`${API_CONFIG.baseUrl}/auth/`)) return next(request);
