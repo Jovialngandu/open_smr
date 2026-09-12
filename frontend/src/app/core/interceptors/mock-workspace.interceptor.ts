@@ -8,9 +8,9 @@ import { Evidence, IsoControl, ManagedUser, SoaEntry, SoaVersion, TreatmentTask 
 const DIGITAL_SCOPE = '8f4b8400-e29b-41d4-a716-446655440101';
 const DATACENTER_SCOPE = '8f4b8400-e29b-41d4-a716-446655440102';
 const members: ManagedUser[] = [
-  { id: 'member-001', name: 'Camille Durand', email: 'camille.durand@opensmr.fr', role: 'RISK_OWNER', is_active: true, scope_ids: [DIGITAL_SCOPE, DATACENTER_SCOPE] },
-  { id: 'member-002', name: 'Nadia Bernard', email: 'nadia.bernard@opensmr.fr', role: 'RSSI', is_active: true, scope_ids: [DIGITAL_SCOPE] },
-  { id: 'member-003', name: 'Thomas Leroy', email: 'thomas.leroy@opensmr.fr', role: 'AUDITOR', is_active: true, scope_ids: [DIGITAL_SCOPE] },
+  { id: '1', role_assignment_id: 'role-001', name: 'Camille Durand', email: 'camille.durand@opensmr.fr', role: 'RISK_OWNER', is_active: true, scope_ids: [DIGITAL_SCOPE, DATACENTER_SCOPE] },
+  { id: '2', role_assignment_id: 'role-002', name: 'Nadia Bernard', email: 'nadia.bernard@opensmr.fr', role: 'RSSI', is_active: true, scope_ids: [DIGITAL_SCOPE] },
+  { id: '3', role_assignment_id: 'role-003', name: 'Thomas Leroy', email: 'thomas.leroy@opensmr.fr', role: 'AUDITOR', is_active: true, scope_ids: [DIGITAL_SCOPE] },
 ];
 
 const controls: IsoControl[] = Array.from({ length: 93 }, (_, index) => {
@@ -23,10 +23,10 @@ const controls: IsoControl[] = Array.from({ length: 93 }, (_, index) => {
 });
 
 let treatments: TreatmentTask[] = [
-  task('task-001', DIGITAL_SCOPE, 'risk-001', 'RSK-PAY-001', 68, 'member-001', 'Corriger les vulnérabilités exposées', '2026-09-05', 'IN_PROGRESS'),
-  task('task-002', DIGITAL_SCOPE, 'risk-002', 'RSK-DAT-002', 53, 'member-002', 'Renforcer la journalisation des accès', '2026-09-18', 'TODO'),
-  task('task-003', DIGITAL_SCOPE, 'risk-003', 'RSK-API-003', 23, 'member-001', 'Revoir les clauses de sécurité fournisseurs', '2026-09-22', 'TODO'),
-  task('task-004', DATACENTER_SCOPE, 'risk-005', 'RSK-INF-005', 73, 'member-001', 'Tester le plan de restauration', '2026-09-01', 'COMPLETED'),
+  task('task-001', DIGITAL_SCOPE, 'risk-001', 'RSK-PAY-001', 68, '1', 'Corriger les vulnérabilités exposées', '2026-09-05', 'IN_PROGRESS'),
+  task('task-002', DIGITAL_SCOPE, 'risk-002', 'RSK-DAT-002', 53, '2', 'Renforcer la journalisation des accès', '2026-09-18', 'TODO'),
+  task('task-003', DIGITAL_SCOPE, 'risk-003', 'RSK-API-003', 23, '1', 'Revoir les clauses de sécurité fournisseurs', '2026-09-22', 'TODO'),
+  task('task-004', DATACENTER_SCOPE, 'risk-005', 'RSK-INF-005', 73, '1', 'Tester le plan de restauration', '2026-09-01', 'COMPLETED'),
 ];
 
 let soaEntries: SoaEntry[] = [DIGITAL_SCOPE, DATACENTER_SCOPE].flatMap((scopeId) => controls.map((control, index) => ({
@@ -45,6 +45,23 @@ let soaVersions: SoaVersion[] = [
 export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
   if (!API_CONFIG.useMocks) return next(request);
   const scopeId = request.params.get('scope_id');
+  const membersMatch = request.url.match(/\/organizations\/([^/]+)\/members\/$/);
+  if (membersMatch && request.method === 'GET') return ok(members.map(toBackendMember));
+  if (membersMatch && request.method === 'POST') {
+    const body = request.body as { user_id: number; role: ManagedUser['role'] };
+    const existing = members.find((member) => member.id === String(body.user_id));
+    if (!existing) return fail(400, "Ce compte utilisateur n'existe pas.");
+    existing.role = body.role;
+    existing.is_active = true;
+    return ok(toBackendMember(existing));
+  }
+  const memberStatusMatch = request.url.match(/\/organizations\/([^/]+)\/members\/([^/]+)\/toggle-status\/$/);
+  if (memberStatusMatch && request.method === 'PATCH') {
+    const member = members.find((item) => item.role_assignment_id === memberStatusMatch[2]);
+    if (!member) return fail(404, 'Affectation introuvable.');
+    member.is_active = Boolean((request.body as { is_active: boolean }).is_active);
+    return ok(toBackendMember(member));
+  }
   if (request.url === DOMAIN_ENDPOINTS.heatmap && request.method === 'GET') {
     const populated = scopeId === DATACENTER_SCOPE ? [[2, 5, 'risk-005']] : [[4, 5, 'risk-001'], [3, 5, 'risk-002'], [3, 4, 'risk-003'], [4, 3, 'risk-004']];
     const cells = Array.from({ length: 25 }, (_, index) => {
@@ -55,12 +72,12 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
     });
     return ok({ scope_id: scopeId ?? '', total_risks: cells.reduce((sum, cell) => sum + cell.risk_count, 0), matrix: cells.map((cell) => ({ likelihood: cell.likelihood, impact: cell.impact, score: cell.likelihood * cell.impact, count: cell.risk_count })) });
   }
-  if (request.url === DOMAIN_ENDPOINTS.treatments && request.method === 'GET') return ok(treatments.filter((item) => !scopeId || item.scope_id === scopeId));
+  if (request.url === DOMAIN_ENDPOINTS.treatments && request.method === 'GET') return ok(treatments.filter((item) => !scopeId || item.scope_id === scopeId).map(toBackendTask));
   if (request.url === DOMAIN_ENDPOINTS.treatments && request.method === 'POST') {
     const payload = request.body as { risk: string; iso_control: string; assignee: string; title: string; description: string; due_date: string };
     const created = task(createMockId('task'), request.params.get('scope_id') ?? DIGITAL_SCOPE, payload.risk, request.params.get('risk_code') ?? 'RSK', Number(payload.iso_control.replace('control-', '')), payload.assignee, payload.title, payload.due_date, 'TODO', payload.description);
     treatments = [created, ...treatments];
-    return ok(created, 201);
+    return ok(toBackendTask(created), 201);
   }
   const treatmentMatch = request.url.match(/\/treatments\/tasks\/([^/]+)\/(?:status\/)?$/);
   if (treatmentMatch && request.method === 'PATCH') {
@@ -72,7 +89,7 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
     const updated = { ...current, ...changes };
     treatments = treatments.map((item) => item.id === id ? updated : item);
     synchronizeSoa(updated);
-    return ok(updated);
+    return ok(toBackendTask(updated));
   }
   if (request.url === DOMAIN_ENDPOINTS.evidences && request.method === 'POST') {
     const form = request.body as FormData;
@@ -82,7 +99,7 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
     if (!current) return fail(404, 'Tâche introuvable.');
     const evidence: Evidence = { id: createMockId('evidence'), task_id: taskId, file_name: file.name, file_type: file.type, description: String(form.get('description') ?? ''), uploaded_by_name: 'Camille Durand', uploaded_at: new Date().toISOString() };
     treatments = treatments.map((item) => item.id === taskId ? { ...item, evidences: [...item.evidences, evidence] } : item);
-    return ok(evidence, 201);
+    return ok(toBackendEvidence(evidence), 201);
   }
   if (request.url === DOMAIN_ENDPOINTS.soaVersions && request.method === 'GET') return ok(soaVersions.filter((item) => !scopeId || item.scope_id === scopeId));
   if (request.url === DOMAIN_ENDPOINTS.soaVersions && request.method === 'POST') {
@@ -131,6 +148,49 @@ function task(id: string, scopeId: string, riskId: string, riskCode: string, con
 function synchronizeSoa(taskItem: TreatmentTask): void {
   const implementation_status = taskItem.status === 'COMPLETED' && taskItem.evidences.length ? 'IMPLEMENTED' : 'IN_PROGRESS';
   soaEntries = soaEntries.map((entry) => entry.scope_id === taskItem.scope_id && entry.control.id === taskItem.iso_control_id ? { ...entry, implementation_status, updated_at: new Date().toISOString(), updated_by_name: 'Synchronisation automatique' } : entry);
+}
+
+function toBackendTask(item: TreatmentTask) {
+  return {
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    status: item.status,
+    risk: item.risk_id,
+    risk_code: item.risk_code,
+    iso_control: item.iso_control_id,
+    iso_control_code: item.control_code,
+    assignee: item.assignee_id || null,
+    assignee_email: members.find((member) => member.id === item.assignee_id)?.email ?? null,
+    due_date: item.due_date || null,
+    completed_at: item.completed_at,
+    evidences: item.evidences.map(toBackendEvidence),
+    created_at: '2026-09-01T08:00:00Z',
+    updated_at: new Date().toISOString(),
+  };
+}
+
+function toBackendEvidence(item: Evidence) {
+  return {
+    id: item.id,
+    task: item.task_id,
+    uploaded_by: item.uploaded_by_name,
+    uploaded_by_email: item.uploaded_by_name,
+    file_path: item.download_url ?? `/media/evidences/${item.file_name}`,
+    description: item.description,
+    created_at: item.uploaded_at,
+  };
+}
+
+function toBackendMember(member: ManagedUser) {
+  const [firstName, ...lastName] = member.name.split(' ');
+  return {
+    id: member.role_assignment_id,
+    user: { id: Number(member.id), username: member.email.split('@')[0], email: member.email, first_name: firstName, last_name: lastName.join(' ') },
+    role: member.role,
+    is_active: member.is_active,
+    joined_at: '2026-09-01T08:00:00Z',
+  };
 }
 
 function collectionId(url: string, base: string): string | null {
