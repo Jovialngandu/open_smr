@@ -19,6 +19,7 @@
         <p>Sélectionnez un périmètre dans la barre supérieure pour afficher son inventaire.</p>
       </section>
     } @else {
+      @if (successMessage()) { <div class="alert alert--success" role="status"><span aria-hidden="true">✓</span><p>{{ successMessage() }}</p></div> }
       <section class="metric-strip" aria-label="Synthèse de l'inventaire">
         <div><small>Actifs recensés</small><strong>{{ assetsService.count() }}</strong></div>
         <div><small>Criticité élevée</small><strong>{{ highCriticalityCount() }}</strong></div>
@@ -80,5 +81,5 @@
 </main>
 
 @if (modalOpen() && context.activeScopeId(); as scopeId) {
-  <app-asset-form-modal [asset]="selectedAsset()" [scopeId]="scopeId" (closed)="closeModal()" (saved)="closeModal()" />
+  <app-asset-form-modal [asset]="selectedAsset()" [scopeId]="scopeId" (closed)="closeModal()" (saved)="assetSaved($event)" />
 }

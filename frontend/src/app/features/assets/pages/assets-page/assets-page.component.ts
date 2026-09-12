@@ -20,6 +20,7 @@ export class AssetsPageComponent {
   protected readonly modalOpen = signal(false);
   protected readonly selectedAsset = signal<Asset | null>(null);
   protected readonly actionError = signal('');
+  protected readonly successMessage = signal('');
   protected readonly categoryLabels = ASSET_CATEGORY_LABELS;
   protected readonly categories = Object.entries(ASSET_CATEGORY_LABELS) as [AssetCategory, string][];
 
@@ -49,6 +50,7 @@ export class AssetsPageComponent {
   }
 
   protected openCreate(): void {
+    this.successMessage.set('');
     this.selectedAsset.set(null);
     this.modalOpen.set(true);
   }
@@ -61,6 +63,13 @@ export class AssetsPageComponent {
   protected closeModal(): void {
     this.modalOpen.set(false);
     this.selectedAsset.set(null);
+  }
+
+  protected assetSaved(asset: Asset): void {
+    this.search.set('');
+    this.category.set('ALL');
+    this.successMessage.set(`L’actif « ${asset.name} » a bien été enregistré.`);
+    this.closeModal();
   }
 
   protected deleteAsset(asset: Asset): void {
