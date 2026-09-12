@@ -27,7 +27,11 @@ export class TreatmentsService {
   }
 
   setStatus(id: string, status: TreatmentStatus): Observable<TreatmentTask> {
-    return this.http.patch<TreatmentTask>(`${DOMAIN_ENDPOINTS.treatments}${id}/`, { status }).pipe(tap((updated) => this.replace(updated)));
+    const previous = this.itemsState();
+    this.itemsState.update((items) => items.map((item) => item.id === id ? { ...item, status } : item));
+    return this.http.patch<TreatmentTask>(`${DOMAIN_ENDPOINTS.treatments}${id}/`, { status }).pipe(
+      tap({ next: (updated) => this.replace(updated), error: () => this.itemsState.set(previous) }),
+    );
   }
 
   complete(id: string): Observable<TreatmentTask> {
