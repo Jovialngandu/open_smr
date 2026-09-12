@@ -313,12 +313,25 @@ Fonctionnalités terminées :
 - gestion des utilisateurs et révocation des accès ;
 - mocks HTTP pour tous les modules du MVP.
 
-## Travail restant : connexion au backend réel
+## Contrats Django déjà pris en charge
+
+Le frontend s'aligne sur les serializers actuellement exposés :
+
+- `GET /api/v1/auth/me/` fournit le profil et ses rôles ; les périmètres sont ensuite chargés avec `GET /api/v1/scopes/?organization_id=...` ;
+- `POST /api/v1/auth/switch-context/` régénère les deux jetons JWT avec l'organisation et le périmètre actifs ;
+- les membres proviennent de `/api/v1/organizations/{organization_id}/members/` ; l'affectation utilise `user_id` et `role` ;
+- les tâches utilisent les clés Django `risk`, `iso_control`, `assignee` et `iso_control_code` ; une couche d'adaptation les convertit vers le modèle d'affichage Angular ;
+- les preuves sont envoyées en multipart avec `task_id`, `file_path` et `description` ;
+- la heatmap consomme l'enveloppe `{ scope_id, total_risks, matrix }`.
+
+Les mocks renvoient volontairement ces mêmes formes Django. Ils testent ainsi les adaptateurs utilisés lors du futur passage au serveur réel.
+
+## Travail restant : endpoints métier non exposés
 
 Le frontend du MVP est fonctionnel en mode mock. Pour le raccorder à Django :
 
 1. vérifier chaque URL et chaque nom de champ avec les serializers DRF ;
-2. implémenter côté backend les endpoints encore absents, notamment les exports, les preuves et la heatmap ;
+2. implémenter côté backend les endpoints encore absents : actifs, risques, SoA, versions SoA et exports ;
 3. garantir l'isolation par `organization_id` et `scope_id` côté serveur ;
 4. implémenter côté Django les snapshots `SoaVersion` et la notification quotidienne des tâches en retard ;
 5. remplacer `useMocks: true` par `useMocks: false` ;
