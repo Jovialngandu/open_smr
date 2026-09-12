@@ -70,6 +70,11 @@ export class AssetFormModalComponent {
     }
     this.submitError.set('');
     const value = this.form.getRawValue();
+    if (!value.name.trim()) {
+      this.form.controls.name.setErrors({ required: true });
+      this.form.controls.name.markAsTouched();
+      return;
+    }
     const payload: AssetPayload = {
       scope_id: this.scopeId(),
       name: value.name.trim(),
