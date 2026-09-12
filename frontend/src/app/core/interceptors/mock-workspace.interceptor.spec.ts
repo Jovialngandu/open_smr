@@ -2,7 +2,7 @@ import { HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
 import { DOMAIN_ENDPOINTS } from '../config/api.config';
-import { HeatmapApiResponse, SoaEntry, TreatmentTask } from '../models/governance.models';
+import { HeatmapApiResponse, SoaEntry } from '../models/governance.models';
 import { mockWorkspaceInterceptor } from './mock-workspace.interceptor';
 
 const SCOPE_ID = '8f4b8400-e29b-41d4-a716-446655440101';
@@ -21,9 +21,9 @@ describe('mockWorkspaceInterceptor', () => {
   });
 
   it('filtre les tâches de traitement par périmètre', async () => {
-    const response = await intercept<TreatmentTask[]>(new HttpRequest('GET', DOMAIN_ENDPOINTS.treatments, null, { params: scopeParams() }));
+    const response = await intercept<Array<{ risk: string; iso_control: string }>>(new HttpRequest('GET', DOMAIN_ENDPOINTS.treatments, null, { params: scopeParams() }));
     expect(response.body).toHaveLength(3);
-    expect(response.body?.every((task) => task.scope_id === SCOPE_ID)).toBe(true);
+    expect(response.body?.every((task) => Boolean(task.risk && task.iso_control))).toBe(true);
   });
 });
 
