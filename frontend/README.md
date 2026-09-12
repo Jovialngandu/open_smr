@@ -324,6 +324,12 @@ Le frontend s'aligne sur les serializers actuellement exposés :
 - les preuves sont envoyées en multipart avec `task_id`, `file_path` et `description` ;
 - la heatmap consomme l'enveloppe `{ scope_id, total_risks, matrix }`.
 
+### Rejoindre un espace de travail partagé
+
+À l'inscription, une personne peut créer une organisation, rejoindre une organisation existante avec son code, ou créer son compte sans organisation. Le créateur reçoit le rôle `ADMIN`. Une personne qui rejoint reçoit uniquement le rôle initial `RISK_OWNER` et aucun périmètre : elle ne peut donc pas s'attribuer elle-même des privilèges.
+
+Un Admin gère ensuite l'espace commun depuis `/users` : il peut changer le rôle organisationnel, activer ou révoquer le membre, et accorder ou retirer l'accès au périmètre actif. Les rôles disponibles sont `ADMIN`, `RSSI`, `RISK_OWNER` et `AUDITOR`. Django reste l'autorité de contrôle pour toutes ces opérations.
+
 Les mocks renvoient volontairement ces mêmes formes Django. Ils testent ainsi les adaptateurs utilisés lors du futur passage au serveur réel.
 
 ## Travail restant : endpoints métier non exposés
