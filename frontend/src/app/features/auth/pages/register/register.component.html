@@ -28,7 +28,7 @@
       </div>
       <p class="eyebrow">Créez votre espace</p>
       <h2 id="register-title">Commencez votre parcours de conformité</h2>
-      <p class="auth-intro">Quelques informations suffisent. Vous pourrez ensuite inviter votre équipe.</p>
+      <p class="auth-intro">Créez une organisation ou rejoignez l’espace de travail de votre équipe.</p>
 
       @if (errorMessage()) {
         <div class="alert alert--error" role="alert"><span aria-hidden="true">!</span><p>{{ errorMessage() }}</p></div>
@@ -52,17 +52,36 @@
           @if (invalid('email')) { <small class="field__error">Saisissez une adresse email valide.</small> }
         </div>
 
-        <div class="form-grid">
-          <div class="field">
-            <label for="username">Identifiant</label>
-            <input id="username" formControlName="username" autocomplete="username" placeholder="camille.durand" [attr.aria-invalid]="invalid('username')" />
-            @if (invalid('username')) { <small class="field__error">Saisissez au moins 3 caractères.</small> }
-          </div>
-          <div class="field">
-            <label for="organization">Organisation <span>(facultatif)</span></label>
-            <input id="organization" formControlName="organization" autocomplete="organization" placeholder="Asteria Finance" />
-          </div>
+        <div class="field">
+          <label for="username">Identifiant</label>
+          <input id="username" formControlName="username" autocomplete="username" placeholder="camille.durand" [attr.aria-invalid]="invalid('username')" />
+          @if (invalid('username')) { <small class="field__error">Saisissez au moins 3 caractères.</small> }
         </div>
+
+        <div class="field">
+          <label for="organization-mode">Accès à l’espace de travail</label>
+          <select id="organization-mode" formControlName="organizationMode">
+            <option value="CREATE">Créer une nouvelle organisation</option>
+            <option value="JOIN">Rejoindre une organisation existante</option>
+            <option value="LATER">Décider plus tard</option>
+          </select>
+        </div>
+
+        @if (form.controls.organizationMode.value === 'CREATE') {
+          <div class="field">
+            <label for="organization">Nom de la nouvelle organisation</label>
+            <input id="organization" formControlName="organization" autocomplete="organization" placeholder="Asteria Finance" [attr.aria-invalid]="invalid('organization')" />
+            @if (invalid('organization')) { <small class="field__error">Le nom de l’organisation est obligatoire.</small> }
+            <small class="field__hint">Vous en deviendrez l’administrateur.</small>
+          </div>
+        } @else if (form.controls.organizationMode.value === 'JOIN') {
+          <div class="field">
+            <label for="organization-code">Code de l’organisation</label>
+            <input id="organization-code" formControlName="organizationCode" autocomplete="off" placeholder="Ex. ASTERIA" [attr.aria-invalid]="invalid('organizationCode')" />
+            @if (invalid('organizationCode')) { <small class="field__error">Le code fourni par votre administrateur est obligatoire.</small> }
+            <small class="field__hint">Vous rejoindrez l’organisation comme responsable de risque. Un administrateur pourra modifier votre rôle et vos périmètres.</small>
+          </div>
+        }
 
         <div class="field">
           <label for="password">Mot de passe</label>
