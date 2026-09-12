@@ -1,7 +1,7 @@
 import { Component, effect, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { IsoControl, MemberOption, Risk, TreatmentTask } from '../../../../core/models/governance.models';
+import { IsoControl, ManagedUser, Risk, TreatmentTask } from '../../../../core/models/governance.models';
 import { TreatmentsService } from '../../services/treatments.service';
 
 @Component({ selector: 'app-treatment-form-modal', imports: [ReactiveFormsModule], templateUrl: './treatment-form-modal.component.html' })
@@ -9,17 +9,18 @@ export class TreatmentFormModalComponent {
   readonly scopeId = input.required<string>();
   readonly risks = input.required<Risk[]>();
   readonly controls = input.required<IsoControl[]>();
+  readonly members = input.required<ManagedUser[]>();
   readonly closed = output<void>();
   readonly saved = output<TreatmentTask>();
   protected readonly service = inject(TreatmentsService);
   private readonly fb = inject(FormBuilder);
   protected readonly error = signal('');
-  protected readonly members: MemberOption[] = [{ id: 'member-001', name: 'Camille Durand' }, { id: 'member-002', name: 'Nadia Bernard' }, { id: 'member-003', name: 'Thomas Leroy' }];
-  protected readonly form = this.fb.nonNullable.group({ riskId: ['', Validators.required], controlId: ['', Validators.required], assigneeId: ['member-001', Validators.required], title: ['', [Validators.required, Validators.maxLength(160)]], description: [''], dueDate: ['', Validators.required] });
+  protected readonly form = this.fb.nonNullable.group({ riskId: ['', Validators.required], controlId: ['', Validators.required], assigneeId: ['', Validators.required], title: ['', [Validators.required, Validators.maxLength(255)]], description: [''], dueDate: ['', Validators.required] });
 
   constructor() {
     effect(() => { const risk = this.risks()[0]; if (risk && !this.form.controls.riskId.value) this.form.controls.riskId.setValue(risk.id); });
     effect(() => { const control = this.controls()[0]; if (control && !this.form.controls.controlId.value) this.form.controls.controlId.setValue(control.id); });
+    effect(() => { const member = this.members().find((item) => item.is_active); if (member && !this.form.controls.assigneeId.value) this.form.controls.assigneeId.setValue(member.id); });
   }
 
   protected submit(): void {
