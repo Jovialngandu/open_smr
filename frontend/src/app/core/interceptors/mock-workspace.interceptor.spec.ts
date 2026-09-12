@@ -2,16 +2,16 @@ import { HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
 import { DOMAIN_ENDPOINTS } from '../config/api.config';
-import { HeatmapCell, SoaEntry, TreatmentTask } from '../models/governance.models';
+import { HeatmapApiResponse, SoaEntry, TreatmentTask } from '../models/governance.models';
 import { mockWorkspaceInterceptor } from './mock-workspace.interceptor';
 
 const SCOPE_ID = '8f4b8400-e29b-41d4-a716-446655440101';
 
 describe('mockWorkspaceInterceptor', () => {
   it('retourne les 25 cases de la matrice du périmètre', async () => {
-    const response = await intercept<HeatmapCell[]>(new HttpRequest('GET', DOMAIN_ENDPOINTS.heatmap, null, { params: scopeParams() }));
-    expect(response.body).toHaveLength(25);
-    expect(response.body?.reduce((sum, cell) => sum + cell.risk_count, 0)).toBe(4);
+    const response = await intercept<HeatmapApiResponse>(new HttpRequest('GET', DOMAIN_ENDPOINTS.heatmap, null, { params: scopeParams() }));
+    expect(response.body?.matrix).toHaveLength(25);
+    expect(response.body?.total_risks).toBe(4);
   });
 
   it('retourne les 93 mesures de la SoA', async () => {

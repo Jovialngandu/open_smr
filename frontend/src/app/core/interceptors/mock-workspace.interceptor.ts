@@ -2,7 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn, HttpResponse } from '@angular/com
 import { delay, of, throwError } from 'rxjs';
 
 import { API_CONFIG, DOMAIN_ENDPOINTS } from '../config/api.config';
-import { Evidence, IsoControl, ManagedUser, SoaEntry, TreatmentPayload, TreatmentTask } from '../models/governance.models';
+import { Evidence, IsoControl, ManagedUser, SoaEntry, SoaVersion, TreatmentTask } from '../models/governance.models';
 
 const DIGITAL_SCOPE = '8f4b8400-e29b-41d4-a716-446655440101';
 const DATACENTER_SCOPE = '8f4b8400-e29b-41d4-a716-446655440102';
@@ -36,6 +36,11 @@ let soaEntries: SoaEntry[] = [DIGITAL_SCOPE, DATACENTER_SCOPE].flatMap((scopeId)
   updated_at: '2026-09-10T09:00:00Z', updated_by_name: 'Nadia Bernard',
 }))) as SoaEntry[];
 
+let soaVersions: SoaVersion[] = [
+  { id: 'version-001', scope_id: DIGITAL_SCOPE, version_number: 'v1.0-2026', title: 'État initial du SMSI', status: 'APPROVED', created_at: '2026-08-20T10:00:00Z', approved_by_name: 'Nadia Bernard' },
+  { id: 'version-002', scope_id: DIGITAL_SCOPE, version_number: 'v1.1-2026', title: 'Revue de septembre', status: 'DRAFT', created_at: '2026-09-10T09:00:00Z', approved_by_name: null },
+];
+
 export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
   if (!API_CONFIG.useMocks) return next(request);
   const scopeId = request.params.get('scope_id');
@@ -47,21 +52,22 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
       const ids = populated.filter(([v, i]) => v === likelihood && i === impact).map(([, , id]) => String(id));
       return { likelihood, impact, risk_count: ids.length, risk_ids: ids };
     });
-    return ok(cells);
+    return ok({ scope_id: scopeId ?? '', total_risks: cells.reduce((sum, cell) => sum + cell.risk_count, 0), matrix: cells.map((cell) => ({ likelihood: cell.likelihood, impact: cell.impact, score: cell.likelihood * cell.impact, count: cell.risk_count })) });
   }
   if (request.url === DOMAIN_ENDPOINTS.treatments && request.method === 'GET') return ok(treatments.filter((item) => !scopeId || item.scope_id === scopeId));
   if (request.url === DOMAIN_ENDPOINTS.treatments && request.method === 'POST') {
-    const payload = request.body as TreatmentPayload & { scope_id: string; risk_code?: string };
-    const created = task(crypto.randomUUID(), payload.scope_id, payload.risk_id, payload.risk_code ?? 'RSK', Number(payload.iso_control_id.replace('control-', '')), payload.assignee_id, payload.title, payload.due_date, 'TODO', payload.description);
+    const payload = request.body as { risk: string; iso_control: string; assignee: string; title: string; description: string; due_date: string };
+    const created = task(crypto.randomUUID(), request.params.get('scope_id') ?? DIGITAL_SCOPE, payload.risk, request.params.get('risk_code') ?? 'RSK', Number(payload.iso_control.replace('control-', '')), payload.assignee, payload.title, payload.due_date, 'TODO', payload.description);
     treatments = [created, ...treatments];
     return ok(created, 201);
   }
-  const treatmentMatch = request.url.match(/\/treatments\/([^/]+)\/(?:complete\/)?$/);
+  const treatmentMatch = request.url.match(/\/treatments\/tasks\/([^/]+)\/(?:status\/)?$/);
   if (treatmentMatch && request.method === 'PATCH') {
     const id = treatmentMatch[1];
     const current = treatments.find((item) => item.id === id);
     if (!current) return fail(404, 'Tâche introuvable.');
-    const changes = request.url.endsWith('/complete/') ? { status: 'COMPLETED' as const, completed_at: new Date().toISOString() } : request.body as Partial<TreatmentTask>;
+    const requested = request.body as Partial<TreatmentTask>;
+    const changes = requested.status === 'COMPLETED' ? { ...requested, completed_at: new Date().toISOString() } : requested;
     const updated = { ...current, ...changes };
     treatments = treatments.map((item) => item.id === id ? updated : item);
     synchronizeSoa(updated);
@@ -70,12 +76,19 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
   if (request.url === DOMAIN_ENDPOINTS.evidences && request.method === 'POST') {
     const form = request.body as FormData;
     const taskId = String(form.get('task_id'));
-    const file = form.get('file') as File;
+    const file = form.get('file_path') as File;
     const current = treatments.find((item) => item.id === taskId);
     if (!current) return fail(404, 'Tâche introuvable.');
     const evidence: Evidence = { id: crypto.randomUUID(), task_id: taskId, file_name: file.name, file_type: file.type, description: String(form.get('description') ?? ''), uploaded_by_name: 'Camille Durand', uploaded_at: new Date().toISOString() };
     treatments = treatments.map((item) => item.id === taskId ? { ...item, evidences: [...item.evidences, evidence] } : item);
     return ok(evidence, 201);
+  }
+  if (request.url === DOMAIN_ENDPOINTS.soaVersions && request.method === 'GET') return ok(soaVersions.filter((item) => !scopeId || item.scope_id === scopeId));
+  if (request.url === DOMAIN_ENDPOINTS.soaVersions && request.method === 'POST') {
+    const body = request.body as { scope_id: string; title: string };
+    const created: SoaVersion = { id: crypto.randomUUID(), scope_id: body.scope_id, version_number: `v1.${soaVersions.filter((item) => item.scope_id === body.scope_id).length + 1}-2026`, title: body.title, status: 'DRAFT', created_at: new Date().toISOString(), approved_by_name: null };
+    soaVersions = [created, ...soaVersions];
+    return ok(created, 201);
   }
   if (request.url === DOMAIN_ENDPOINTS.soa && request.method === 'GET') return ok(soaEntries.filter((item) => !scopeId || item.scope_id === scopeId));
   const soaId = collectionId(request.url, DOMAIN_ENDPOINTS.soa);
