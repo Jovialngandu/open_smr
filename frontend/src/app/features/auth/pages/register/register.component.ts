@@ -54,7 +54,7 @@ export class RegisterComponent {
       password: value.password,
       organization_name: value.organization.trim() || undefined,
     }).subscribe({
-      next: () => void this.router.navigate(['/dashboard']),
+      next: () => void this.router.navigate(['/select-context']),
       error: (error: Error) => this.errorMessage.set(error.message),
     });
   }
@@ -65,5 +65,4 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
     ? null
     : { passwordMismatch: true };
 }
-
 
