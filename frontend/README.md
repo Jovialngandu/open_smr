@@ -64,6 +64,7 @@ Le mode mock permet de tester :
 - le registre des risques, son filtrage par périmètre et son CRUD.
 - le dashboard, ses indicateurs et la heatmap interactive 5 × 5 ;
 - les plans de traitement et leur suivi ;
+- le tableau Kanban des traitements avec glisser-déposer entre les statuts ;
 - le dépôt de preuves et la clôture des tâches ;
 - les 93 mesures de la SoA, leur édition et leur synchronisation simulée ;
 - les exports PDF/CSV simulés ;
@@ -251,6 +252,30 @@ Exemple de route privée :
 - préserver la navigation au clavier et les attributs ARIA ;
 - ne jamais ajouter de secret ou de vrai token au dépôt ;
 - lancer les tests et le build avant de partager les modifications.
+
+## Suivi des traitements
+
+La page `/treatments` propose deux présentations :
+
+- une vue Tableau de type Kanban, organisée en colonnes « À faire », « En cours » et « Terminées » ;
+- une vue Liste adaptée à la lecture détaillée et aux petits écrans.
+
+Une carte peut être déplacée à la souris entre les colonnes. Le sélecteur présent sur chaque carte offre la même action au clavier et sur mobile. La mise à jour est optimiste : la carte se déplace immédiatement, puis revient à sa position précédente si l'API refuse la modification. Une tâche ne peut pas être terminée tant qu'aucune preuve n'est jointe.
+
+Les filtres permettent de rechercher par action, risque, mesure ISO ou responsable. Chaque carte présente le responsable, l'échéance, le risque, la mesure et le nombre de preuves sans devoir ouvrir une autre page.
+
+## Comportement des formulaires
+
+Les formulaires Actif, Risque, Traitement, Preuve et Utilisateur :
+
+- valident les champs requis avant l'appel HTTP ;
+- refusent les valeurs constituées uniquement d'espaces ;
+- attendent le chargement des listes dépendantes avant d'autoriser la soumission ;
+- affichent une erreur près du champ concerné ;
+- désactivent l'action principale pendant l'enregistrement ;
+- affichent une confirmation et rendent le nouvel élément visible après la réussite.
+
+Le formulaire Risque sélectionne automatiquement le premier actif une fois le chargement terminé, tout en conservant un choix effectué manuellement.
 
 ## État actuel
 
