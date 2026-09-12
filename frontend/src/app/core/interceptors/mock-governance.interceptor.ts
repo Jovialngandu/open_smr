@@ -3,6 +3,7 @@ import { delay, of, throwError } from 'rxjs';
 
 import { API_CONFIG, DOMAIN_ENDPOINTS } from '../config/api.config';
 import { Asset, AssetPayload, Risk, RiskPayload } from '../models/governance.models';
+import { createMockId } from '../utils/mock-id';
 
 const SCOPE_DIGITAL = '8f4b8400-e29b-41d4-a716-446655440101';
 const SCOPE_DATACENTER = '8f4b8400-e29b-41d4-a716-446655440102';
@@ -128,7 +129,7 @@ function risk(
 function buildAsset(payload: AssetPayload, current?: Asset): Asset {
   return {
     ...payload,
-    id: current?.id ?? crypto.randomUUID(),
+    id: current?.id ?? createMockId('asset'),
     owner_name: payload.owner_id ? OWNER_NAMES[payload.owner_id] ?? 'Utilisateur inconnu' : 'Non attribué',
     criticality: Math.max(payload.confidentiality, payload.integrity, payload.availability),
     created_at: current?.created_at ?? new Date().toISOString(),
@@ -140,7 +141,7 @@ function buildRisk(payload: RiskPayload, current?: Risk): Risk {
   const linkedAsset = assets.find((item) => item.id === payload.asset_id)!;
   return {
     ...payload,
-    id: current?.id ?? crypto.randomUUID(),
+    id: current?.id ?? createMockId('risk'),
     asset_name: linkedAsset.name,
     scope_id: linkedAsset.scope_id,
     score: payload.likelihood * payload.impact,
