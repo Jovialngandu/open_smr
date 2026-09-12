@@ -71,6 +71,19 @@ Le mode mock permet de tester :
 - le portail auditeur en lecture seule ;
 - les comptes, rôles et statuts des utilisateurs.
 
+## Parcours métier
+
+```text
+Compte → Organisation → Périmètre → Actif → Risque
+       → Mesure ISO → Tâche assignée → Preuve → SoA versionnée
+```
+
+Après la connexion ou l'inscription, l'utilisateur passe par `/select-context`. Il doit choisir une organisation et un périmètre avant d'ouvrir son dashboard. Un Admin ou un RSSI peut créer le premier périmètre d'une nouvelle organisation directement depuis cet écran.
+
+Le dashboard dépend du rôle : l'Admin et le RSSI pilotent le périmètre, le responsable de risque retrouve ses propres tâches et preuves, et l'auditeur consulte les informations sans action d'édition.
+
+Les 93 mesures ISO ne sont jamais saisies depuis l'interface. Elles proviennent du catalogue de référence chargé côté Django par le seeder `seed_iso_controls.py`.
+
 ## Connexion au backend Django
 
 L'API attendue par défaut est :
@@ -104,10 +117,9 @@ PUT|DELETE /api/v1/assets/{id}/
 GET|POST /api/v1/risks/
 PUT|DELETE /api/v1/risks/{id}/
 GET /api/v1/heatmap/?scope_id={scope_id}
-GET|POST /api/v1/treatments/
-PATCH /api/v1/treatments/{id}/
-PATCH /api/v1/treatments/{id}/complete/
-POST /api/v1/treatment/evidences/
+GET|POST /api/v1/treatments/tasks/
+PATCH /api/v1/treatments/tasks/{id}/status/
+POST /api/v1/treatments/evidences/
 GET /api/v1/soa/?scope_id={scope_id}
 PATCH /api/v1/soa/{id}/
 GET /api/v1/scopes/{scope_id}/soa/export/?format=pdf|csv
@@ -184,6 +196,7 @@ Le fichier TypeScript gère l'état et les actions. Le fichier HTML gère la str
 |---|---|---|
 | `/login` | Public | Connexion |
 | `/register` | Public | Inscription |
+| `/select-context` | Authentifié | Choix de l'organisation et du périmètre |
 | `/dashboard` | Authentifié | Indicateurs, heatmap et priorités |
 | `/assets` | ADMIN, RSSI, RISK_OWNER | Inventaire des actifs |
 | `/risks` | ADMIN, RSSI, AUDITOR | Registre des risques |
