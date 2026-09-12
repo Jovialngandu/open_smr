@@ -134,3 +134,23 @@ class HasScopeAccessPermission(BasePermission):
             user_organization_role__user=request.user,
             user_organization_role__is_active=True
         ).exists()
+
+
+class CanManageScopeAccessPermission(BasePermission):
+    """Réserve l'attribution des périmètres aux ADMIN et RSSI de l'organisation."""
+
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated or not request.user.is_active:
+            return False
+        if request.user.is_superuser:
+            return True
+
+        scope_id = view.kwargs.get('pk')
+        if not scope_id:
+            return False
+        return UserOrganizationRole.objects.filter(
+            user=request.user,
+            organization__scopes__id=scope_id,
+            is_active=True,
+            role__in=['ADMIN', 'RSSI'],
+        ).exists()
