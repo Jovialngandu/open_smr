@@ -13,12 +13,14 @@ export const AUTH_ENDPOINTS = {
 } as const;
 
 export const DOMAIN_ENDPOINTS = {
+  scopes: `${API_CONFIG.baseUrl}/scopes/`,
   assets: `${API_CONFIG.baseUrl}/assets/`,
   risks: `${API_CONFIG.baseUrl}/risks/`,
   heatmap: `${API_CONFIG.baseUrl}/heatmap/`,
-  treatments: `${API_CONFIG.baseUrl}/treatments/`,
-  evidences: `${API_CONFIG.baseUrl}/treatment/evidences/`,
+  treatments: `${API_CONFIG.baseUrl}/treatments/tasks/`,
+  evidences: `${API_CONFIG.baseUrl}/treatments/evidences/`,
   soa: `${API_CONFIG.baseUrl}/soa/`,
+  soaVersions: `${API_CONFIG.baseUrl}/soa/versions/`,
   users: `${API_CONFIG.baseUrl}/users/`,
 } as const;
 

@@ -99,6 +99,16 @@ export interface SoaEntry {
   updated_by_name: string;
 }
 
+export interface SoaVersion {
+  id: string;
+  scope_id: string;
+  version_number: string;
+  title: string;
+  status: 'DRAFT' | 'APPROVED';
+  created_at: string;
+  approved_by_name: string | null;
+}
+
 export interface DashboardSummary {
   asset_count: number;
   critical_risk_count: number;
@@ -111,6 +121,19 @@ export interface HeatmapCell {
   impact: 1 | 2 | 3 | 4 | 5;
   risk_count: number;
   risk_ids: string[];
+}
+
+export interface HeatmapApiCell {
+  likelihood: number;
+  impact: number;
+  score: number;
+  count: number;
+}
+
+export interface HeatmapApiResponse {
+  scope_id: string;
+  total_risks: number;
+  matrix: HeatmapApiCell[];
 }
 
 export interface ManagedUser {
