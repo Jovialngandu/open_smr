@@ -22,7 +22,8 @@
         <div class="field">
           <label for="risk-asset">Actif concerné</label>
           <select id="risk-asset" formControlName="assetId" [attr.aria-invalid]="invalid('assetId')">
-            @if (!assetsService.assets().length) { <option value="">Aucun actif disponible</option> }
+            @if (assetsService.loading()) { <option value="">Chargement des actifs…</option> }
+            @else if (!assetsService.assets().length) { <option value="">Aucun actif disponible</option> }
             @for (asset of assetsService.assets(); track asset.id) { <option [value]="asset.id">{{ asset.name }}</option> }
           </select>
           @if (invalid('assetId')) { <small class="field__error">Sélectionnez un actif.</small> }
@@ -57,7 +58,7 @@
 
       <footer class="modal-card__actions">
         <button class="button button--ghost" type="button" (click)="close()">Annuler</button>
-        <button class="button button--primary" type="submit" [disabled]="risksService.saving() || !assetsService.assets().length">
+        <button class="button button--primary" type="submit" [disabled]="risksService.saving() || assetsService.loading() || !assetsService.assets().length">
           @if (risksService.saving()) { <span class="spinner" aria-hidden="true"></span> Enregistrement… }
           @else { {{ risk() ? 'Enregistrer les modifications' : 'Ajouter le risque' }} }
         </button>

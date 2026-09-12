@@ -1,4 +1,4 @@
-import { Component, effect, HostListener, inject, input, output, signal, untracked } from '@angular/core';
+import { Component, effect, HostListener, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { RISK_STATUS_LABELS, Risk, RiskPayload, RiskStatus } from '../../../../core/models/governance.models';
@@ -36,13 +36,19 @@ export class RiskFormModalComponent {
       const risk = this.risk();
       this.form.reset({
         code: risk?.code ?? '',
-        assetId: risk?.asset_id ?? untracked(() => this.assetsService.assets()[0]?.id ?? ''),
+        assetId: risk?.asset_id ?? '',
         threatDescription: risk?.threat_description ?? '',
         likelihood: risk?.likelihood ?? 1,
         impact: risk?.impact ?? 1,
         status: risk?.status ?? 'OPEN',
       });
       this.submitError.set('');
+    });
+    effect(() => {
+      const firstAsset = this.assetsService.assets()[0];
+      if (!this.risk() && firstAsset && !this.form.controls.assetId.value) {
+        this.form.controls.assetId.setValue(firstAsset.id);
+      }
     });
   }
 
@@ -62,6 +68,12 @@ export class RiskFormModalComponent {
     }
     this.submitError.set('');
     const value = this.form.getRawValue();
+    if (!value.code.trim() || !value.threatDescription.trim()) {
+      if (!value.code.trim()) this.form.controls.code.setErrors({ required: true });
+      if (!value.threatDescription.trim()) this.form.controls.threatDescription.setErrors({ required: true });
+      this.form.markAllAsTouched();
+      return;
+    }
     const payload: RiskPayload = {
       code: value.code.trim().toUpperCase(),
       asset_id: value.assetId,
