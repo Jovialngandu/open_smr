@@ -62,6 +62,25 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
     member.is_active = Boolean((request.body as { is_active: boolean }).is_active);
     return ok(toBackendMember(member));
   }
+  const scopeAccessRemovalMatch = request.url.match(/\/scopes\/([^/]+)\/access\/remove\/$/);
+  if (scopeAccessRemovalMatch && request.method === 'POST') {
+    const body = request.body as { user_id: number };
+    const member = members.find((item) => item.id === String(body.user_id));
+    if (!member) return fail(400, 'Utilisateur introuvable.');
+    member.scope_ids = member.scope_ids.filter((id) => id !== scopeAccessRemovalMatch[1]);
+    return ok({ detail: 'Accès retiré avec succès.' });
+  }
+  const scopeAccessMatch = request.url.match(/\/scopes\/([^/]+)\/access\/$/);
+  if (scopeAccessMatch && request.method === 'GET') {
+    return ok(members.filter((member) => member.scope_ids.includes(scopeAccessMatch[1])).map((member) => toBackendScopeAccess(member, scopeAccessMatch[1])));
+  }
+  if (scopeAccessMatch && request.method === 'POST') {
+    const body = request.body as { user_id: number };
+    const member = members.find((item) => item.id === String(body.user_id));
+    if (!member) return fail(400, 'Utilisateur introuvable.');
+    member.scope_ids = [...new Set([...member.scope_ids, scopeAccessMatch[1]])];
+    return ok(toBackendScopeAccess(member, scopeAccessMatch[1]), 201);
+  }
   if (request.url === DOMAIN_ENDPOINTS.heatmap && request.method === 'GET') {
     const populated = scopeId === DATACENTER_SCOPE ? [[2, 5, 'risk-005']] : [[4, 5, 'risk-001'], [3, 5, 'risk-002'], [3, 4, 'risk-003'], [4, 3, 'risk-004']];
     const cells = Array.from({ length: 25 }, (_, index) => {
@@ -191,6 +210,11 @@ function toBackendMember(member: ManagedUser) {
     is_active: member.is_active,
     joined_at: '2026-09-01T08:00:00Z',
   };
+}
+
+function toBackendScopeAccess(member: ManagedUser, scopeId: string) {
+  const [firstName, ...lastName] = member.name.split(' ');
+  return { id: `access-${scopeId}-${member.id}`, scope: scopeId, user_organization_role: member.role_assignment_id, user: { id: Number(member.id), email: member.email, first_name: firstName, last_name: lastName.join(' ') }, granted_by: 2, granted_at: '2026-09-01T08:00:00Z' };
 }
 
 function collectionId(url: string, base: string): string | null {
