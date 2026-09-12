@@ -2,14 +2,18 @@ export type UserRole = 'ADMIN' | 'RSSI' | 'RISK_OWNER' | 'AUDITOR';
 
 export interface ScopeSummary {
   id: string;
+  organization_id: string;
   name: string;
+  description: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface OrganizationRole {
   organization_id: string;
   organization_name: string;
   role: UserRole;
-  scopes?: ScopeSummary[];
+  scopes: ScopeSummary[];
 }
 
 export interface UserProfile {
@@ -41,6 +45,7 @@ export interface RegisterRequest extends LoginRequest {
   first_name: string;
   last_name: string;
   organization_name?: string;
+  organization_code?: string;
 }
 
 export interface JwtClaims {
