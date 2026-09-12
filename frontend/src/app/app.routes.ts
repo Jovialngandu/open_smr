@@ -21,6 +21,12 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'select-context',
+    title: 'Choisir le contexte | OpenSMR',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/auth/pages/context-selection/context-selection.component').then((module) => module.ContextSelectionComponent),
+  },
+  {
     path: 'dashboard',
     title: 'Tableau de bord | OpenSMR',
     canActivate: [authGuard, roleGuard],
