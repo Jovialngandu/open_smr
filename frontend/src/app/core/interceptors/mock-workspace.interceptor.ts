@@ -2,6 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn, HttpResponse } from '@angular/com
 import { delay, of, throwError } from 'rxjs';
 
 import { API_CONFIG, DOMAIN_ENDPOINTS } from '../config/api.config';
+import { createMockId } from '../utils/mock-id';
 import { Evidence, IsoControl, ManagedUser, SoaEntry, SoaVersion, TreatmentTask } from '../models/governance.models';
 
 const DIGITAL_SCOPE = '8f4b8400-e29b-41d4-a716-446655440101';
@@ -57,7 +58,7 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
   if (request.url === DOMAIN_ENDPOINTS.treatments && request.method === 'GET') return ok(treatments.filter((item) => !scopeId || item.scope_id === scopeId));
   if (request.url === DOMAIN_ENDPOINTS.treatments && request.method === 'POST') {
     const payload = request.body as { risk: string; iso_control: string; assignee: string; title: string; description: string; due_date: string };
-    const created = task(crypto.randomUUID(), request.params.get('scope_id') ?? DIGITAL_SCOPE, payload.risk, request.params.get('risk_code') ?? 'RSK', Number(payload.iso_control.replace('control-', '')), payload.assignee, payload.title, payload.due_date, 'TODO', payload.description);
+    const created = task(createMockId('task'), request.params.get('scope_id') ?? DIGITAL_SCOPE, payload.risk, request.params.get('risk_code') ?? 'RSK', Number(payload.iso_control.replace('control-', '')), payload.assignee, payload.title, payload.due_date, 'TODO', payload.description);
     treatments = [created, ...treatments];
     return ok(created, 201);
   }
@@ -79,14 +80,14 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
     const file = form.get('file_path') as File;
     const current = treatments.find((item) => item.id === taskId);
     if (!current) return fail(404, 'Tâche introuvable.');
-    const evidence: Evidence = { id: crypto.randomUUID(), task_id: taskId, file_name: file.name, file_type: file.type, description: String(form.get('description') ?? ''), uploaded_by_name: 'Camille Durand', uploaded_at: new Date().toISOString() };
+    const evidence: Evidence = { id: createMockId('evidence'), task_id: taskId, file_name: file.name, file_type: file.type, description: String(form.get('description') ?? ''), uploaded_by_name: 'Camille Durand', uploaded_at: new Date().toISOString() };
     treatments = treatments.map((item) => item.id === taskId ? { ...item, evidences: [...item.evidences, evidence] } : item);
     return ok(evidence, 201);
   }
   if (request.url === DOMAIN_ENDPOINTS.soaVersions && request.method === 'GET') return ok(soaVersions.filter((item) => !scopeId || item.scope_id === scopeId));
   if (request.url === DOMAIN_ENDPOINTS.soaVersions && request.method === 'POST') {
     const body = request.body as { scope_id: string; title: string };
-    const created: SoaVersion = { id: crypto.randomUUID(), scope_id: body.scope_id, version_number: `v1.${soaVersions.filter((item) => item.scope_id === body.scope_id).length + 1}-2026`, title: body.title, status: 'DRAFT', created_at: new Date().toISOString(), approved_by_name: null };
+    const created: SoaVersion = { id: createMockId('soa-version'), scope_id: body.scope_id, version_number: `v1.${soaVersions.filter((item) => item.scope_id === body.scope_id).length + 1}-2026`, title: body.title, status: 'DRAFT', created_at: new Date().toISOString(), approved_by_name: null };
     soaVersions = [created, ...soaVersions];
     return ok(created, 201);
   }
@@ -106,7 +107,7 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
   }
   if (request.url === DOMAIN_ENDPOINTS.users && request.method === 'GET') return ok(members);
   if (request.url === DOMAIN_ENDPOINTS.users && request.method === 'POST') {
-    const created = { ...(request.body as Omit<ManagedUser, 'id'>), id: crypto.randomUUID() };
+    const created = { ...(request.body as Omit<ManagedUser, 'id'>), id: createMockId('user') };
     members.push(created);
     return ok(created, 201);
   }

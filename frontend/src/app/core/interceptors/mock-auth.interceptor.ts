@@ -2,6 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn, HttpResponse } from '@angular/com
 import { delay, of, throwError } from 'rxjs';
 
 import { API_CONFIG, AUTH_ENDPOINTS, DOMAIN_ENDPOINTS } from '../config/api.config';
+import { createMockId } from '../utils/mock-id';
 import {
   AuthResponse,
   JwtClaims,
@@ -62,7 +63,7 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
     const body = request.body as { organization_id: string; name: string; description?: string };
     const role = currentProfile.roles.find((item) => item.organization_id === body.organization_id);
     if (!role || !['ADMIN', 'RSSI'].includes(role.role)) return mockError(403, 'Vous ne pouvez pas créer de périmètre dans cette organisation.');
-    const scope = { id: crypto.randomUUID(), organization_id: body.organization_id, name: body.name, description: body.description ?? '' };
+    const scope = { id: createMockId('scope'), organization_id: body.organization_id, name: body.name, description: body.description ?? '' };
     role.scopes = [...(role.scopes ?? []), { id: scope.id, name: scope.name }];
     return mockOk(scope, 201);
   }
