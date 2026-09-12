@@ -1,9 +1,9 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 
 import { DOMAIN_ENDPOINTS } from '../../../core/config/api.config';
-import { HeatmapCell } from '../../../core/models/governance.models';
+import { HeatmapApiResponse, HeatmapCell } from '../../../core/models/governance.models';
 
 @Injectable({ providedIn: 'root' })
 export class HeatmapService {
@@ -15,6 +15,9 @@ export class HeatmapService {
 
   fetch(scopeId: string): void {
     this.loadingState.set(true);
-    this.http.get<HeatmapCell[]>(DOMAIN_ENDPOINTS.heatmap, { params: new HttpParams().set('scope_id', scopeId) }).pipe(finalize(() => this.loadingState.set(false))).subscribe((cells) => this.cellsState.set(cells));
+    this.http.get<HeatmapApiResponse>(DOMAIN_ENDPOINTS.heatmap, { params: new HttpParams().set('scope_id', scopeId) }).pipe(
+      map((response) => response.matrix.map((cell) => ({ likelihood: cell.likelihood as HeatmapCell['likelihood'], impact: cell.impact as HeatmapCell['impact'], risk_count: cell.count, risk_ids: [] }))),
+      finalize(() => this.loadingState.set(false)),
+    ).subscribe((cells) => this.cellsState.set(cells));
   }
 }

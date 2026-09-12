@@ -23,26 +23,28 @@ export class TreatmentsService {
 
   create(scopeId: string, riskCode: string, payload: TreatmentPayload): Observable<TreatmentTask> {
     this.savingState.set(true);
-    return this.http.post<TreatmentTask>(DOMAIN_ENDPOINTS.treatments, { ...payload, scope_id: scopeId, risk_code: riskCode }).pipe(tap((created) => this.itemsState.update((items) => [created, ...items])), finalize(() => this.savingState.set(false)));
+    const params = new HttpParams().set('scope_id', scopeId).set('risk_code', riskCode);
+    const body = { title: payload.title, description: payload.description, risk: payload.risk_id, iso_control: payload.iso_control_id, assignee: payload.assignee_id, due_date: payload.due_date };
+    return this.http.post<TreatmentTask>(DOMAIN_ENDPOINTS.treatments, body, { params }).pipe(tap((created) => this.itemsState.update((items) => [created, ...items])), finalize(() => this.savingState.set(false)));
   }
 
   setStatus(id: string, status: TreatmentStatus): Observable<TreatmentTask> {
     const previous = this.itemsState();
     this.itemsState.update((items) => items.map((item) => item.id === id ? { ...item, status } : item));
-    return this.http.patch<TreatmentTask>(`${DOMAIN_ENDPOINTS.treatments}${id}/`, { status }).pipe(
+    return this.http.patch<TreatmentTask>(`${DOMAIN_ENDPOINTS.treatments}${id}/status/`, { status }).pipe(
       tap({ next: (updated) => this.replace(updated), error: () => this.itemsState.set(previous) }),
     );
   }
 
   complete(id: string): Observable<TreatmentTask> {
-    return this.http.patch<TreatmentTask>(`${DOMAIN_ENDPOINTS.treatments}${id}/complete/`, {}).pipe(tap((updated) => this.replace(updated)));
+    return this.setStatus(id, 'COMPLETED');
   }
 
   uploadEvidence(taskId: string, file: File, description: string): Observable<Evidence> {
     this.savingState.set(true);
     const form = new FormData();
     form.append('task_id', taskId);
-    form.append('file', file);
+    form.append('file_path', file);
     form.append('description', description);
     return this.http.post<Evidence>(DOMAIN_ENDPOINTS.evidences, form).pipe(tap((evidence) => this.itemsState.update((items) => items.map((item) => item.id === taskId ? { ...item, evidences: [...item.evidences, evidence] } : item))), finalize(() => this.savingState.set(false)));
   }
