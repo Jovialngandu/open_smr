@@ -27,6 +27,6 @@ export const guestGuard: CanActivateFn = () => {
   return toObservable(auth.status).pipe(
     filter((status) => status !== 'checking'),
     take(1),
-    map((status) => status === 'anonymous' || router.createUrlTree(['/dashboard'])),
+    map((status) => status === 'anonymous' || router.createUrlTree(['/select-context'])),
   );
 };

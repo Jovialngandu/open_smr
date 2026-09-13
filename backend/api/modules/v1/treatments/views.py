@@ -24,7 +24,7 @@ from api.modules.v1.treatments.serializers import (
     EvidenceSerializer,
     EvidenceUploadSerializer
 )
-from api.modules.v1.permissions import IsAccountActive, IsAdminRole, CanUpdateTaskStatusPermission
+from api.modules.v1.permissions import IsAccountActive, IsAdminRole, CanCreateTreatmentTaskPermission, CanUpdateTaskStatusPermission, user_can_access_scope
 
 class TreatmentTaskListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -40,6 +40,10 @@ class TreatmentTaskListView(APIView):
         risk_id = request.query_params.get('risk_id')
 
         if risk_id:
+            from api.models import Risk
+            risk = Risk.objects.select_related('asset__scope').filter(id=risk_id).first()
+            if not risk or not user_can_access_scope(request.user, risk.asset.scope_id):
+                return Response({"detail": "Accès refusé à ce risque."}, status=status.HTTP_403_FORBIDDEN)
             tasks = list_tasks_by_risk(risk_id=risk_id)
         else:
             # Récupère par défaut TOUTES les tâches de l'utilisateur connecté
@@ -53,6 +57,9 @@ class TreatmentTaskListView(APIView):
         responses={201: TreatmentTaskSerializer}
     )
     def post(self, request):
+        permission = CanCreateTreatmentTaskPermission()
+        if not permission.has_permission(request, self):
+            return Response({"detail": "Seuls un administrateur ou un RSSI peuvent créer une tâche."}, status=status.HTTP_403_FORBIDDEN)
         serializer = CreateTreatmentTaskSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -78,6 +85,8 @@ class TreatmentTaskDetailView(APIView):
         task = get_task_by_id(task_id=pk)
         if not task:
             raise NotFound("Tâche de traitement introuvable.")
+        if task.assignee_id != request.user.id and not user_can_access_scope(request.user, task.risk.asset.scope_id):
+            return Response({"detail": "Accès refusé à cette tâche."}, status=status.HTTP_403_FORBIDDEN)
         return Response(TreatmentTaskSerializer(task).data, status=status.HTTP_200_OK)
 
 
@@ -96,6 +105,15 @@ class EvidenceUploadView(APIView):
         serializer = EvidenceUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        task = get_task_by_id(task_id=serializer.validated_data['task_id'])
+        if not task:
+            raise NotFound("Tâche de traitement introuvable.")
+        can_upload = task.assignee_id == request.user.id or user_can_access_scope(
+            request.user, task.risk.asset.scope_id, ['ADMIN', 'RSSI']
+        )
+        if not can_upload:
+            return Response({"detail": "Vous ne pouvez pas déposer de preuve pour cette tâche."}, status=status.HTTP_403_FORBIDDEN)
+
         evidence = upload_evidence_file(
             task_id=str(serializer.validated_data['task_id']),
             file_path=serializer.validated_data['file_path'],
@@ -113,6 +131,11 @@ class TaskEvidenceListView(APIView):
         responses={200: EvidenceSerializer(many=True)}
     )
     def get(self, request, task_id):
+        task = get_task_by_id(task_id=task_id)
+        if not task:
+            raise NotFound("Tâche de traitement introuvable.")
+        if task.assignee_id != request.user.id and not user_can_access_scope(request.user, task.risk.asset.scope_id):
+            return Response({"detail": "Accès refusé aux preuves de cette tâche."}, status=status.HTTP_403_FORBIDDEN)
         evidences = get_task_evidences(task_id=task_id)
         return Response(EvidenceSerializer(evidences, many=True).data, status=status.HTTP_200_OK)
     

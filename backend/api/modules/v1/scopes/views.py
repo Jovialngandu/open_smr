@@ -14,7 +14,7 @@ from .services import create_scope, update_scope, grant_scope_access, revoke_sco
 from api.models import Scope
 from api.modules.v1.scopes.selectors import get_scope_dashboard_metrics
 from api.modules.v1.scopes.serializers import ScopeDashboardMetricsSerializer
-from api.modules.v1.permissions import IsAccountActive, HasScopeAccessPermission
+from api.modules.v1.permissions import IsAccountActive, HasScopeAccessPermission, CanManageScopeAccessPermission
 
 class ScopeListCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -72,7 +72,7 @@ class ScopeDetailView(APIView):
 
 
 class SetScopeAccessView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanManageScopeAccessPermission]
 
     @extend_schema(summary="Lister les accès d'un Scope", responses={200: UserScopeAccessSerializer(many=True)})
     def get(self, request, pk):
@@ -101,7 +101,7 @@ class SetScopeAccessView(APIView):
         return Response(UserScopeAccessSerializer(access).data, status=status_code)
 
 class RemoveScopeAccessView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanManageScopeAccessPermission]
 
     @extend_schema(
         summary="Retirer un accès à un Scope", 

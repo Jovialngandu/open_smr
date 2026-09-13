@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, finalize, Observable, of, switchMap, tap, throwError } from 'rxjs';
+import { catchError, finalize, Observable, switchMap, tap, throwError } from 'rxjs';
 
 import { AUTH_ENDPOINTS } from '../config/api.config';
 import {
@@ -61,6 +61,7 @@ export class AuthService {
 
   loadProfile(): Observable<UserProfile> {
     return this.http.get<UserProfile>(AUTH_ENDPOINTS.profile).pipe(
+      switchMap((profile) => this.context.hydrateProfile(profile)),
       tap((profile) => {
         this.context.setProfile(profile);
         this.context.syncClaims();
@@ -74,10 +75,11 @@ export class AuthService {
   }
 
   private acceptProfile(profile: UserProfile): Observable<UserProfile> {
-    this.context.setProfile(profile);
-    this.context.syncClaims();
-    this.statusState.set('authenticated');
-    return of(profile);
+    return this.context.hydrateProfile(profile).pipe(tap((hydratedProfile) => {
+      this.context.setProfile(hydratedProfile);
+      this.context.syncClaims();
+      this.statusState.set('authenticated');
+    }));
   }
 
   private endSession(redirect: boolean): void {

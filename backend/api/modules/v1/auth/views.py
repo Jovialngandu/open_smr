@@ -119,7 +119,8 @@ class RegisterView(APIView):
             first_name=serializer.validated_data.get('first_name', ''),
             last_name=serializer.validated_data.get('last_name', ''),
             organization_name=serializer.validated_data.get('organization_name'),
-            organization_code=serializer.validated_data.get('organization_code')
+            organization_code=serializer.validated_data.get('organization_code'),
+            join_organization_code=serializer.validated_data.get('join_organization_code')
         )
 
         refresh = build_jwt_payload_for_user(user)

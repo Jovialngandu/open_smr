@@ -113,6 +113,18 @@ class RegisterSerializer(serializers.Serializer):
     # Champ optionnel si l'utilisateur veut directement créer sa structure/organisation à l'inscription
     organization_name = serializers.CharField(max_length=255, required=False, allow_null=True, allow_blank=True)
     organization_code = serializers.CharField(max_length=50, required=False, allow_null=True, allow_blank=True)
+    join_organization_code = serializers.CharField(max_length=50, required=False, allow_null=True, allow_blank=True)
+
+    def validate(self, attrs):
+        create_name = (attrs.get('organization_name') or '').strip()
+        join_code = (attrs.get('join_organization_code') or '').strip().upper()
+        if create_name and join_code:
+            raise serializers.ValidationError("Choisissez soit la création, soit l'accès à une organisation existante.")
+        if join_code and not Organization.objects.filter(code__iexact=join_code).exists():
+            raise serializers.ValidationError({"join_organization_code": "Aucune organisation ne correspond à ce code."})
+        attrs['organization_name'] = create_name or None
+        attrs['join_organization_code'] = join_code or None
+        return attrs
 
     def validate_organization_code(self, value):
         """Valide l'unicité du code si fourni pour éviter une erreur 500 serveur."""

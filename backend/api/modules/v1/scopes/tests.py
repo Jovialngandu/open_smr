@@ -161,6 +161,14 @@ class ScopeAccessTests(APITestCase):
             ).exists()
         )
 
+    def test_non_manager_cannot_grant_scope_access(self):
+        self.client.force_authenticate(user=self.target_user)
+        url = reverse('scope-access', kwargs={'pk': self.scope.pk})
+
+        response = self.client.post(url, {'user_id': self.admin_user.id}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_list_scope_accesses(self):
         UserScopeAccess.objects.create(
             scope=self.scope,

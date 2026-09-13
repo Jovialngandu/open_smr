@@ -1,7 +1,7 @@
 from uuid import UUID
 from django.db import transaction, IntegrityError
 from django.contrib.auth import get_user_model
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from api.models import Scope, UserScopeAccess, UserOrganizationRole, Organization
 
@@ -24,6 +24,15 @@ def create_scope(
         org = Organization.objects.get(id=organization_id)
     except Organization.DoesNotExist:
         raise ValidationError({"organization_id": "Organisation introuvable."})
+
+    is_manager = created_by_user.is_superuser or UserOrganizationRole.objects.filter(
+        user=created_by_user,
+        organization=org,
+        role__in=['ADMIN', 'RSSI'],
+        is_active=True,
+    ).exists()
+    if not is_manager:
+        raise PermissionDenied("Seuls un administrateur ou un RSSI peuvent créer un périmètre.")
 
     try:
         scope = Scope.objects.create(

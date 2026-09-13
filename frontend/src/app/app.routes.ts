@@ -21,6 +21,12 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'select-context',
+    title: 'Choisir le contexte | OpenSMR',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/auth/pages/context-selection/context-selection.component').then((module) => module.ContextSelectionComponent),
+  },
+  {
     path: 'dashboard',
     title: 'Tableau de bord | OpenSMR',
     canActivate: [authGuard, roleGuard],
@@ -35,11 +41,14 @@ export const routes: Routes = [
     title: 'Inventaire des actifs | OpenSMR',
     canActivate: [authGuard, roleGuard],
     data: {
-      roles: ['ADMIN', 'RSSI', 'RISK_OWNER'],
+      roles: ['ADMIN', 'RSSI'],
       featureTitle: 'Inventaire des actifs',
       featureDescription: 'Recensement et suivi de la criticité DIC des actifs du périmètre actif.',
     },
-    loadComponent: loadFeaturePlaceholder,
+    loadComponent: () =>
+      import('./features/assets/pages/assets-page/assets-page.component').then(
+        (module) => module.AssetsPageComponent,
+      ),
   },
   {
     path: 'risks',
@@ -50,18 +59,21 @@ export const routes: Routes = [
       featureTitle: 'Registre des risques',
       featureDescription: 'Identification, évaluation et suivi des scénarios de risque du périmètre actif.',
     },
-    loadComponent: loadFeaturePlaceholder,
+    loadComponent: () =>
+      import('./features/risks/pages/risks-page/risks-page.component').then(
+        (module) => module.RisksPageComponent,
+      ),
   },
   {
     path: 'treatments',
     title: 'Plans de traitement | OpenSMR',
     canActivate: [authGuard, roleGuard],
     data: {
-      roles: ['ADMIN', 'RSSI', 'RISK_OWNER'],
+      roles: ['ADMIN', 'RSSI'],
       featureTitle: 'Plans de traitement',
       featureDescription: 'Planification et suivi des actions destinées à réduire les risques.',
     },
-    loadComponent: loadFeaturePlaceholder,
+    loadComponent: () => import('./features/treatments/pages/treatments-page/treatments-page.component').then((module) => module.TreatmentsPageComponent),
   },
   {
     path: 'soa',
@@ -72,7 +84,7 @@ export const routes: Routes = [
       featureTitle: "Déclaration d'applicabilité",
       featureDescription: 'Suivi de l\'applicabilité et de la mise en œuvre des 93 mesures ISO 27001:2022.',
     },
-    loadComponent: loadFeaturePlaceholder,
+    loadComponent: () => import('./features/soa/pages/soa-page/soa-page.component').then((module) => module.SoaPageComponent),
   },
   {
     path: 'users',
@@ -83,7 +95,7 @@ export const routes: Routes = [
       featureTitle: 'Utilisateurs et auditeurs',
       featureDescription: 'Gestion des comptes, des rôles et des habilitations par périmètre.',
     },
-    loadComponent: loadFeaturePlaceholder,
+    loadComponent: () => import('./features/users/pages/users-page/users-page.component').then((module) => module.UsersPageComponent),
   },
   {
     path: 'my-tasks',
@@ -94,7 +106,7 @@ export const routes: Routes = [
       featureTitle: 'Mes tâches',
       featureDescription: 'Suivi des actions assignées et dépôt des preuves de réalisation.',
     },
-    loadComponent: loadFeaturePlaceholder,
+    loadComponent: () => import('./features/my-tasks/pages/my-tasks-page/my-tasks-page.component').then((module) => module.MyTasksPageComponent),
   },
   {
     path: 'audit-view',
@@ -105,7 +117,7 @@ export const routes: Routes = [
       featureTitle: "Portail d'audit externe",
       featureDescription: 'Consultation en lecture seule des risques, de la SoA et des preuves.',
     },
-    loadComponent: loadFeaturePlaceholder,
+    loadComponent: () => import('./features/audit/pages/audit-view-page/audit-view-page.component').then((module) => module.AuditViewPageComponent),
   },
   {
     path: 'access-denied',
@@ -119,9 +131,3 @@ export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   { path: '**', redirectTo: 'login' },
 ];
-
-function loadFeaturePlaceholder() {
-  return import('./shared/pages/feature-placeholder/feature-placeholder.component').then(
-    (module) => module.FeaturePlaceholderComponent,
-  );
-}

@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.models.organization import Organization, Scope
+from api.models.organization import Organization, Scope, UserOrganizationRole
 from api.models.iso27001 import Asset, Risk
 
 User = get_user_model()
@@ -20,6 +20,9 @@ class HeatmapApiTests(APITestCase):
         self.organization = Organization.objects.create(name="Org Test")
         self.scope = Scope.objects.create(organization=self.organization, name="Périmètre SI")
         
+        UserOrganizationRole.objects.create(
+            user=self.user, organization=self.organization, role='RSSI'
+        )
         self.asset = Asset.objects.create(
             scope=self.scope,
             owner=self.user,
