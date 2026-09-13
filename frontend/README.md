@@ -46,11 +46,11 @@ Le frontend fonctionne actuellement sans le backend grâce aux mocks couvrant l'
 Compte disponible :
 
 ```text
-Identifiant : demo@opensmr.fr
+Identifiant : demo.rssi
 Mot de passe : Demo1234!
 ```
 
-Le compte `owner@opensmr.fr` avec le même mot de passe permet de tester directement le rôle `RISK_OWNER` et la page `/my-tasks`. Le compte principal peut basculer vers l'organisation Novacare pour tester le rôle `AUDITOR` et le portail d'audit.
+Le compte `demo.owner`, avec le même mot de passe, permet de tester directement le rôle `RISK_OWNER` et la page `/my-tasks`. Le compte `demo.rssi` peut basculer vers l'organisation Novacare pour tester le rôle `AUDITOR` et le portail d'audit.
 
 Le mode mock permet de tester :
 
@@ -69,7 +69,7 @@ Le mode mock permet de tester :
 - les 93 mesures de la SoA, leur édition et leur synchronisation simulée ;
 - les exports PDF/CSV simulés ;
 - le portail auditeur en lecture seule ;
-- les comptes, rôles et statuts des utilisateurs.
+- les comptes, rôles, statuts et habilitations par périmètre.
 
 ## Parcours métier
 
@@ -104,7 +104,7 @@ export const API_CONFIG = {
 
 Le backend doit autoriser l'origine `http://localhost:4200` dans sa configuration CORS.
 
-Endpoints utilisés :
+Endpoints déjà exposés par Django et pris en charge par le frontend :
 
 ```text
 POST /api/v1/auth/login/
@@ -112,22 +112,21 @@ POST /api/v1/auth/register/
 POST /api/v1/auth/refresh/
 GET  /api/v1/auth/me/
 POST /api/v1/auth/switch-context/
-GET|POST /api/v1/assets/
-PUT|DELETE /api/v1/assets/{id}/
-GET|POST /api/v1/risks/
-PUT|DELETE /api/v1/risks/{id}/
+GET|POST /api/v1/organizations/
+GET|POST /api/v1/organizations/{organization_id}/members/
+PATCH /api/v1/organizations/{organization_id}/members/{role_id}/toggle-status/
+GET|POST /api/v1/scopes/
+GET|POST /api/v1/scopes/{scope_id}/access/
+POST /api/v1/scopes/{scope_id}/access/remove/
+GET /api/v1/scopes/{scope_id}/dashboard/
 GET /api/v1/heatmap/?scope_id={scope_id}
 GET|POST /api/v1/treatments/tasks/
 PATCH /api/v1/treatments/tasks/{id}/status/
 POST /api/v1/treatments/evidences/
-GET /api/v1/soa/?scope_id={scope_id}
-PATCH /api/v1/soa/{id}/
-GET /api/v1/scopes/{scope_id}/soa/export/?format=pdf|csv
-GET|POST /api/v1/users/
-PATCH /api/v1/users/{id}/
+GET /api/v1/treatments/tasks/{id}/evidences/
 ```
 
-Attention : le formulaire accepte un email ou un identifiant, mais le contrat Django actuel utilise la propriété `username` pour la connexion.
+Les endpoints Actifs, Risques, SoA, versions SoA et export restent simulés : leurs modèles Django existent, mais leurs routes DRF ne sont pas encore exposées. Le formulaire de connexion transmet uniquement la propriété `username`, conformément au contrat Django actuel.
 
 ## Organisation du projet
 
@@ -198,9 +197,9 @@ Le fichier TypeScript gère l'état et les actions. Le fichier HTML gère la str
 | `/register` | Public | Inscription |
 | `/select-context` | Authentifié | Choix de l'organisation et du périmètre |
 | `/dashboard` | Authentifié | Indicateurs, heatmap et priorités |
-| `/assets` | ADMIN, RSSI, RISK_OWNER | Inventaire des actifs |
+| `/assets` | ADMIN, RSSI | Inventaire des actifs |
 | `/risks` | ADMIN, RSSI, AUDITOR | Registre des risques |
-| `/treatments` | ADMIN, RSSI, RISK_OWNER | Plans de traitement |
+| `/treatments` | ADMIN, RSSI | Plans de traitement |
 | `/soa` | Tous les rôles | Déclaration d'applicabilité |
 | `/users` | ADMIN, RSSI | Utilisateurs et habilitations |
 | `/my-tasks` | RISK_OWNER | Tâches assignées |
@@ -311,7 +310,10 @@ Fonctionnalités terminées :
 - SoA de 93 mesures avec édition en ligne et exports ;
 - portail auditeur en lecture seule avec téléchargement des preuves ;
 - gestion des utilisateurs et révocation des accès ;
-- mocks HTTP pour tous les modules du MVP.
+- mocks HTTP pour tous les modules du MVP, avec les mêmes enveloppes que les serializers Django disponibles ;
+- métriques du dashboard issues de `/scopes/{scope_id}/dashboard/` ;
+- propriétaires d'actifs issus des membres actifs de l'organisation ;
+- lecture seule effective des risques et preuves pour l'auditeur.
 
 ## Contrats Django déjà pris en charge
 
@@ -328,7 +330,7 @@ Le frontend s'aligne sur les serializers actuellement exposés :
 
 À l'inscription, une personne peut créer une organisation, rejoindre une organisation existante avec son code, ou créer son compte sans organisation. Le créateur reçoit le rôle `ADMIN`. Une personne qui rejoint reçoit uniquement le rôle initial `RISK_OWNER` et aucun périmètre : elle ne peut donc pas s'attribuer elle-même des privilèges.
 
-Un Admin gère ensuite l'espace commun depuis `/users` : il peut changer le rôle organisationnel, activer ou révoquer le membre, et accorder ou retirer l'accès au périmètre actif. Les rôles disponibles sont `ADMIN`, `RSSI`, `RISK_OWNER` et `AUDITOR`. Django reste l'autorité de contrôle pour toutes ces opérations.
+Un Admin gère ensuite l'espace commun depuis `/users` : il peut changer le rôle organisationnel, activer ou révoquer le membre, et accorder ou retirer l'accès au périmètre actif. Un RSSI peut uniquement gérer les accès aux périmètres. Les rôles disponibles sont `ADMIN`, `RSSI`, `RISK_OWNER` et `AUDITOR`. Django reste l'autorité de contrôle pour toutes ces opérations.
 
 Les mocks renvoient volontairement ces mêmes formes Django. Ils testent ainsi les adaptateurs utilisés lors du futur passage au serveur réel.
 
@@ -336,11 +338,11 @@ Les mocks renvoient volontairement ces mêmes formes Django. Ils testent ainsi l
 
 Le frontend du MVP est fonctionnel en mode mock. Pour le raccorder à Django :
 
-1. vérifier chaque URL et chaque nom de champ avec les serializers DRF ;
-2. implémenter côté backend les endpoints encore absents : actifs, risques, SoA, versions SoA et exports ;
+1. implémenter côté backend les endpoints encore absents : actifs, risques, SoA, versions SoA et exports ;
+2. valider leurs serializers puis, si nécessaire, ajuster uniquement les adaptateurs des services Angular ;
 3. garantir l'isolation par `organization_id` et `scope_id` côté serveur ;
 4. implémenter côté Django les snapshots `SoaVersion` et la notification quotidienne des tâches en retard ;
-5. remplacer `useMocks: true` par `useMocks: false` ;
+5. remplacer `useMocks: true` par `useMocks: false` lorsque ces routes seront disponibles ;
 6. exécuter les tests d'intégration avec le backend et vérifier les téléchargements réels.
 
 Les guards et filtres frontend améliorent l'expérience utilisateur, mais les permissions RBAC doivent toujours être appliquées par Django.
