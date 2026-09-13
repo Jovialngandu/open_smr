@@ -7,9 +7,9 @@
         <h1>Registre des risques</h1>
         <p>Identifiez les scénarios redoutés, mesurez leur niveau brut et suivez leur traitement.</p>
       </div>
-      <button class="button button--primary" type="button" (click)="openCreate()" [disabled]="!context.activeScopeId() || !assetsService.assets().length">
+      @if (editable()) { <button class="button button--primary" type="button" (click)="openCreate()" [disabled]="!context.activeScopeId() || !assetsService.assets().length">
         <span aria-hidden="true">+</span> Ajouter un risque
-      </button>
+      </button> }
     </header>
 
     @if (!context.activeScopeId()) {
@@ -57,7 +57,7 @@
         } @else {
           <div class="table-scroll">
             <table>
-              <thead><tr><th>Code</th><th>Actif</th><th>Menace</th><th>Vraisemblance</th><th>Impact</th><th>Score</th><th>Statut</th><th><span class="sr-only">Actions</span></th></tr></thead>
+              <thead><tr><th>Code</th><th>Actif</th><th>Menace</th><th>Vraisemblance</th><th>Impact</th><th>Score</th><th>Statut</th>@if (editable()) { <th><span class="sr-only">Actions</span></th> }</tr></thead>
               <tbody>
                 @for (risk of filteredRisks(); track risk.id) {
                   <tr>
@@ -68,10 +68,10 @@
                     <td class="numeric-cell">{{ risk.impact }}</td>
                     <td><app-risk-score-badge [likelihood]="risk.likelihood" [impact]="risk.impact" /></td>
                     <td><span class="status-chip" [attr.data-status]="risk.status">{{ statusLabels[risk.status] }}</span></td>
-                    <td class="row-actions">
+                    @if (editable()) { <td class="row-actions">
                       <button type="button" (click)="openEdit(risk)" [attr.aria-label]="'Modifier ' + risk.code">Modifier</button>
                       <button class="danger-link" type="button" (click)="deleteRisk(risk)" [attr.aria-label]="'Supprimer ' + risk.code">Supprimer</button>
-                    </td>
+                    </td> }
                   </tr>
                 }
               </tbody>

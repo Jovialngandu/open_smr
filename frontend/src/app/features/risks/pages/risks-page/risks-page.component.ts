@@ -25,6 +25,7 @@ export class RisksPageComponent {
   protected readonly successMessage = signal('');
   protected readonly statusLabels = RISK_STATUS_LABELS;
   protected readonly statuses = Object.entries(RISK_STATUS_LABELS) as [RiskStatus, string][];
+  protected readonly editable = computed(() => ['ADMIN', 'RSSI'].includes(this.context.activeRole() ?? ''));
 
   protected readonly filteredRisks = computed(() => {
     const query = this.search().trim().toLocaleLowerCase('fr');
@@ -47,7 +48,7 @@ export class RisksPageComponent {
       const scopeId = this.context.activeScopeId();
       if (scopeId) {
         this.risksService.fetchRisks(scopeId);
-        this.assetsService.fetchAssets(scopeId);
+        if (this.editable()) this.assetsService.fetchAssets(scopeId);
       }
     });
   }
