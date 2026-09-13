@@ -45,6 +45,11 @@ let soaVersions: SoaVersion[] = [
 export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
   if (!API_CONFIG.useMocks) return next(request);
   const scopeId = request.params.get('scope_id');
+  const dashboardMatch = request.url.match(/\/scopes\/([^/]+)\/dashboard\/$/);
+  if (dashboardMatch && request.method === 'GET') {
+    const isDatacenter = dashboardMatch[1] === DATACENTER_SCOPE;
+    return ok({ risks_by_level: { high: isDatacenter ? 0 : 2, medium: isDatacenter ? 1 : 2, low: 0 }, soa_completion: { total_applicable: 84, implemented: isDatacenter ? 31 : 30, percentage: isDatacenter ? 36.9 : 35.71 }, overdue_tasks_count: isDatacenter ? 0 : 1 });
+  }
   const membersMatch = request.url.match(/\/organizations\/([^/]+)\/members\/$/);
   if (membersMatch && request.method === 'GET') return ok(members.map(toBackendMember));
   if (membersMatch && request.method === 'POST') {
