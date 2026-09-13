@@ -45,7 +45,7 @@ const DEMO_PROFILE: UserProfile = {
 };
 
 const OWNER_PROFILE: UserProfile = {
-  id: 'member-001',
+  id: '1',
   username: 'demo.owner',
   email: 'owner@opensmr.fr',
   first_name: 'Camille',
