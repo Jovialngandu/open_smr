@@ -81,5 +81,5 @@
 </main>
 
 @if (modalOpen() && context.activeScopeId(); as scopeId) {
-  <app-asset-form-modal [asset]="selectedAsset()" [scopeId]="scopeId" (closed)="closeModal()" (saved)="assetSaved($event)" />
+  <app-asset-form-modal [asset]="selectedAsset()" [scopeId]="scopeId" [members]="members()" (closed)="closeModal()" (saved)="assetSaved($event)" />
 }
