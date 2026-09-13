@@ -1,6 +1,24 @@
 # api/modules/v1/permissions.py
 from rest_framework.permissions import BasePermission
-from api.models import UserOrganizationRole, UserScopeAccess, TreatmentTask, Scope
+from api.models import UserOrganizationRole, UserScopeAccess, TreatmentTask, Scope, Risk
+
+
+def user_can_access_scope(user, scope_id, allowed_roles=None):
+    if user.is_superuser:
+        return True
+    role_query = UserOrganizationRole.objects.filter(
+        user=user, organization__scopes__id=scope_id, is_active=True
+    )
+    if allowed_roles:
+        role_query = role_query.filter(role__in=allowed_roles)
+    if role_query.filter(role__in=['ADMIN', 'RSSI']).exists():
+        return True
+    return UserScopeAccess.objects.filter(
+        scope_id=scope_id,
+        user_organization_role__user=user,
+        user_organization_role__is_active=True,
+        **({'user_organization_role__role__in': allowed_roles} if allowed_roles else {}),
+    ).exists()
 
 class IsAccountActive(BasePermission):
     """
@@ -92,11 +110,25 @@ class CanUpdateTaskStatusPermission(BasePermission):
             return True
 
         # 2. Accès au Scope de la tâche
-        return UserScopeAccess.objects.filter(
-            scope=obj.risk.asset.scope,
-            user_organization_role__user=user,
-            user_organization_role__is_active=True
-        ).exists()
+        return user_can_access_scope(user, obj.risk.asset.scope_id, ['ADMIN', 'RSSI'])
+
+
+class CanCreateTreatmentTaskPermission(BasePermission):
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated or not request.user.is_active:
+            return False
+        risk_id = request.data.get('risk')
+        risk = Risk.objects.select_related('asset__scope').filter(id=risk_id).first()
+        return bool(risk and user_can_access_scope(request.user, risk.asset.scope_id, ['ADMIN', 'RSSI']))
+
+
+class HasRequestedScopeAccessPermission(BasePermission):
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated or not request.user.is_active:
+            return False
+        scope_id = request.query_params.get('scope_id')
+        # Laisser la vue produire la réponse 400 documentée lorsque le paramètre manque.
+        return not scope_id or user_can_access_scope(request.user, scope_id)
 
 
 
