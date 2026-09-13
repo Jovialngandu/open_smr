@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { UserRole } from '../../../../core/models/auth.models';
@@ -14,6 +14,7 @@ export class UsersPageComponent {
   protected readonly modalOpen = signal(false);
   protected readonly feedback = signal('');
   protected readonly submitError = signal('');
+  protected readonly canManageRoles = computed(() => this.context.activeRole() === 'ADMIN');
   protected readonly form = this.fb.nonNullable.group({ userId: ['', [Validators.required, Validators.pattern(/^\d+$/)]], role: ['RISK_OWNER' as Exclude<UserRole, 'ADMIN'>, Validators.required] });
   constructor() { this.service.fetch(); }
   protected submit(): void {
