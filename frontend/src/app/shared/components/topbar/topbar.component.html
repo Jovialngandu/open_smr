@@ -49,13 +49,13 @@
 
 <nav class="module-nav" aria-label="Navigation principale">
   <a routerLink="/dashboard" routerLinkActive="module-nav__link--active">Tableau de bord</a>
-  @if (context.activeRole() !== 'AUDITOR') {
+  @if (context.activeRole() === 'ADMIN' || context.activeRole() === 'RSSI') {
     <a routerLink="/assets" routerLinkActive="module-nav__link--active">Actifs</a>
   }
   @if (context.activeRole() !== 'RISK_OWNER') {
     <a routerLink="/risks" routerLinkActive="module-nav__link--active">Risques</a>
   }
-  @if (context.activeRole() !== 'AUDITOR') {
+  @if (context.activeRole() === 'ADMIN' || context.activeRole() === 'RSSI') {
     <a routerLink="/treatments" routerLinkActive="module-nav__link--active">Traitements</a>
   }
   <a routerLink="/soa" routerLinkActive="module-nav__link--active">SoA</a>

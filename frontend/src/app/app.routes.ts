@@ -41,7 +41,7 @@ export const routes: Routes = [
     title: 'Inventaire des actifs | OpenSMR',
     canActivate: [authGuard, roleGuard],
     data: {
-      roles: ['ADMIN', 'RSSI', 'RISK_OWNER'],
+      roles: ['ADMIN', 'RSSI'],
       featureTitle: 'Inventaire des actifs',
       featureDescription: 'Recensement et suivi de la criticité DIC des actifs du périmètre actif.',
     },
@@ -69,7 +69,7 @@ export const routes: Routes = [
     title: 'Plans de traitement | OpenSMR',
     canActivate: [authGuard, roleGuard],
     data: {
-      roles: ['ADMIN', 'RSSI', 'RISK_OWNER'],
+      roles: ['ADMIN', 'RSSI'],
       featureTitle: 'Plans de traitement',
       featureDescription: 'Planification et suivi des actions destinées à réduire les risques.',
     },
