@@ -247,7 +247,7 @@ Exemple de route privée :
 {
   path: 'assets',
   canActivate: [authGuard, roleGuard],
-  data: { roles: ['ADMIN', 'RSSI', 'RISK_OWNER'] },
+  data: { roles: ['ADMIN', 'RSSI'] },
   loadComponent: () =>
     import('./features/assets/pages/asset-list.component')
       .then((module) => module.AssetListComponent),
