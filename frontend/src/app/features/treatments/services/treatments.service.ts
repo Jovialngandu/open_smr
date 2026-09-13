@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { finalize, map, Observable, tap } from 'rxjs';
 
-import { DOMAIN_ENDPOINTS } from '../../../core/config/api.config';
+import { API_CONFIG, DOMAIN_ENDPOINTS } from '../../../core/config/api.config';
 import { Evidence, TreatmentPayload, TreatmentStatus, TreatmentTask } from '../../../core/models/governance.models';
 
 @Injectable({ providedIn: 'root' })
@@ -87,6 +87,7 @@ export class TreatmentsService {
 
   private evidenceFromBackend(evidence: BackendEvidence): Evidence {
     const filePath = evidence.file_path ?? evidence.download_url ?? '';
+    const downloadUrl = filePath && !/^https?:/i.test(filePath) ? new URL(filePath, API_CONFIG.baseUrl).toString() : filePath;
     return {
       id: evidence.id,
       task_id: evidence.task_id ?? evidence.task,
@@ -95,7 +96,7 @@ export class TreatmentsService {
       description: evidence.description ?? '',
       uploaded_by_name: evidence.uploaded_by_name ?? evidence.uploaded_by_email ?? 'Utilisateur',
       uploaded_at: evidence.uploaded_at ?? evidence.created_at,
-      download_url: evidence.download_url ?? filePath,
+      download_url: evidence.download_url ?? downloadUrl,
     };
   }
 }

@@ -7,6 +7,7 @@ import { RiskScoreBadgeComponent } from '../../../../shared/components/risk-scor
 import { RisksService } from '../../../risks/services/risks.service';
 import { SoaService } from '../../../soa/services/soa.service';
 import { TreatmentsService } from '../../../treatments/services/treatments.service';
+import { API_CONFIG } from '../../../../core/config/api.config';
 
 @Component({ selector: 'app-audit-view-page', imports: [TopbarComponent, RiskScoreBadgeComponent], templateUrl: './audit-view-page.component.html' })
 export class AuditViewPageComponent {
@@ -18,5 +19,12 @@ export class AuditViewPageComponent {
   protected readonly statuses = IMPLEMENTATION_STATUS_LABELS;
   protected readonly evidences = computed(() => this.treatments.items().flatMap((task) => task.evidences.map((evidence) => ({ ...evidence, taskTitle: task.title, controlCode: task.control_code }))));
   constructor() { effect(() => { const scope = this.context.activeScopeId(); if (scope) { this.risks.fetchRisks(scope); this.soa.fetch(scope); this.treatments.fetch(scope); } }); }
-  protected download(evidence: Evidence): void { const blob = new Blob([`Preuve simulée : ${evidence.file_name}`], { type: evidence.file_type || 'text/plain' }); const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = evidence.file_name; anchor.click(); URL.revokeObjectURL(url); }
+  protected download(evidence: Evidence): void {
+    if (!API_CONFIG.useMocks && evidence.download_url) {
+      const anchor = document.createElement('a'); anchor.href = evidence.download_url; anchor.download = evidence.file_name; anchor.click();
+      return;
+    }
+    const blob = new Blob([`Preuve simulée : ${evidence.file_name}`], { type: evidence.file_type || 'text/plain' });
+    const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = evidence.file_name; anchor.click(); URL.revokeObjectURL(url);
+  }
 }
