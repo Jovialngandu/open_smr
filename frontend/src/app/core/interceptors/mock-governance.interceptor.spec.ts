@@ -24,7 +24,7 @@ describe('mockGovernanceInterceptor', () => {
       scope_id: DIGITAL_SCOPE_ID,
       name: 'Référentiel documentaire',
       category: 'DATA',
-      owner_id: 'member-001',
+      owner_id: '1',
       description: 'Documents du SMSI.',
       confidentiality: 2,
       integrity: 3,

@@ -10,17 +10,17 @@ const SCOPE_DATACENTER = '8f4b8400-e29b-41d4-a716-446655440102';
 const NOW = '2026-09-10T08:30:00Z';
 
 const OWNER_NAMES: Record<string, string> = {
-  'member-001': 'Camille Durand',
-  'member-002': 'Nadia Bernard',
-  'member-003': 'Thomas Leroy',
+  '1': 'Camille Durand',
+  '2': 'Nadia Bernard',
+  '3': 'Thomas Leroy',
 };
 
 let assets: Asset[] = [
-  asset('asset-001', SCOPE_DIGITAL, 'Plateforme de paiement', 'SOFTWARE', 'member-001', 3, 3, 3),
-  asset('asset-002', SCOPE_DIGITAL, 'Base clients', 'DATA', 'member-002', 3, 3, 2),
-  asset('asset-003', SCOPE_DIGITAL, 'API partenaires', 'SERVICE', 'member-003', 2, 3, 2),
-  asset('asset-004', SCOPE_DIGITAL, 'Postes des analystes', 'HARDWARE', 'member-003', 2, 2, 2),
-  asset('asset-005', SCOPE_DATACENTER, 'Cluster de virtualisation', 'HARDWARE', 'member-001', 2, 3, 3),
+  asset('asset-001', SCOPE_DIGITAL, 'Plateforme de paiement', 'SOFTWARE', '1', 3, 3, 3),
+  asset('asset-002', SCOPE_DIGITAL, 'Base clients', 'DATA', '2', 3, 3, 2),
+  asset('asset-003', SCOPE_DIGITAL, 'API partenaires', 'SERVICE', '3', 2, 3, 2),
+  asset('asset-004', SCOPE_DIGITAL, 'Postes des analystes', 'HARDWARE', '3', 2, 2, 2),
+  asset('asset-005', SCOPE_DATACENTER, 'Cluster de virtualisation', 'HARDWARE', '1', 2, 3, 3),
 ];
 
 let risks: Risk[] = [
