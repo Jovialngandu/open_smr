@@ -30,7 +30,7 @@
           <label for="asset-owner">Responsable</label>
           <select id="asset-owner" formControlName="ownerId">
             <option value="">Non attribué</option>
-            @for (member of members; track member.id) { <option [value]="member.id">{{ member.name }}</option> }
+            @for (member of members(); track member.id) { <option [value]="member.id">{{ member.name }}</option> }
           </select>
         </div>
       </div>

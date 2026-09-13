@@ -18,6 +18,7 @@ import { AssetsService } from '../../services/assets.service';
 export class AssetFormModalComponent {
   readonly asset = input<Asset | null>(null);
   readonly scopeId = input.required<string>();
+  readonly members = input<MemberOption[]>([]);
   readonly closed = output<void>();
   readonly saved = output<Asset>();
 
@@ -25,11 +26,6 @@ export class AssetFormModalComponent {
   private readonly formBuilder = inject(FormBuilder);
   protected readonly submitError = signal('');
   protected readonly categories = Object.entries(ASSET_CATEGORY_LABELS) as [AssetCategory, string][];
-  protected readonly members: MemberOption[] = [
-    { id: 'member-001', name: 'Camille Durand' },
-    { id: 'member-002', name: 'Nadia Bernard' },
-    { id: 'member-003', name: 'Thomas Leroy' },
-  ];
   protected readonly scores = [1, 2, 3] as const;
 
   protected readonly form = this.formBuilder.nonNullable.group({
