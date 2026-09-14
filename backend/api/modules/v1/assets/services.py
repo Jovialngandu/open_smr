@@ -6,6 +6,8 @@ from api.models import Asset, Scope
 
 User = get_user_model()
 
+OWNER_NOT_PROVIDED = object()
+
 
 @transaction.atomic
 def create_asset(
@@ -41,7 +43,7 @@ def create_asset(
 def update_asset(
     *,
     asset: Asset,
-    owner: User | None = None,
+    owner=OWNER_NOT_PROVIDED,
     name: str | None = None,
     category: str | None = None,
     description: str | None = None,
@@ -53,7 +55,7 @@ def update_asset(
     Met à jour les informations d'un actif existant.
     """
 
-    if owner is not None:
+    if owner is not OWNER_NOT_PROVIDED:
         asset.owner = owner
 
     if name is not None:
@@ -82,7 +84,9 @@ def update_asset(
 @transaction.atomic
 def delete_asset(*, asset: Asset) -> None:
     """
-    Effectue une suppression logique (Soft Delete) de l'actif.
+    Effectue une suppression logique de l'actif.
     """
 
     asset.delete()
+
+    

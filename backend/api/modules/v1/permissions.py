@@ -1,5 +1,34 @@
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import BasePermission
+
+from api.models import UserOrganizationRole, UserScopeAccess
+
 from rest_framework.permissions import BasePermission
 from api.models import UserOrganizationRole
+
+
+
+def check_scope_access(user, scope):
+    """
+    Vérifie que l'utilisateur possède un accès actif au scope donné.
+    Les superusers ont un accès global.
+    """
+
+    if user.is_superuser:
+        return
+
+    has_access = UserScopeAccess.objects.filter(
+        user_organization_role__user=user,
+        user_organization_role__is_active=True,
+        scope=scope,
+    ).exists()
+
+    if not has_access:
+        raise PermissionDenied(
+            "Vous n'avez pas accès à ce périmètre."
+        )
+
+
 
 
 class IsAccountActive(BasePermission):

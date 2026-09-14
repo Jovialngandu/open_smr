@@ -1,14 +1,15 @@
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 
-from rest_framework import status, permissions
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework import permissions, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 
-from api.models import Scope, UserScopeAccess
-from api.models import Asset, Scope, UserScopeAccess
+from api.models import Asset, Scope
+from api.modules.v1.permissions import check_scope_access
 
 from .selectors import (
     get_asset_by_id,
@@ -27,24 +28,7 @@ from .serializers import (
 )
 
 
-def check_scope_access(user, scope):
-    """
-    Vérifie que l'utilisateur a le droit d'accéder au scope.
-    """
-
-    if user.is_superuser:
-        return
-
-    has_access = UserScopeAccess.objects.filter(
-        user_organization_role__user=user,
-        user_organization_role__is_active=True,
-        scope=scope,
-    ).exists()
-
-    if not has_access:
-        raise PermissionDenied(
-            "Vous n'avez pas accès à ce périmètre."
-        )
+User = get_user_model()
 
 
 class AssetListCreateAPI(APIView):
@@ -72,20 +56,26 @@ class AssetListCreateAPI(APIView):
         ],
         responses={200: AssetSerializer(many=True)},
     )
-
     def get(self, request):
-
         scope_id = request.query_params.get("scope_id")
         category = request.query_params.get("category")
 
         if not scope_id:
-            raise ValidationError({
-                "scope_id": "Ce paramètre est obligatoire."
-            })
+            raise ValidationError(
+                {
+                    "scope_id": "Ce paramètre est obligatoire."
+                }
+            )
 
-        scope = get_object_or_404(Scope, id=scope_id)
+        scope = get_object_or_404(
+            Scope,
+            id=scope_id,
+        )
 
-        check_scope_access(request.user, scope)
+        check_scope_access(
+            request.user,
+            scope,
+        )
 
         if category:
             assets = filter_assets_by_category(
@@ -94,17 +84,17 @@ class AssetListCreateAPI(APIView):
             )
         else:
             assets = list_assets_by_scope(
-                scope_id=scope.id
+                scope_id=scope.id,
             )
 
         serializer = AssetSerializer(
             assets,
-            many=True
+            many=True,
         )
 
         return Response(
             serializer.data,
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
     @extend_schema(
@@ -112,30 +102,41 @@ class AssetListCreateAPI(APIView):
         request=AssetCreateSerializer,
         responses={201: AssetSerializer},
     )
-    
     def post(self, request):
-
         serializer = AssetCreateSerializer(
-            data=request.data
+            data=request.data,
         )
 
         serializer.is_valid(
-            raise_exception=True
+            raise_exception=True,
         )
 
         data = serializer.validated_data
 
         scope = get_object_or_404(
             Scope,
-            id=data["scope_id"]
+            id=data["scope_id"],
         )
 
         check_scope_access(
             request.user,
-            scope
+            scope,
         )
 
-        owner = request.user
+        # Si owner_id est fourni, on utilise cet utilisateur.
+        # S'il est absent, le créateur devient propriétaire.
+        if "owner_id" in data:
+            owner_id = data["owner_id"]
+
+            if owner_id is None:
+                owner = None
+            else:
+                owner = get_object_or_404(
+                    User,
+                    id=owner_id,
+                )
+        else:
+            owner = request.user
 
         asset = create_asset(
             scope=scope,
@@ -145,21 +146,21 @@ class AssetListCreateAPI(APIView):
             description=data.get("description"),
             confidentiality=data.get(
                 "confidentiality",
-                1
+                1,
             ),
             integrity=data.get(
                 "integrity",
-                1
+                1,
             ),
             availability=data.get(
                 "availability",
-                1
+                1,
             ),
         )
 
         return Response(
             AssetSerializer(asset).data,
-            status=status.HTTP_201_CREATED
+            status=status.HTTP_201_CREATED,
         )
 
 
@@ -170,41 +171,36 @@ class AssetDetailAPI(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
-
-
     def get_asset(self, request, pk):
-
         try:
             asset = get_asset_by_id(pk)
-        except Exception:
-            raise ValidationError({
-                "asset": "Actif introuvable."
-            })
+        except Asset.DoesNotExist:
+            raise ValidationError(
+                {
+                    "asset": "Actif introuvable."
+                }
+            )
 
         check_scope_access(
             request.user,
-            asset.scope
+            asset.scope,
         )
 
         return asset
-
-
 
     @extend_schema(
         summary="Afficher un actif",
         responses={200: AssetSerializer},
     )
-
     def get(self, request, pk):
-
         asset = self.get_asset(
             request,
-            pk
+            pk,
         )
 
         return Response(
             AssetSerializer(asset).data,
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
     @extend_schema(
@@ -212,56 +208,70 @@ class AssetDetailAPI(APIView):
         request=AssetUpdateSerializer,
         responses={200: AssetSerializer},
     )
-
     def patch(self, request, pk):
-
         asset = self.get_asset(
             request,
-            pk
+            pk,
         )
 
         serializer = AssetUpdateSerializer(
             data=request.data,
-            partial=True
+            partial=True,
         )
 
         serializer.is_valid(
-            raise_exception=True
+            raise_exception=True,
         )
 
         data = serializer.validated_data
 
+        update_kwargs = {
+            "asset": asset,
+            "name": data.get("name"),
+            "category": data.get("category"),
+            "description": data.get("description"),
+            "confidentiality": data.get("confidentiality"),
+            "integrity": data.get("integrity"),
+            "availability": data.get("availability"),
+        }
+
+        # On ne modifie owner que si owner_id est présent dans le PATCH.
+        if "owner_id" in data:
+            owner_id = data["owner_id"]
+
+            if owner_id is None:
+                owner = None
+            else:
+                owner = get_object_or_404(
+                    User,
+                    id=owner_id,
+                )
+
+            update_kwargs["owner"] = owner
+
         updated_asset = update_asset(
-            asset=asset,
-            name=data.get("name"),
-            category=data.get("category"),
-            description=data.get("description"),
-            confidentiality=data.get("confidentiality"),
-            integrity=data.get("integrity"),
-            availability=data.get("availability"),
+            **update_kwargs
         )
 
         return Response(
             AssetSerializer(updated_asset).data,
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
     @extend_schema(
         summary="Supprimer un actif",
         responses={204: None},
     )
-
     def delete(self, request, pk):
-
         asset = self.get_asset(
             request,
-            pk
+            pk,
         )
 
-        delete_asset(asset=asset)
+        delete_asset(
+            asset=asset,
+        )
 
         return Response(
-            status=status.HTTP_204_NO_CONTENT
+            status=status.HTTP_204_NO_CONTENT,
         )
-
-
