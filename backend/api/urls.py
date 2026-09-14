@@ -6,6 +6,6 @@ urlpatterns = [
     path('v1/assets/', include('api.modules.v1.assets.urls')),
     path('v1/scopes/', include('api.modules.v1.scopes.urls')),
     path('settings/', include('api.modules.v1.settings.urls')),
-    path('v1/treatment/', include('api.modules.v1.treatment.urls')),
+    path('v1/treatments/', include('api.modules.v1.treatments.urls')),
     path('v1/heatmap/', include('api.modules.v1.heatmap.urls')),
 ]

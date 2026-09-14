@@ -1,0 +1,19 @@
+<section class="heatmap-panel" aria-labelledby="heatmap-title">
+  <div class="section-heading"><div><p class="eyebrow">Analyse visuelle</p><h2 id="heatmap-title">Matrice des risques 5 × 5</h2></div><span>{{ total() }} risque(s)</span></div>
+  <div class="heatmap-layout">
+    <span class="heatmap-axis heatmap-axis--vertical">Vraisemblance</span>
+    <div class="heatmap-grid">
+      @for (likelihood of rows; track likelihood) {
+        <span class="heatmap-tick">{{ likelihood }}</span>
+        @for (impact of columns; track impact) {
+          <button type="button" class="heatmap-cell" [attr.data-severity]="severity(likelihood, impact)" [class.heatmap-cell--selected]="selected()?.likelihood === likelihood && selected()?.impact === impact" (click)="select(likelihood, impact)" [attr.aria-label]="'Vraisemblance ' + likelihood + ', impact ' + impact + ', ' + (cell(likelihood, impact)?.risk_count ?? 0) + ' risque(s)'">
+            <strong>{{ cell(likelihood, impact)?.risk_count ?? 0 }}</strong><small>{{ likelihood * impact }}</small>
+          </button>
+        }
+      }
+      <span></span>@for (impact of columns; track impact) { <span class="heatmap-tick">{{ impact }}</span> }
+    </div>
+    <span class="heatmap-axis heatmap-axis--horizontal">Impact</span>
+  </div>
+  <div class="heatmap-legend"><span data-severity="low">Faible</span><span data-severity="medium">Modéré</span><span data-severity="high">Élevé</span><span data-severity="critical">Critique</span></div>
+</section>

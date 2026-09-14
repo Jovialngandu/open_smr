@@ -21,12 +21,14 @@ def register_user(
     first_name: str = "", 
     last_name: str = "",
     organization_name: str = None,
-    organization_code: str = None
+    organization_code: str = None,
+    join_organization_code: str = None
 ) -> User:
     """
     Crée un utilisateur dans la base de données.
-    Si `organization_name` est fourni, crée également l'organisation (avec code unique)
-    et attribue le rôle ADMIN à l'utilisateur au sein de cette organisation.
+    Si `organization_name` est fourni, crée l'organisation et attribue le rôle ADMIN.
+    Si `join_organization_code` est fourni, rattache le compte comme RISK_OWNER sans
+    lui accorder automatiquement de périmètre.
     """
     email = email.lower().strip()
     username = username.strip()
@@ -60,6 +62,14 @@ def register_user(
             user=user,
             organization=org,
             role='ADMIN',
+            is_active=True
+        )
+    elif join_organization_code:
+        organization = Organization.objects.get(code__iexact=join_organization_code.strip())
+        UserOrganizationRole.objects.create(
+            user=user,
+            organization=organization,
+            role='RISK_OWNER',
             is_active=True
         )
 

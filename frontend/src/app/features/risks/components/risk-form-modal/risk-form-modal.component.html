@@ -1,0 +1,68 @@
+<div class="modal-backdrop" (click)="$event.target === $event.currentTarget && close()">
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="risk-modal-title" (click)="$event.stopPropagation()">
+    <header class="modal-card__header">
+      <div>
+        <p class="eyebrow">Registre des risques</p>
+        <h2 id="risk-modal-title">{{ risk() ? 'Modifier le risque' : 'Ajouter un scénario de risque' }}</h2>
+      </div>
+      <button class="icon-button" type="button" (click)="close()" aria-label="Fermer la fenêtre">×</button>
+    </header>
+
+    @if (submitError()) {
+      <div class="alert alert--error" role="alert"><span aria-hidden="true">!</span><p>{{ submitError() }}</p></div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="form-grid">
+        <div class="field">
+          <label for="risk-code">Code</label>
+          <input id="risk-code" formControlName="code" placeholder="RSK-PAY-001" autofocus [attr.aria-invalid]="invalid('code')" />
+          @if (invalid('code')) { <small class="field__error">Le code est obligatoire.</small> }
+        </div>
+        <div class="field">
+          <label for="risk-asset">Actif concerné</label>
+          <select id="risk-asset" formControlName="assetId" [attr.aria-invalid]="invalid('assetId')">
+            @if (assetsService.loading()) { <option value="">Chargement des actifs…</option> }
+            @else if (!assetsService.assets().length) { <option value="">Aucun actif disponible</option> }
+            @for (asset of assetsService.assets(); track asset.id) { <option [value]="asset.id">{{ asset.name }}</option> }
+          </select>
+          @if (invalid('assetId')) { <small class="field__error">Sélectionnez un actif.</small> }
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="risk-threat">Menace ou scénario redouté</label>
+        <textarea id="risk-threat" formControlName="threatDescription" rows="4" placeholder="Décrivez la menace, la vulnérabilité et la conséquence possible." [attr.aria-invalid]="invalid('threatDescription')"></textarea>
+        @if (invalid('threatDescription')) { <small class="field__error">Décrivez le scénario de risque.</small> }
+      </div>
+
+      <div class="risk-evaluation">
+        <div class="score-grid">
+          <label>Vraisemblance
+            <select formControlName="likelihood">@for (score of scores; track score) { <option [value]="score">{{ score }}</option> }</select>
+          </label>
+          <span aria-hidden="true">×</span>
+          <label>Impact
+            <select formControlName="impact">@for (score of scores; track score) { <option [value]="score">{{ score }}</option> }</select>
+          </label>
+          <strong class="score-preview" [attr.data-score]="currentScore()">{{ currentScore() }} / 25</strong>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="risk-status">Statut</label>
+        <select id="risk-status" formControlName="status">
+          @for (status of statuses; track status[0]) { <option [value]="status[0]">{{ status[1] }}</option> }
+        </select>
+      </div>
+
+      <footer class="modal-card__actions">
+        <button class="button button--ghost" type="button" (click)="close()">Annuler</button>
+        <button class="button button--primary" type="submit" [disabled]="risksService.saving() || assetsService.loading() || !assetsService.assets().length">
+          @if (risksService.saving()) { <span class="spinner" aria-hidden="true"></span> Enregistrement… }
+          @else { {{ risk() ? 'Enregistrer les modifications' : 'Ajouter le risque' }} }
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>

@@ -39,7 +39,7 @@ class UserOrganizationRole(TimeStampedUUIDModel):
     joined_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'organization', 'role')
+        unique_together = ('user', 'organization')
 
 
 class UserScopeAccess(TimeStampedUUIDModel):
