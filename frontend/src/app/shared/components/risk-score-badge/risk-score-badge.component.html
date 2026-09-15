@@ -1,0 +1,9 @@
+<span
+  class="risk-score"
+  [attr.data-severity]="severity().key"
+  [attr.aria-label]="'Risque ' + severity().label + ', score ' + score() + ' sur 25'"
+>
+  <strong>{{ score() }}</strong>
+  <small>/ 25</small>
+  <span>{{ severity().label }}</span>
+</span>

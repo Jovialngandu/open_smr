@@ -56,3 +56,19 @@ class GrantAccessInputSerializer(serializers.Serializer):
 
 class RemoveAccessInputSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(required=True)
+    
+
+class RisksByLevelSerializer(serializers.Serializer):
+    high = serializers.IntegerField()
+    medium = serializers.IntegerField()
+    low = serializers.IntegerField()
+
+class SoaCompletionSerializer(serializers.Serializer):
+    total_applicable = serializers.IntegerField()
+    implemented = serializers.IntegerField()
+    percentage = serializers.FloatField()
+
+class ScopeDashboardMetricsSerializer(serializers.Serializer):
+    risks_by_level = RisksByLevelSerializer()
+    soa_completion = SoaCompletionSerializer()
+    overdue_tasks_count = serializers.IntegerField()

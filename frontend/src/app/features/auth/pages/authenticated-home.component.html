@@ -1,0 +1,26 @@
+<main class="workspace-page">
+  <app-topbar />
+  <div class="workspace-content">
+    <header class="page-heading"><div><p class="eyebrow">Vue de pilotage</p><h1>Bonjour, {{ auth.user()?.first_name || auth.user()?.username }}.</h1><p>Voici la situation du SMSI pour le périmètre actif.</p></div></header>
+    @if (context.activeRole() === 'RISK_OWNER') {
+      <section class="dashboard-metrics" aria-label="Mes indicateurs"><article><span aria-hidden="true">▤</span><small>Mes tâches</small><strong>{{ personalTasks().length }}</strong></article><article><span aria-hidden="true">◷</span><small>À réaliser</small><strong>{{ personalOpenCount() }}</strong></article><article><span aria-hidden="true">✓</span><small>Preuves déposées</small><strong>{{ personalEvidenceCount() }}</strong></article><article><span aria-hidden="true">◇</span><small>Actifs suivis</small><strong>{{ assets.count() }}</strong></article></section>
+      <section class="dashboard-panel personal-dashboard"><div class="section-heading"><div><p class="eyebrow">Plan d’action personnel</p><h2>Mes prochaines tâches</h2></div><a class="button button--primary" routerLink="/my-tasks">Ouvrir Mes tâches</a></div><div class="task-stack">@for (task of personalTasks(); track task.id) { <article><div><strong>{{ task.title }}</strong><small>{{ task.risk_code }} · {{ task.control_code }} · {{ task.evidences.length }} preuve(s)</small></div><time>{{ task.due_date }}</time></article> } @empty { <p class="muted-copy">Aucune tâche ne vous est assignée dans ce périmètre.</p> }</div></section>
+    } @else {
+    <section class="dashboard-metrics" aria-label="Indicateurs principaux">
+      <article><span aria-hidden="true">◇</span><small>{{ context.activeRole() === 'AUDITOR' ? 'Risques consultables' : 'Actifs recensés' }}</small><strong>{{ context.activeRole() === 'AUDITOR' ? risks.count() : assets.count() }}</strong></article>
+      <article><span aria-hidden="true">!</span><small>Risques critiques</small><strong>{{ dashboard.metrics().risks_by_level.high }}</strong></article>
+      <article><span aria-hidden="true">✓</span><small>Conformité SoA</small><strong>{{ dashboard.metrics().soa_completion.percentage }} %</strong></article>
+      <article><span aria-hidden="true">⌛</span><small>Tâches en retard</small><strong>{{ dashboard.metrics().overdue_tasks_count }}</strong></article>
+    </section>
+    <div class="dashboard-grid">
+      <app-heatmap [cells]="heatmap.cells()" [selected]="selectedCell()" (cellSelected)="selectedCell.set($event)" />
+      <section class="dashboard-panel"><div class="section-heading"><div><p class="eyebrow">Priorités</p><h2>Tâches urgentes</h2></div></div>
+        <div class="task-stack">@for (task of urgentTasks(); track task.id) { <article><div><strong>{{ task.title }}</strong><small>{{ task.risk_code }} · {{ task.assignee_name }}</small></div><time [class.overdue]="isOverdue(task.due_date)">{{ task.due_date }}</time></article> } @empty { <p class="muted-copy">Aucune tâche urgente.</p> }</div>
+      </section>
+    </div>
+    <section class="data-panel dashboard-risks"><div class="section-heading"><div><p class="eyebrow">Registre</p><h2>{{ selectedCell() ? 'Risques de la case sélectionnée' : 'Risques prioritaires' }}</h2></div>@if (selectedCell()) { <button class="text-button" type="button" (click)="selectedCell.set(null)">Effacer le filtre</button> }</div>
+      <div class="table-scroll"><table><thead><tr><th>Code</th><th>Actif</th><th>Scénario</th><th>Score</th><th>Statut</th></tr></thead><tbody>@for (risk of visibleRisks(); track risk.id) { <tr><td><strong class="risk-code">{{ risk.code }}</strong></td><td>{{ risk.asset_name }}</td><td class="threat-cell">{{ risk.threat_description }}</td><td><app-risk-score-badge [likelihood]="risk.likelihood" [impact]="risk.impact" /></td><td><span class="status-chip" [attr.data-status]="risk.status">{{ risk.status }}</span></td></tr> } @empty { <tr><td colspan="5">Aucun risque dans cette sélection.</td></tr> }</tbody></table></div>
+    </section>
+    }
+  </div>
+</main>

@@ -7,10 +7,11 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 from api.modules.v1.heatmap.selectors import get_heatmap_matrix_data
 from api.modules.v1.heatmap.serializers import HeatmapMatrixSerializer
+from api.modules.v1.permissions import HasRequestedScopeAccessPermission
 
 
 class HeatmapView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasRequestedScopeAccessPermission]
 
     @extend_schema(
         summary="Obtenir la matrice Heatmap 5x5 des risques",

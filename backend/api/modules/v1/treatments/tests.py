@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.models.organization import Scope, Organization
+from api.models.organization import Scope, Organization, UserOrganizationRole
 from api.models.iso27001 import Asset, Risk, IsoControl, SoaEntry, TreatmentTask, Evidence
 
 User = get_user_model()
@@ -35,6 +35,9 @@ class TreatmentTaskApiTests(APITestCase):
         self.scope = Scope.objects.create(
             organization=self.organization,
             name="Périmètre SI principal"
+        )
+        UserOrganizationRole.objects.create(
+            user=self.user, organization=self.organization, role='RSSI'
         )
         self.asset = Asset.objects.create(
             scope=self.scope,
@@ -179,7 +182,28 @@ class TreatmentTaskApiTests(APITestCase):
             'IN_PROGRESS', 
             "La SoA doit repasser à IN_PROGRESS lorsqu'une tâche est réouverte"
         )
+ 
+    def test_unauthorized_user_cannot_update_task_status(self):
+        """Vérifie qu'un utilisateur non assigné et sans accès au scope reçoit un 403 HTTP."""
+        self.client.force_authenticate(user=self.other_user)
+        response = self.client.patch(
+            self.url_status,
+            data={'status': 'COMPLETED'},
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_assignee_can_update_task_status(self):
+        """Vérifie que l'utilisateur assigné peut mettre à jour le statut."""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            self.url_status,
+            data={'status': 'COMPLETED'},
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.status, 'COMPLETED')
 
 class EvidenceApiTests(APITestCase):
 
