@@ -1,0 +1,85 @@
+<main class="workspace-page">
+  <app-topbar />
+  <section class="workspace-content">
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">Périmètre actif · {{ context.activeOrganization()?.organization_name }}</p>
+        <h1>Inventaire des actifs</h1>
+        <p>Recensez les biens à protéger et évaluez leur criticité selon les critères DIC.</p>
+      </div>
+      <button class="button button--primary" type="button" (click)="openCreate()" [disabled]="!context.activeScopeId()">
+        <span aria-hidden="true">+</span> Ajouter un actif
+      </button>
+    </header>
+
+    @if (!context.activeScopeId()) {
+      <section class="empty-state">
+        <span aria-hidden="true">◇</span>
+        <h2>Aucun périmètre actif</h2>
+        <p>Sélectionnez un périmètre dans la barre supérieure pour afficher son inventaire.</p>
+      </section>
+    } @else {
+      @if (successMessage()) { <div class="alert alert--success" role="status"><span aria-hidden="true">✓</span><p>{{ successMessage() }}</p></div> }
+      <section class="metric-strip" aria-label="Synthèse de l'inventaire">
+        <div><small>Actifs recensés</small><strong>{{ assetsService.count() }}</strong></div>
+        <div><small>Criticité élevée</small><strong>{{ highCriticalityCount() }}</strong></div>
+        <div><small>Périmètre</small><strong class="metric-strip__text">{{ activeScopeName() }}</strong></div>
+      </section>
+
+      <section class="data-panel">
+        <div class="table-toolbar">
+          <label class="search-field">
+            <span aria-hidden="true">⌕</span>
+            <span class="sr-only">Rechercher un actif</span>
+            <input type="search" placeholder="Rechercher par nom, responsable…" [value]="search()" (input)="search.set($any($event.target).value)" />
+          </label>
+          <label class="filter-field">
+            <span>Catégorie</span>
+            <select [value]="category()" (change)="category.set($any($event.target).value)">
+              <option value="ALL">Toutes</option>
+              @for (item of categories; track item[0]) { <option [value]="item[0]">{{ item[1] }}</option> }
+            </select>
+          </label>
+          <span class="result-count">{{ filteredAssets().length }} résultat(s)</span>
+        </div>
+
+        @if (actionError() || assetsService.error()) {
+          <div class="inline-error" role="alert">{{ actionError() || assetsService.error() }}</div>
+        }
+
+        @if (assetsService.loading()) {
+          <div class="table-loading"><span class="spinner spinner--dark"></span> Chargement de l'inventaire…</div>
+        } @else if (!filteredAssets().length) {
+          <div class="empty-state empty-state--compact">
+            <h2>Aucun actif trouvé</h2>
+            <p>Modifiez les filtres ou ajoutez le premier actif de ce périmètre.</p>
+          </div>
+        } @else {
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Actif</th><th>Catégorie</th><th>Responsable</th><th>Score DIC</th><th><span class="sr-only">Actions</span></th></tr></thead>
+              <tbody>
+                @for (asset of filteredAssets(); track asset.id) {
+                  <tr>
+                    <td><strong>{{ asset.name }}</strong><small>{{ asset.description || 'Aucune description' }}</small></td>
+                    <td><span class="category-chip">{{ categoryLabels[asset.category] }}</span></td>
+                    <td>{{ asset.owner_name }}</td>
+                    <td><app-dic-badge [confidentiality]="asset.confidentiality" [integrity]="asset.integrity" [availability]="asset.availability" [compact]="true" /></td>
+                    <td class="row-actions">
+                      <button type="button" (click)="openEdit(asset)" [attr.aria-label]="'Modifier ' + asset.name">Modifier</button>
+                      <button class="danger-link" type="button" (click)="deleteAsset(asset)" [attr.aria-label]="'Supprimer ' + asset.name">Supprimer</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    }
+  </section>
+</main>
+
+@if (modalOpen() && context.activeScopeId(); as scopeId) {
+  <app-asset-form-modal [asset]="selectedAsset()" [scopeId]="scopeId" [members]="members()" (closed)="closeModal()" (saved)="assetSaved($event)" />
+}

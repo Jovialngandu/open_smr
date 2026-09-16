@@ -1,0 +1,14 @@
+<div
+  class="dic-badge"
+  [class.dic-badge--compact]="compact()"
+  [attr.data-level]="criticality()"
+  [attr.aria-label]="'Criticité ' + levelLabel() + '. Confidentialité ' + confidentiality() + ', intégrité ' + integrity() + ', disponibilité ' + availability()"
+>
+  <div class="dic-badge__scores" aria-hidden="true">
+    <span><b>C</b>{{ confidentiality() }}</span>
+    <span><b>I</b>{{ integrity() }}</span>
+    <span><b>D</b>{{ availability() }}</span>
+  </div>
+  <strong class="dic-badge__max">{{ criticality() }}</strong>
+  @if (!compact()) { <small>{{ levelLabel() }}</small> }
+</div>

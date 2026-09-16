@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.models.organization import Scope, Organization
+from api.models.organization import Scope, Organization, UserOrganizationRole
 from api.models.iso27001 import Asset, Risk, IsoControl, SoaEntry, TreatmentTask, Evidence
 
 User = get_user_model()
@@ -35,6 +35,9 @@ class TreatmentTaskApiTests(APITestCase):
         self.scope = Scope.objects.create(
             organization=self.organization,
             name="Périmètre SI principal"
+        )
+        UserOrganizationRole.objects.create(
+            user=self.user, organization=self.organization, role='RSSI'
         )
         self.asset = Asset.objects.create(
             scope=self.scope,
@@ -265,4 +268,3 @@ class EvidenceApiTests(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['description'], "Preuve existante")
         self.assertEqual(response.data[0]['uploaded_by_email'], self.user.email)
-   

@@ -1,7 +1,8 @@
 import { HttpErrorResponse, HttpInterceptorFn, HttpResponse } from '@angular/common/http';
 import { delay, of, throwError } from 'rxjs';
 
-import { API_CONFIG, AUTH_ENDPOINTS } from '../config/api.config';
+import { API_CONFIG, AUTH_ENDPOINTS, DOMAIN_ENDPOINTS } from '../config/api.config';
+import { createMockId } from '../utils/mock-id';
 import {
   AuthResponse,
   JwtClaims,
@@ -17,17 +18,21 @@ const ORGANIZATIONS = [
     organization_name: 'Asteria Finance',
     role: 'RSSI' as UserRole,
     scopes: [
-      { id: '8f4b8400-e29b-41d4-a716-446655440101', name: 'Services numériques' },
-      { id: '8f4b8400-e29b-41d4-a716-446655440102', name: 'Datacenter Europe' },
+      { id: '8f4b8400-e29b-41d4-a716-446655440101', organization_id: '8f4b8400-e29b-41d4-a716-446655440001', name: 'Services numériques', description: 'Services numériques critiques.' },
+      { id: '8f4b8400-e29b-41d4-a716-446655440102', organization_id: '8f4b8400-e29b-41d4-a716-446655440001', name: 'Datacenter Europe', description: 'Infrastructure européenne.' },
     ],
   },
   {
     organization_id: '8f4b8400-e29b-41d4-a716-446655440002',
     organization_name: 'Novacare Groupe',
     role: 'AUDITOR' as UserRole,
-    scopes: [{ id: '8f4b8400-e29b-41d4-a716-446655440201', name: 'SI clinique' }],
+    scopes: [{ id: '8f4b8400-e29b-41d4-a716-446655440201', organization_id: '8f4b8400-e29b-41d4-a716-446655440002', name: 'SI clinique', description: 'Système d’information clinique.' }],
   },
 ];
+const ORGANIZATION_CODES: Record<string, string> = {
+  ASTERIA: ORGANIZATIONS[0].organization_id,
+  NOVACARE: ORGANIZATIONS[1].organization_id,
+};
 
 const DEMO_PROFILE: UserProfile = {
   id: '8f4b8400-e29b-41d4-a716-446655440000',
@@ -39,21 +44,52 @@ const DEMO_PROFILE: UserProfile = {
   roles: ORGANIZATIONS,
 };
 
+const OWNER_PROFILE: UserProfile = {
+  id: '1',
+  username: 'demo.owner',
+  email: 'owner@opensmr.fr',
+  first_name: 'Camille',
+  last_name: 'Durand',
+  is_active: true,
+  roles: [{ ...ORGANIZATIONS[0], role: 'RISK_OWNER' }],
+};
+
 let currentProfile = DEMO_PROFILE;
 let activeOrganizationId = ORGANIZATIONS[0].organization_id;
 let activeScopeId = ORGANIZATIONS[0].scopes[0].id;
 
 export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
-  if (!API_CONFIG.useMocks || !request.url.startsWith(`${API_CONFIG.baseUrl}/auth/`)) {
+  if (!API_CONFIG.useMocks) {
     return next(request);
   }
 
+  if (request.url === DOMAIN_ENDPOINTS.scopes && request.method === 'POST') {
+    const body = request.body as { organization_id: string; name: string; description?: string };
+    const role = currentProfile.roles.find((item) => item.organization_id === body.organization_id);
+    if (!role || !['ADMIN', 'RSSI'].includes(role.role)) return mockError(403, 'Vous ne pouvez pas créer de périmètre dans cette organisation.');
+    const scope = { id: createMockId('scope'), organization_id: body.organization_id, name: body.name, description: body.description ?? '' };
+    role.scopes = [...role.scopes, scope];
+    return mockOk(scope, 201);
+  }
+
+  if (request.url === DOMAIN_ENDPOINTS.scopes && request.method === 'GET') {
+    const organizationId = request.params.get('organization_id');
+    if (!organizationId) return mockError(400, "Le paramètre organization_id est requis.");
+    const role = currentProfile.roles.find((item) => item.organization_id === organizationId);
+    return mockOk(role?.scopes ?? []);
+  }
+
+  if (!request.url.startsWith(`${API_CONFIG.baseUrl}/auth/`)) return next(request);
+
   if (request.url === AUTH_ENDPOINTS.login && request.method === 'POST') {
     const body = request.body as { username?: string; password?: string };
-    const validIdentity = ['demo@opensmr.fr', 'demo.rssi'].includes(body.username ?? '');
+    const validIdentity = ['demo.rssi', 'demo.owner'].includes(body.username ?? '');
     if (!validIdentity || body.password !== 'Demo1234!') {
       return mockError(401, 'Identifiant ou mot de passe incorrect.');
     }
+    currentProfile = body.username === 'demo.owner' ? OWNER_PROFILE : DEMO_PROFILE;
+    activeOrganizationId = currentProfile.roles[0].organization_id;
+    activeScopeId = currentProfile.roles[0].scopes?.[0]?.id ?? '';
     return mockOk(tokensFor(currentProfile));
   }
 
@@ -62,7 +98,12 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
     if (body.email === DEMO_PROFILE.email || body.username === DEMO_PROFILE.username) {
       return mockError(400, 'Un compte utilise déjà cet email ou cet identifiant.');
     }
-    const organizationId = '8f4b8400-e29b-41d4-a716-446655440099';
+    const joinCode = body.join_organization_code?.trim().toUpperCase();
+    const joinedOrganization = joinCode
+      ? ORGANIZATIONS.find((organization) => organization.organization_id === ORGANIZATION_CODES[joinCode])
+      : undefined;
+    if (joinCode && !joinedOrganization) return mockError(400, 'Aucune organisation ne correspond à ce code.');
+    const organizationId = joinedOrganization?.organization_id ?? '8f4b8400-e29b-41d4-a716-446655440099';
     currentProfile = {
       id: '8f4b8400-e29b-41d4-a716-446655440098',
       username: body.username,
@@ -70,7 +111,9 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
       first_name: body.first_name,
       last_name: body.last_name,
       is_active: true,
-      roles: body.organization_name
+      roles: joinedOrganization
+        ? [{ ...joinedOrganization, role: 'RISK_OWNER', scopes: [] }]
+        : body.organization_name
         ? [{
             organization_id: organizationId,
             organization_name: body.organization_name,
@@ -79,7 +122,7 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
           }]
         : [],
     };
-    activeOrganizationId = body.organization_name ? organizationId : '';
+    activeOrganizationId = body.organization_name || joinedOrganization ? organizationId : '';
     activeScopeId = '';
     return mockOk({ ...tokensFor(currentProfile), user: currentProfile }, 201);
   }

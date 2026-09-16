@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../../core/services/auth.service';
 
@@ -13,7 +13,6 @@ import { AuthService } from '../../../../core/services/auth.service';
 export class LoginComponent {
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
   private readonly formBuilder = inject(FormBuilder);
   protected readonly passwordVisible = signal(false);
   protected readonly errorMessage = signal('');
@@ -49,10 +48,7 @@ export class LoginComponent {
   }
 
   private safeReturnUrl(): string {
-    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-    return returnUrl?.startsWith('/') && !returnUrl.startsWith('//')
-      ? returnUrl
-      : '/dashboard';
+    return '/select-context';
   }
 
   constructor() {
