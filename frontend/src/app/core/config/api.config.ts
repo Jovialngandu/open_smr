@@ -1,6 +1,6 @@
 export const API_CONFIG = {
   baseUrl: 'http://127.0.0.1:8000/api/v1',
-  useMocks: true,
+  useMocks: false,
   mockDelayMs: 550,
 } as const;
 
