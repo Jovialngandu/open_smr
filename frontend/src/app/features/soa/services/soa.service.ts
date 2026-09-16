@@ -36,20 +36,36 @@ export class SoaService {
     this.http.patch<SoaEntry>(`${DOMAIN_ENDPOINTS.soa}${id}/`, changes).pipe(finalize(() => this.savingIdsState.update((ids) => { const next = new Set(ids); next.delete(id); return next; }))).subscribe((updated) => this.entriesState.update((entries) => entries.map((entry) => entry.id === id ? updated : entry)));
   }
 
-  export(scopeId: string, format: 'pdf' | 'csv'): void {
-    const params = new HttpParams().set('format', format);
-    this.http.get(soaExportEndpoint(scopeId, format), { params, responseType: 'blob' }).subscribe((blob) => {
-      const url = URL.createObjectURL(blob);
+//   export(scopeId: string, format: 'pdf' | 'csv'): void {
+//     const params = new HttpParams().set('format', format);
+//     this.http.get(soaExportEndpoint(scopeId, format), { params, responseType: 'blob' }).subscribe((blob) => {
+//       const url = URL.createObjectURL(blob);
+//       const anchor = document.createElement('a');
+//       anchor.href = url;
+//       anchor.download = `soa-${scopeId}.${format}`;
+//       anchor.click();
+//       URL.revokeObjectURL(url);
+//     });
 //   }
 export(scopeId: string, format: 'pdf' | 'xlsx' = 'pdf'): void {
   // Utilisez un nom de paramètre distinct pour éviter le conflit avec le 'format' interne de DRF
   const params = new HttpParams().set('file_type', format);
 
+  this.http.get(soaExportEndpoint(scopeId), { 
+    params, 
+    responseType: 'blob' 
+  }).subscribe({
+    next: (blob: Blob) => {
+      const url = window.URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
       anchor.download = `soa-${scopeId}.${format}`;
       anchor.click();
-      URL.revokeObjectURL(url);
-    });
-  }
+      window.URL.revokeObjectURL(url);
+    },
+    error: (err) => {
+      console.error("Erreur lors de l'export SoA :", err);
+    }
+  });
+}
 }
