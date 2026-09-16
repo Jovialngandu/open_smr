@@ -33,14 +33,21 @@ def update_soa_entry(
 def create_soa_snapshot_version(
     *,
     scope: Scope,
-    version_number: str,
     title: str,
+    version_number: str | None = None,
     approved_by=None,
     status: str = "DRAFT",
 ) -> SoaVersion:
     """
     Crée une version figée (snapshot) de la SoA d'un scope.
+    Le numéro de version est généré automatiquement s'il n'est pas fourni.
     """
+
+
+    if not version_number:
+        count = SoaVersion.objects.filter(scope=scope).count()
+        version_number = f"v{count + 1}.0"
+
 
     entries = (
         SoaEntry.objects

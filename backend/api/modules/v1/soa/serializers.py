@@ -20,7 +20,14 @@ class SoaEntryUpdateSerializer(serializers.ModelSerializer):
 
 class SoaVersionCreateSerializer(serializers.Serializer):
     scope_id = serializers.UUIDField()
-    version_number = serializers.CharField(max_length=50)
+
+    version_number = serializers.CharField(
+        max_length=50,
+        required=False,
+    )
+
+
+    
     title = serializers.CharField(max_length=255)
     status = serializers.ChoiceField(
         choices=["DRAFT", "APPROVED"],

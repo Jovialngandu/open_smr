@@ -1,11 +1,12 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status
-from rest_framework.exceptions import PermissionDenied
+
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 
-from api.models import Scope, SoaEntry, UserScopeAccess
+from api.models import Scope, SoaEntry
+from api.modules.v1.permissions import check_scope_access
 
 from .selectors import (
     get_soa_entries_by_scope,
@@ -22,20 +23,6 @@ from .services import (
 )
 
 
-def check_scope_access(user, scope):
-    if user.is_superuser:
-        return
-
-    has_access = UserScopeAccess.objects.filter(
-        user_organization_role__user=user,
-        user_organization_role__is_active=True,
-        scope=scope,
-    ).exists()
-
-    if not has_access:
-        raise PermissionDenied(
-            "Vous n'avez pas accès à ce périmètre."
-        )
 
 
 class SoaEntryListAPI(APIView):
@@ -207,11 +194,7 @@ class SoaVersionListCreateAPI(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if not version_number:
-            return Response(
-                {"version_number": "Ce champ est obligatoire."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        
 
         if not title:
             return Response(
