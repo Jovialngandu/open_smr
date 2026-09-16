@@ -40,6 +40,11 @@ export class SoaService {
     const params = new HttpParams().set('format', format);
     this.http.get(soaExportEndpoint(scopeId, format), { params, responseType: 'blob' }).subscribe((blob) => {
       const url = URL.createObjectURL(blob);
+//   }
+export(scopeId: string, format: 'pdf' | 'xlsx' = 'pdf'): void {
+  // Utilisez un nom de paramètre distinct pour éviter le conflit avec le 'format' interne de DRF
+  const params = new HttpParams().set('file_type', format);
+
       const anchor = document.createElement('a');
       anchor.href = url;
       anchor.download = `soa-${scopeId}.${format}`;
