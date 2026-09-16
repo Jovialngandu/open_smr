@@ -149,6 +149,37 @@ class SoaAPITests(TestCase):
             "A.5.1",
         )
 
+
+
+    def test_create_soa_version_with_auto_version_number(self):
+        response = self.client.post(
+            "/api/v1/soa/versions/",
+            {
+                "scope_id": str(self.scope.id),
+                "title": "Version automatique",
+                "status": "DRAFT",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        version = SoaVersion.objects.get(
+            title="Version automatique"
+        )
+
+        self.assertEqual(
+            version.version_number,
+            "v1.0",
+        )
+
+        self.assertEqual(
+            response.data["version_number"],
+            "v1.0",
+        )
+
+
+
     def test_list_soa_versions(self):
         SoaVersion.objects.create(
             scope=self.scope,
