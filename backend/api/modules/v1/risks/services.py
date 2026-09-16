@@ -32,17 +32,32 @@ def create_risk(
 
 
 @transaction.atomic
-def update_risk_status(
+def update_risk(
     *,
     risk: Risk,
-    status: str,
+    threat_description: str | None = None,
+    likelihood: int | None = None,
+    impact: int | None = None,
+    status: str | None = None,
 ) -> Risk:
     """
-    Met à jour le statut d'un risque.
+    Met à jour les informations modifiables d'un risque.
+    Le score est recalculé automatiquement par le modèle
+    à partir de likelihood et impact.
     """
 
-    risk.status = status
-    risk.save(update_fields=["status", "updated_at"])
+    if threat_description is not None:
+        risk.threat_description = threat_description
+
+    if likelihood is not None:
+        risk.likelihood = likelihood
+
+    if impact is not None:
+        risk.impact = impact
+
+    if status is not None:
+        risk.status = status
+
+    risk.save()
 
     return risk
-

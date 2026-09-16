@@ -180,4 +180,74 @@ class RiskAPITests(TestCase):
 
         self.assertEqual(response.status_code, 400)
 
-        
+
+
+
+    def test_update_risk_fields_and_score(self):
+        response = self.client.patch(
+            f"/api/v1/risks/{self.risk.id}/",
+            {
+                "threat_description": "Menace mise à jour",
+                "likelihood": 2,
+                "impact": 3,
+                "status": "IN_MITIGATION",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.risk.refresh_from_db()
+
+        self.assertEqual(
+            self.risk.threat_description,
+            "Menace mise à jour",
+        )
+        self.assertEqual(self.risk.likelihood, 2)
+        self.assertEqual(self.risk.impact, 3)
+        self.assertEqual(
+            self.risk.status,
+            "IN_MITIGATION",
+        )
+
+        # 2 × 3 = 6
+        self.assertEqual(response.data["score"], 6)
+
+
+    def test_partial_update_risk(self):
+        response = self.client.patch(
+            f"/api/v1/risks/{self.risk.id}/",
+            {
+                "likelihood": 2,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.risk.refresh_from_db()
+
+        self.assertEqual(self.risk.likelihood, 2)
+
+        # L'impact n'a pas été envoyé :
+        # il doit rester à 5.
+        self.assertEqual(self.risk.impact, 5)
+
+        # 2 × 5 = 10
+        self.assertEqual(response.data["score"], 10)
+
+
+    def test_unauthenticated_user_cannot_access_risks(self):
+        self.client.force_authenticate(user=None)
+
+        response = self.client.get(
+            "/api/v1/risks/",
+            {
+                "scope_id": str(self.scope.id),
+            },
+        )
+
+        self.assertIn(
+            response.status_code,
+            [401, 403],
+        )

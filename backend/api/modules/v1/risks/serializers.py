@@ -29,16 +29,33 @@ class RiskCreateSerializer(serializers.Serializer):
     )
 
 
-class RiskStatusUpdateSerializer(serializers.Serializer):
+
+class RiskUpdateSerializer(serializers.Serializer):
+    threat_description = serializers.CharField(
+        required=False
+    )
+
+    likelihood = serializers.IntegerField(
+        min_value=1,
+        max_value=5,
+        required=False,
+    )
+
+    impact = serializers.IntegerField(
+        min_value=1,
+        max_value=5,
+        required=False,
+    )
+
     status = serializers.ChoiceField(
         choices=[
             "OPEN",
             "IN_MITIGATION",
             "ACCEPTED",
             "CLOSED",
-        ]
+        ],
+        required=False,
     )
-
 
 class RiskOutputSerializer(serializers.ModelSerializer):
     score = serializers.IntegerField(read_only=True)

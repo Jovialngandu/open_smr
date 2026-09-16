@@ -1,12 +1,16 @@
 from django.shortcuts import get_object_or_404
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework.exceptions import PermissionDenied
+
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 
-from api.models import Asset, Scope, UserScopeAccess
+from api.models import Asset, Scope
+from api.modules.v1.permissions import (
+    IsAccountActive,
+    check_scope_access,
+)
 
 from .selectors import (
     get_risk_by_id,
@@ -15,38 +19,20 @@ from .selectors import (
 )
 from .serializers import (
     RiskCreateSerializer,
-    RiskStatusUpdateSerializer,
+    RiskUpdateSerializer,
     RiskOutputSerializer,
 )
 from .services import (
     create_risk,
-    update_risk_status,
+    update_risk,
 )
 
 
-def check_scope_access(user, scope):
-    """
-    Vérifie que l'utilisateur a accès au scope.
-    """
-    if user.is_superuser:
-        return True
-
-    has_access = UserScopeAccess.objects.filter(
-        user_organization_role__user=user,
-        user_organization_role__is_active=True,
-        scope=scope,
-    ).exists()
-
-    if not has_access:
-        raise PermissionDenied(
-            "Vous n'avez pas accès à ce périmètre."
-        )
-
-    return True
 
 
 class RiskListCreateAPI(APIView):
 
+    permission_classes = [IsAccountActive]
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -157,7 +143,7 @@ class RiskListCreateAPI(APIView):
 
 
 class RiskDetailAPI(APIView):
-
+    permission_classes = [IsAccountActive]
     @extend_schema(
         responses=RiskOutputSerializer,
     )
@@ -173,8 +159,10 @@ class RiskDetailAPI(APIView):
 
         return Response(serializer.data)
 
+
+
     @extend_schema(
-        request=RiskStatusUpdateSerializer,
+        request=RiskUpdateSerializer,
         responses=RiskOutputSerializer,
     )
     def patch(self, request, pk):
@@ -185,7 +173,7 @@ class RiskDetailAPI(APIView):
             risk.asset.scope,
         )
 
-        serializer = RiskStatusUpdateSerializer(
+        serializer = RiskUpdateSerializer(
             data=request.data
         )
 
@@ -193,11 +181,9 @@ class RiskDetailAPI(APIView):
             raise_exception=True
         )
 
-        risk = update_risk_status(
+        risk = update_risk(
             risk=risk,
-            status=serializer.validated_data[
-                "status"
-            ],
+            **serializer.validated_data,
         )
 
         output = RiskOutputSerializer(risk)
