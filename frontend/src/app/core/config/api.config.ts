@@ -49,6 +49,6 @@ export function taskEvidencesEndpoint(taskId: string): string {
   return `${DOMAIN_ENDPOINTS.treatments}${taskId}/evidences/`;
 }
 
-export function soaExportEndpoint(scopeId: string, format: 'pdf' | 'csv'): string {
-  return `${API_CONFIG.baseUrl}/scopes/${scopeId}/soa/export/?format=${format}`;
+export function soaExportEndpoint(scopeId: string): string {
+  return `${API_CONFIG.baseUrl}/exporter/scopes/${scopeId}/export/`;
 }
