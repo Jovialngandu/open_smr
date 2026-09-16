@@ -83,8 +83,11 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
-
+ALLOWED_HOSTS = [
+    'open-smr.onrender.com',
+    'localhost',
+    '127.0.0.1',
+]
 # --- DATABASE CONFIGURATION ---
 DATABASE_URL = os.getenv('DATABASE_URL')
 
