@@ -86,7 +86,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 ALLOWED_HOSTS = [
     'open-smr.onrender.com',
     'localhost',
-    '127.0.0.1',
+    '127.0.0.1'
 ]
 # --- DATABASE CONFIGURATION ---
 DATABASE_URL = os.getenv('DATABASE_URL')
@@ -183,6 +183,7 @@ SPECTACULAR_SETTINGS = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
     "http://127.0.0.1:4200",
+    "https://opensmr.netlify.app"
 ]
 
 # Permettre l'envoi de headers personnalisés (Authorization, Content-Type, etc.)
