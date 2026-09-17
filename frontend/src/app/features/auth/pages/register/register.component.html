@@ -2,7 +2,7 @@
   <section class="auth-story" aria-labelledby="story-title">
     <a class="brand brand--light" routerLink="/login" aria-label="OpenSMR, accueil">
       <span class="brand__mark" aria-hidden="true">
-        <svg viewBox="0 0 32 32"><path d="M16 3 27 8v7c0 7.1-4.6 11.7-11 14-6.4-2.3-11-6.9-11-14V8l11-5Z"/><path d="m11.5 16 3 3 6.5-7"/></svg>
+        <svg lucideShieldCheck class="ui-icon" aria-hidden="true"></svg>
       </span>
       <span>OpenSMR</span>
     </a>
@@ -22,7 +22,7 @@
     <div class="auth-card auth-card--wide">
       <div class="mobile-brand">
         <span class="brand__mark" aria-hidden="true">
-          <svg viewBox="0 0 32 32"><path d="M16 3 27 8v7c0 7.1-4.6 11.7-11 14-6.4-2.3-11-6.9-11-14V8l11-5Z"/><path d="m11.5 16 3 3 6.5-7"/></svg>
+          <svg lucideShieldCheck class="ui-icon" aria-hidden="true"></svg>
         </span>
         OpenSMR
       </div>
@@ -31,7 +31,7 @@
       <p class="auth-intro">Créez une organisation ou rejoignez l’espace de travail de votre équipe.</p>
 
       @if (errorMessage()) {
-        <div class="alert alert--error" role="alert"><span aria-hidden="true">!</span><p>{{ errorMessage() }}</p></div>
+        <div class="alert alert--error" role="alert"><span aria-hidden="true"><svg lucideCircleAlert class="ui-icon"></svg></span><p>{{ errorMessage() }}</p></div>
       }
 
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
@@ -111,7 +111,7 @@
 
         <button class="button button--primary button--full" type="submit" [disabled]="auth.busy()">
           @if (auth.busy()) { <span class="spinner" aria-hidden="true"></span> Création en cours… }
-          @else { Créer mon espace <span aria-hidden="true">→</span> }
+          @else { Créer mon espace <svg lucideArrowRight class="ui-icon" aria-hidden="true"></svg> }
         </button>
       </form>
       <p class="auth-switch">Déjà inscrit&nbsp;? <a routerLink="/login">Se connecter</a></p>
