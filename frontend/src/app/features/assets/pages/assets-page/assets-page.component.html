@@ -8,18 +8,18 @@
         <p>Recensez les biens à protéger et évaluez leur criticité selon les critères DIC.</p>
       </div>
       <button class="button button--primary" type="button" (click)="openCreate()" [disabled]="!context.activeScopeId()">
-        <span aria-hidden="true">+</span> Ajouter un actif
+        <svg lucidePlus class="ui-icon" aria-hidden="true"></svg> Ajouter un actif
       </button>
     </header>
 
     @if (!context.activeScopeId()) {
       <section class="empty-state">
-        <span aria-hidden="true">◇</span>
+        <span aria-hidden="true"><svg lucidePackage class="ui-icon"></svg></span>
         <h2>Aucun périmètre actif</h2>
         <p>Sélectionnez un périmètre dans la barre supérieure pour afficher son inventaire.</p>
       </section>
     } @else {
-      @if (successMessage()) { <div class="alert alert--success" role="status"><span aria-hidden="true">✓</span><p>{{ successMessage() }}</p></div> }
+      @if (successMessage()) { <div class="alert alert--success" role="status"><span aria-hidden="true"><svg lucideCheck class="ui-icon"></svg></span><p>{{ successMessage() }}</p></div> }
       <section class="metric-strip" aria-label="Synthèse de l'inventaire">
         <div><small>Actifs recensés</small><strong>{{ assetsService.count() }}</strong></div>
         <div><small>Criticité élevée</small><strong>{{ highCriticalityCount() }}</strong></div>
@@ -29,7 +29,7 @@
       <section class="data-panel">
         <div class="table-toolbar">
           <label class="search-field">
-            <span aria-hidden="true">⌕</span>
+            <svg lucideSearch class="ui-icon" aria-hidden="true"></svg>
             <span class="sr-only">Rechercher un actif</span>
             <input type="search" placeholder="Rechercher par nom, responsable…" [value]="search()" (input)="search.set($any($event.target).value)" />
           </label>

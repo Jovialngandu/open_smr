@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { LucidePlus, LucidePackage, LucideCheck, LucideSearch } from '@lucide/angular';
 
 import { ASSET_CATEGORY_LABELS, Asset, AssetCategory, MemberOption } from '../../../../core/models/governance.models';
 import { ContextService } from '../../../../core/services/context.service';
@@ -10,7 +11,7 @@ import { UsersService } from '../../../users/services/users.service';
 
 @Component({
   selector: 'app-assets-page',
-  imports: [TopbarComponent, DicBadgeComponent, AssetFormModalComponent],
+  imports: [TopbarComponent, DicBadgeComponent, AssetFormModalComponent, LucidePlus, LucidePackage, LucideCheck, LucideSearch],
   templateUrl: './assets-page.component.html',
 })
 export class AssetsPageComponent {
