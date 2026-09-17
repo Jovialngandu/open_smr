@@ -8,18 +8,18 @@
         <p>Identifiez les scénarios redoutés, mesurez leur niveau brut et suivez leur traitement.</p>
       </div>
       @if (editable()) { <button class="button button--primary" type="button" (click)="openCreate()" [disabled]="!context.activeScopeId() || !assetsService.assets().length">
-        <span aria-hidden="true">+</span> Ajouter un risque
+        <svg lucidePlus class="ui-icon" aria-hidden="true"></svg> Ajouter un risque
       </button> }
     </header>
 
     @if (!context.activeScopeId()) {
       <section class="empty-state">
-        <span aria-hidden="true">◇</span>
+        <span aria-hidden="true"><svg lucideShieldAlert class="ui-icon"></svg></span>
         <h2>Aucun périmètre actif</h2>
         <p>Sélectionnez un périmètre pour consulter son registre des risques.</p>
       </section>
     } @else {
-      @if (successMessage()) { <div class="alert alert--success" role="status"><span aria-hidden="true">✓</span><p>{{ successMessage() }}</p></div> }
+      @if (successMessage()) { <div class="alert alert--success" role="status"><span aria-hidden="true"><svg lucideCheck class="ui-icon"></svg></span><p>{{ successMessage() }}</p></div> }
       <section class="metric-strip" aria-label="Synthèse du registre">
         <div><small>Risques recensés</small><strong>{{ risksService.count() }}</strong></div>
         <div><small>Risques critiques</small><strong class="metric-strip__danger">{{ risksService.criticalCount() }}</strong></div>
@@ -29,7 +29,7 @@
       <section class="data-panel">
         <div class="table-toolbar">
           <label class="search-field">
-            <span aria-hidden="true">⌕</span>
+            <svg lucideSearch class="ui-icon" aria-hidden="true"></svg>
             <span class="sr-only">Rechercher un risque</span>
             <input type="search" placeholder="Rechercher par code, actif, menace…" [value]="search()" (input)="search.set($any($event.target).value)" />
           </label>

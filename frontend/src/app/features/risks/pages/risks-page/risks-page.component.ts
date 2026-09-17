@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { LucidePlus, LucideShieldAlert, LucideCheck, LucideSearch } from '@lucide/angular';
 
 import { RISK_STATUS_LABELS, Risk, RiskStatus } from '../../../../core/models/governance.models';
 import { ContextService } from '../../../../core/services/context.service';
@@ -10,7 +11,7 @@ import { RisksService } from '../../services/risks.service';
 
 @Component({
   selector: 'app-risks-page',
-  imports: [TopbarComponent, RiskScoreBadgeComponent, RiskFormModalComponent],
+  imports: [TopbarComponent, RiskScoreBadgeComponent, RiskFormModalComponent, LucidePlus, LucideShieldAlert, LucideCheck, LucideSearch],
   templateUrl: './risks-page.component.html',
 })
 export class RisksPageComponent {
