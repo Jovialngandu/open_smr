@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { LucideShieldCheck, LucideCheck, LucideCircleAlert, LucideArrowRight, LucideSparkles } from '@lucide/angular';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
@@ -6,7 +7,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, LucideShieldCheck, LucideCheck, LucideCircleAlert, LucideArrowRight, LucideSparkles],
   host: { class: 'auth-page' },
   templateUrl: './login.component.html',
 })
