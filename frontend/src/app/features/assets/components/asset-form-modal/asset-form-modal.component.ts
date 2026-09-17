@@ -1,4 +1,5 @@
 import { Component, effect, HostListener, inject, input, output, signal } from '@angular/core';
+import { LucideX, LucideCircleAlert } from '@lucide/angular';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import {
@@ -12,7 +13,7 @@ import { AssetsService } from '../../services/assets.service';
 
 @Component({
   selector: 'app-asset-form-modal',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, LucideX, LucideCircleAlert],
   templateUrl: './asset-form-modal.component.html',
 })
 export class AssetFormModalComponent {
