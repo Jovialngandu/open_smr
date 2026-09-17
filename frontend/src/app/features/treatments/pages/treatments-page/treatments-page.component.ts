@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { LucidePlus, LucideSearch, LucideClock3, LucideFileText, LucideCircleAlert } from '@lucide/angular';
 
 import { TREATMENT_STATUS_LABELS, TreatmentStatus, TreatmentTask } from '../../../../core/models/governance.models';
 import { ContextService } from '../../../../core/services/context.service';
@@ -9,7 +10,7 @@ import { UsersService } from '../../../users/services/users.service';
 import { TreatmentFormModalComponent } from '../../components/treatment-form-modal/treatment-form-modal.component';
 import { TreatmentsService } from '../../services/treatments.service';
 
-@Component({ selector: 'app-treatments-page', imports: [TopbarComponent, TreatmentFormModalComponent], templateUrl: './treatments-page.component.html' })
+@Component({ selector: 'app-treatments-page', imports: [TopbarComponent, TreatmentFormModalComponent, LucidePlus, LucideSearch, LucideClock3, LucideFileText, LucideCircleAlert], templateUrl: './treatments-page.component.html' })
 export class TreatmentsPageComponent {
   protected readonly context = inject(ContextService);
   protected readonly service = inject(TreatmentsService);

@@ -1,12 +1,12 @@
 <main class="workspace-page"><app-topbar /><div class="workspace-content">
-  <header class="page-heading"><div><p class="eyebrow">Réduction du risque</p><h1>Plans de traitement</h1><p>Organisez les actions par état, assignez les responsables et suivez les échéances.</p></div><button class="button button--primary" type="button" (click)="modalOpen.set(true)" [disabled]="!risks.risks().length || !controls().length">＋ Nouvelle tâche</button></header>
+  <header class="page-heading"><div><p class="eyebrow">Réduction du risque</p><h1>Plans de traitement</h1><p>Organisez les actions par état, assignez les responsables et suivez les échéances.</p></div><button class="button button--primary" type="button" (click)="modalOpen.set(true)" [disabled]="!risks.risks().length || !controls().length"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg> Nouvelle tâche</button></header>
   <section class="metric-strip"><div><small>Total</small><strong>{{ service.items().length }}</strong></div><div><small>En retard</small><strong class="metric-strip__danger">{{ service.overdueCount() }}</strong></div><div><small>Terminées</small><strong>{{ completedCount() }}</strong></div></section>
   <section class="board-toolbar" aria-label="Filtres et affichage">
-    <label class="search-field"><span aria-hidden="true">⌕</span><span class="sr-only">Rechercher une tâche</span><input type="search" placeholder="Rechercher une action, un risque…" [value]="search()" (input)="search.set($any($event.target).value)"></label>
+    <label class="search-field"><svg lucideSearch class="ui-icon" aria-hidden="true"></svg><span class="sr-only">Rechercher une tâche</span><input type="search" placeholder="Rechercher une action, un risque…" [value]="search()" (input)="search.set($any($event.target).value)"></label>
     <label class="filter-field">Responsable <select [value]="assigneeFilter()" (change)="assigneeFilter.set($any($event.target).value)"><option value="ALL">Tous</option>@for (assignee of assignees(); track assignee[0]) { <option [value]="assignee[0]">{{ assignee[1] }}</option> }</select></label>
     <div class="view-switch" aria-label="Mode d’affichage"><button type="button" [class.active]="viewMode() === 'BOARD'" (click)="viewMode.set('BOARD')">Tableau</button><button type="button" [class.active]="viewMode() === 'TABLE'" (click)="viewMode.set('TABLE')">Liste</button></div>
   </section>
-  @if (actionError()) { <div class="alert alert--error" role="alert"><span>!</span><p>{{ actionError() }}</p></div> }
+  @if (actionError()) { <div class="alert alert--error" role="alert"><span aria-hidden="true"><svg lucideCircleAlert class="ui-icon"></svg></span><p>{{ actionError() }}</p></div> }
   @if (service.loading()) { <div class="table-loading"><span class="spinner spinner--dark"></span> Chargement du plan…</div> }
   @else if (viewMode() === 'BOARD') {
     <section class="kanban-board" aria-label="Tableau de suivi des traitements">
@@ -18,7 +18,7 @@
               <article class="kanban-card" draggable="true" [class.kanban-card--dragging]="draggingId() === task.id" (dragstart)="dragStart(task, $event)" (dragend)="dragEnd()" tabindex="0">
                 <div class="kanban-card__labels"><span class="risk-code">{{ task.risk_code }}</span><span>{{ task.control_code }}</span></div>
                 <h3>{{ task.title }}</h3><p>{{ task.description || 'Aucune consigne complémentaire.' }}</p>
-                <div class="kanban-card__meta"><span class="avatar avatar--small" [attr.title]="task.assignee_name">{{ task.assignee_name.slice(0, 2).toUpperCase() }}</span><time [class.overdue]="isOverdue(task)">◷ {{ task.due_date }}</time><span title="Preuves">▤ {{ task.evidences.length }}</span></div>
+                <div class="kanban-card__meta"><span class="avatar avatar--small" [attr.title]="task.assignee_name">{{ task.assignee_name.slice(0, 2).toUpperCase() }}</span><time [class.overdue]="isOverdue(task)"><svg lucideClock3 class="ui-icon" aria-hidden="true"></svg> {{ task.due_date }}</time><span title="Preuves"><svg lucideFileText class="ui-icon" aria-hidden="true"></svg> {{ task.evidences.length }}</span></div>
                 <label class="card-status"><span class="sr-only">Déplacer la tâche</span><select [value]="task.status" (change)="updateStatus(task.id, $event)">@for (option of columns; track option.status) { <option [value]="option.status">{{ option.title }}</option> }</select></label>
               </article>
             } @empty { <div class="kanban-empty">Déposez une carte ici</div> }
