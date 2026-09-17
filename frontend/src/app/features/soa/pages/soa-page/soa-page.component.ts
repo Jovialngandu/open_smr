@@ -1,11 +1,12 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { LucideSearch } from '@lucide/angular';
 
 import { CONTROL_THEME_LABELS, ControlTheme, IMPLEMENTATION_STATUS_LABELS, SoaEntry } from '../../../../core/models/governance.models';
 import { ContextService } from '../../../../core/services/context.service';
 import { TopbarComponent } from '../../../../shared/components/topbar/topbar.component';
 import { SoaService } from '../../services/soa.service';
 
-@Component({ selector: 'app-soa-page', imports: [TopbarComponent], templateUrl: './soa-page.component.html' })
+@Component({ selector: 'app-soa-page', imports: [TopbarComponent, LucideSearch], templateUrl: './soa-page.component.html' })
 export class SoaPageComponent {
   protected readonly context = inject(ContextService);
   protected readonly service = inject(SoaService);
