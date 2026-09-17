@@ -16,6 +16,10 @@ node --version
 npm --version
 ```
 
+## Icônes
+
+L'interface utilise les icônes officielles Lucide via `@lucide/angular`. Chaque composant Angular autonome importe uniquement les icônes dont son template a besoin. Les SVG héritent de la couleur du texte (`currentColor`) et la classe `.ui-icon`, définie dans `src/styles.scss`, conserve les dimensions prévues par les styles existants. Aucune police d'icônes ni requête externe n'est nécessaire à l'exécution.
+
 ## Installation
 
 Depuis la racine du dépôt :

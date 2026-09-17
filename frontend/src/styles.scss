@@ -25,6 +25,13 @@ body { min-width: 320px; }
 
 button, input, select, textarea { font: inherit; }
 
+.ui-icon { display: inline-block; flex: none; width: 1em; height: 1em; vertical-align: -.125em; stroke: currentColor; }
+.brand__mark .ui-icon { width: 1.45rem; height: 1.45rem; }
+.alert > span .ui-icon { width: .85rem; height: .85rem; }
+.dashboard-metrics article > span .ui-icon { width: 1.35rem; height: 1.35rem; }
+.empty-state > span .ui-icon { width: 2.4rem; height: 2.4rem; }
+.evidence-list article > span .ui-icon, .upload-zone > span .ui-icon { width: 1.4rem; height: 1.4rem; }
+
 button, a { -webkit-tap-highlight-color: transparent; }
 
 a { color: inherit; }
