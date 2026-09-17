@@ -1,11 +1,12 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { LucideShieldCheck, LucideInfo, LucideCircleAlert } from '@lucide/angular';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { AuthService } from '../../../../core/services/auth.service';
 import { ContextService } from '../../../../core/services/context.service';
 
-@Component({ selector: 'app-context-selection', imports: [ReactiveFormsModule], host: { class: 'context-page' }, templateUrl: './context-selection.component.html' })
+@Component({ selector: 'app-context-selection', imports: [ReactiveFormsModule, LucideShieldCheck, LucideInfo, LucideCircleAlert], host: { class: 'context-page' }, templateUrl: './context-selection.component.html' })
 export class ContextSelectionComponent {
   protected readonly context = inject(ContextService);
   protected readonly auth = inject(AuthService);
