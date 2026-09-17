@@ -1,7 +1,7 @@
 <header class="topbar">
   <a class="brand" routerLink="/dashboard" aria-label="OpenSMR, tableau de bord">
     <span class="brand__mark" aria-hidden="true">
-      <svg viewBox="0 0 32 32"><path d="M16 3 27 8v7c0 7.1-4.6 11.7-11 14-6.4-2.3-11-6.9-11-14V8l11-5Z"/><path d="m11.5 16 3 3 6.5-7"/></svg>
+      <svg lucideShieldCheck class="ui-icon" aria-hidden="true"></svg>
     </span>
     <span>OpenSMR</span>
   </a>
@@ -36,7 +36,7 @@
         <strong>{{ auth.user()?.first_name }} {{ auth.user()?.last_name }}</strong>
         <small>{{ context.activeRole() }}</small>
       </span>
-      <span aria-hidden="true">⌄</span>
+      <svg lucideChevronDown class="ui-icon" aria-hidden="true"></svg>
     </button>
     @if (menuOpen()) {
       <div class="profile-dropdown" id="profile-dropdown">

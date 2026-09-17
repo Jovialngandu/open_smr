@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { LucideShieldCheck, LucideChevronDown } from '@lucide/angular';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { finalize } from 'rxjs';
 
@@ -7,7 +8,7 @@ import { ContextService } from '../../../core/services/context.service';
 
 @Component({
   selector: 'app-topbar',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, LucideShieldCheck, LucideChevronDown],
   templateUrl: './topbar.component.html',
 })
 export class TopbarComponent {
