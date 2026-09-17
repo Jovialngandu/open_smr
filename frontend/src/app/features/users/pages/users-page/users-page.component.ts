@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { LucidePlus, LucideCheck, LucideX, LucideCircleAlert } from '@lucide/angular';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { UserRole } from '../../../../core/models/auth.models';
@@ -6,7 +7,7 @@ import { TopbarComponent } from '../../../../shared/components/topbar/topbar.com
 import { ContextService } from '../../../../core/services/context.service';
 import { UsersService } from '../../services/users.service';
 
-@Component({ selector: 'app-users-page', imports: [TopbarComponent, ReactiveFormsModule], templateUrl: './users-page.component.html' })
+@Component({ selector: 'app-users-page', imports: [TopbarComponent, ReactiveFormsModule, LucidePlus, LucideCheck, LucideX, LucideCircleAlert], templateUrl: './users-page.component.html' })
 export class UsersPageComponent {
   protected readonly service = inject(UsersService);
   protected readonly context = inject(ContextService);
