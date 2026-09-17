@@ -1,4 +1,5 @@
 import { Component, effect, HostListener, inject, input, output, signal } from '@angular/core';
+import { LucideX, LucideCircleAlert } from '@lucide/angular';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { RISK_STATUS_LABELS, Risk, RiskPayload, RiskStatus } from '../../../../core/models/governance.models';
@@ -7,7 +8,7 @@ import { RisksService } from '../../services/risks.service';
 
 @Component({
   selector: 'app-risk-form-modal',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, LucideX, LucideCircleAlert],
   templateUrl: './risk-form-modal.component.html',
 })
 export class RiskFormModalComponent {

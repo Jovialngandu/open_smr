@@ -5,11 +5,11 @@
         <p class="eyebrow">Registre des risques</p>
         <h2 id="risk-modal-title">{{ risk() ? 'Modifier le risque' : 'Ajouter un scénario de risque' }}</h2>
       </div>
-      <button class="icon-button" type="button" (click)="close()" aria-label="Fermer la fenêtre">×</button>
+      <button class="icon-button" type="button" (click)="close()" aria-label="Fermer la fenêtre"><svg lucideX class="ui-icon" aria-hidden="true"></svg></button>
     </header>
 
     @if (submitError()) {
-      <div class="alert alert--error" role="alert"><span aria-hidden="true">!</span><p>{{ submitError() }}</p></div>
+      <div class="alert alert--error" role="alert"><span aria-hidden="true"><svg lucideCircleAlert class="ui-icon"></svg></span><p>{{ submitError() }}</p></div>
     }
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
