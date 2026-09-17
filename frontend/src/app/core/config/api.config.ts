@@ -1,6 +1,6 @@
 export const API_CONFIG = {
-  baseUrl: 'http://127.0.0.1:8000/api/v1',
-  useMocks: true,
+  baseUrl: 'https://open-smr.onrender.com/api/v1',
+  useMocks: false,
   mockDelayMs: 550,
 } as const;
 
@@ -49,6 +49,6 @@ export function taskEvidencesEndpoint(taskId: string): string {
   return `${DOMAIN_ENDPOINTS.treatments}${taskId}/evidences/`;
 }
 
-export function soaExportEndpoint(scopeId: string, format: 'pdf' | 'csv'): string {
-  return `${API_CONFIG.baseUrl}/scopes/${scopeId}/soa/export/?format=${format}`;
+export function soaExportEndpoint(scopeId: string): string {
+  return `${API_CONFIG.baseUrl}/exporter/scopes/${scopeId}/export/`;
 }

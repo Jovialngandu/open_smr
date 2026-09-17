@@ -8,5 +8,7 @@ urlpatterns = [
     path('settings/', include('api.modules.v1.settings.urls')),
     path('v1/treatments/', include('api.modules.v1.treatments.urls')),
     path('v1/heatmap/', include('api.modules.v1.heatmap.urls')),
-    path("v1/soa/", include("api.modules.v1.soa.urls")),
+    path('v1/soa/', include('api.modules.v1.soa.urls')),
+    path('v1/risks/', include('api.modules.v1.risks.urls')),
+    path('v1/exporter/', include('api.modules.v1.exporter.urls')),
 ]
