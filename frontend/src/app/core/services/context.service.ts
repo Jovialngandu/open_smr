@@ -65,6 +65,15 @@ export class ContextService {
     );
   }
 
+  createOrganization(name: string, code: string): Observable<{ id: string; name: string; code: string }> {
+    return this.http.post<{ id: string; name: string; code: string }>(DOMAIN_ENDPOINTS.organizations, { name, code }).pipe(
+      tap((organization) => this.profileState.update((profile) => profile ? {
+        ...profile,
+        roles: profile.roles.some((role) => role.organization_id === organization.id) ? profile.roles : [...profile.roles, { organization_id: organization.id, organization_name: organization.name, role: 'ADMIN', scopes: [] }],
+      } : profile)),
+    );
+  }
+
   reset(): void {
     this.profileState.set(null);
     this.claimsState.set(null);

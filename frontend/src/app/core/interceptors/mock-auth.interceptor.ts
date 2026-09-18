@@ -63,6 +63,18 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
     return next(request);
   }
 
+  if (request.url === DOMAIN_ENDPOINTS.organizations && request.method === 'POST') {
+    const body = request.body as { name: string; code: string };
+    const name = body.name?.trim();
+    const code = body.code?.trim().toUpperCase();
+    if (!name || !code) return mockError(400, 'Le nom et le code de l’organisation sont obligatoires.');
+    if (ORGANIZATION_CODES[code]) return mockError(400, 'Ce code d’organisation est déjà utilisé.');
+    const id = createMockId('organization');
+    ORGANIZATION_CODES[code] = id;
+    currentProfile.roles = [...currentProfile.roles, { organization_id: id, organization_name: name, role: 'ADMIN', scopes: [] }];
+    return mockOk({ id, name, code }, 201);
+  }
+
   if (request.url === DOMAIN_ENDPOINTS.scopes && request.method === 'POST') {
     const body = request.body as { organization_id: string; name: string; description?: string };
     const role = currentProfile.roles.find((item) => item.organization_id === body.organization_id);
