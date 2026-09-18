@@ -19,11 +19,11 @@ export class RegisterComponent {
   protected readonly errorMessage = signal('');
   protected readonly form = this.formBuilder.nonNullable.group(
     {
-      firstName: ['', Validators.required],
-      lastName: ['', Validators.required],
+      firstName: [''],
+      lastName: [''],
       email: ['', [Validators.required, Validators.email]],
       username: ['', [Validators.required, Validators.minLength(3)]],
-      organizationMode: ['CREATE' as 'CREATE' | 'JOIN' | 'LATER'],
+      organizationMode: ['LATER' as 'CREATE' | 'JOIN' | 'LATER'],
       organization: [''],
       organizationCode: [''],
       password: ['', [Validators.required, Validators.minLength(12), Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)]],

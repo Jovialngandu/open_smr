@@ -28,7 +28,7 @@
       </div>
       <p class="eyebrow">Créez votre espace</p>
       <h2 id="register-title">Commencez votre parcours de conformité</h2>
-      <p class="auth-intro">Créez une organisation ou rejoignez l’espace de travail de votre équipe.</p>
+      <p class="auth-intro">Créez votre compte maintenant. Vous pourrez créer ou rejoindre une organisation plus tard.</p>
 
       @if (errorMessage()) {
         <div class="alert alert--error" role="alert"><span aria-hidden="true"><svg lucideCircleAlert class="ui-icon"></svg></span><p>{{ errorMessage() }}</p></div>
@@ -61,9 +61,9 @@
         <div class="field">
           <label for="organization-mode">Accès à l’espace de travail</label>
           <select id="organization-mode" formControlName="organizationMode">
+            <option value="LATER">Décider plus tard</option>
             <option value="CREATE">Créer une nouvelle organisation</option>
             <option value="JOIN">Rejoindre une organisation existante</option>
-            <option value="LATER">Décider plus tard</option>
           </select>
         </div>
 
@@ -111,7 +111,7 @@
 
         <button class="button button--primary button--full" type="submit" [disabled]="auth.busy()">
           @if (auth.busy()) { <span class="spinner" aria-hidden="true"></span> Création en cours… }
-          @else { Créer mon espace <svg lucideArrowRight class="ui-icon" aria-hidden="true"></svg> }
+          @else { Créer mon compte <svg lucideArrowRight class="ui-icon" aria-hidden="true"></svg> }
         </button>
       </form>
       <p class="auth-switch">Déjà inscrit&nbsp;? <a routerLink="/login">Se connecter</a></p>
