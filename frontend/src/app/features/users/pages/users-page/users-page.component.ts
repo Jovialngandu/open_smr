@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { LucidePlus, LucideCheck, LucideX, LucideCircleAlert } from '@lucide/angular';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -17,7 +17,7 @@ export class UsersPageComponent {
   protected readonly submitError = signal('');
   protected readonly canManageRoles = computed(() => this.context.activeRole() === 'ADMIN');
   protected readonly form = this.fb.nonNullable.group({ userId: ['', [Validators.required, Validators.pattern(/^\d+$/)]], role: ['RISK_OWNER' as Exclude<UserRole, 'ADMIN'>, Validators.required] });
-  constructor() { this.service.fetch(); }
+  constructor() { effect(() => { this.context.activeOrganizationId(); this.context.activeScopeId(); this.feedback.set(''); this.submitError.set(''); this.modalOpen.set(false); this.service.fetch(); }); }
   protected submit(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     const value = this.form.getRawValue(); this.submitError.set('');
