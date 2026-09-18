@@ -52,56 +52,56 @@ open_smr/
 ```
 
 ```text
-				+-----------------------------------------------------------------------------------+
-				|                         COUCHE PRÉSENTATION (FRONTEND)                            |
-				|                                                                                   |
-				|   +---------------------------------------------------------------------------+   |
-				|   |                       Interface SPA Angular 21                            |   |
-				|   |  - Dashboard & Heatmap 5x5        - Registre des Risques (DIC)            |   |
-				|   |  - Module SoA (93 Mesures)        - Suivi Kanban des Traitements          |   |
-				|   |  - Portail Auditeur (Read-Only)   - Moteur d'Export (PDF / Word)          |   |
-				|   +---------------------------------------------------------------------------+   |
-				+----------------------------------------+------------------------------------------+
-														|
-														| Requêtes HTTPS / REST (Headers Bearer)
-														v
-				+-----------------------------------------------------------------------------------+
-				|                         COUCHE SÉCURITÉ & MIDDLEWARE                              |
-				|                                                                                   |
-				|   +------------------------------+     +--------------------------------------+   |
-				|   |  Authentification JWT        | --> |  Contrôle d'Accès RBAC               |   |
-				|   |  (Stateless Token Validation)|     |  (ADMIN, RSSI, RISK_OWNER, AUDITOR)  |   |
-				|   +------------------------------+     +--------------------------------------+   |
-				+----------------------------------------+------------------------------------------+
-														|
-														| Autorisation Validée
-														v
-				+-----------------------------------------------------------------------------------+
-				|                         COUCHE LOGIQUE MÉTIER (BACKEND)                           |
-				|                                                                                   |
-				|   +---------------------------------------------------------------------------+   |
-				|   |                      Django REST Framework (DRF)                          |   |
-				|   |                                                                           |   |
-				|   |  [ Multi-Tenancy Engine ]      --> Cloisonnement par Organization / Scope  |   |
-				|   |  [ Risk Evaluation Core ]      --> Calcul DIC et Matrice (Vraisemblance x I)|   |
-				|   |  [ ISO 27001:2022 Reference ]  --> Gestion des 93 Contrôles Annexe A       |   |
-				|   |  [ Reporting Engine ]          --> Génération dynamique PDF / Word / Excel |   |
-				|   +---------------------------------------------------------------------------+   |
-				+----------------------------------------+------------------------------------------+
-														|
-														| Mapping ORM Django
-														v
-				+-----------------------------------------------------------------------------------+
-				|                         COUCHE DE DONNÉES & STOCKAGE                              |
-				|                                                                                   |
-				|   +-----------------------------------+     +---------------------------------+   |
-				|   |  Base de Données Relationnelle    |     |  Stockage Fichiers Sécurisé     |   |
-				|   |  (PostgreSQL / SQLite)            |     |  (Preuves / Evidences Uploads)  |   |
-				|   |  - Organizations & Scopes         |     +---------------------------------+   |
-				|   |  - Assets, Risks & Treatments     |                                           |
-				|   |  - IsoControls, SoaEntries & Ver. |                                           |
-				|   +-----------------------------------+                                           |
-				+-----------------------------------------------------------------------------------+
+		+-----------------------------------------------------------------------------------+
+		|                         COUCHE PRÉSENTATION (FRONTEND)                            |
+		|                                                                                   |
+		|   +---------------------------------------------------------------------------+   |
+		|   |                       Interface SPA Angular 21                            |   |
+		|   |  - Dashboard & Heatmap 5x5        - Registre des Risques (DIC)            |   |
+		|   |  - Module SoA (93 Mesures)        - Suivi Kanban des Traitements          |   |
+		|   |  - Portail Auditeur (Read-Only)   - Moteur d'Export (PDF / Word)          |   |
+		|   +---------------------------------------------------------------------------+   |
+		+----------------------------------------+------------------------------------------+
+												|
+												| Requêtes HTTPS / REST (Headers Bearer)
+												v
+		+-----------------------------------------------------------------------------------+
+		|                         COUCHE SÉCURITÉ & MIDDLEWARE                              |
+		|                                                                                   |
+		|   +------------------------------+     +--------------------------------------+   |
+		|   |  Authentification JWT        | --> |  Contrôle d'Accès RBAC               |   |
+		|   |  (Stateless Token Validation)|     |  (ADMIN, RSSI, RISK_OWNER, AUDITOR)  |   |
+		|   +------------------------------+     +--------------------------------------+   |
+		+----------------------------------------+------------------------------------------+
+												|
+												| Autorisation Validée
+												v
+		+-----------------------------------------------------------------------------------+
+		|                         COUCHE LOGIQUE MÉTIER (BACKEND)                           |
+		|                                                                                   |
+		|   +---------------------------------------------------------------------------+   |
+		|   |                      Django REST Framework (DRF)                          |   |
+		|   |                                                                           |   |
+		|   |  [ Multi-Tenancy Engine ]      --> Cloisonnement par Organization / Scope  |   |
+		|   |  [ Risk Evaluation Core ]      --> Calcul DIC et Matrice (Vraisemblance x I)|   |
+		|   |  [ ISO 27001:2022 Reference ]  --> Gestion des 93 Contrôles Annexe A       |   |
+		|   |  [ Reporting Engine ]          --> Génération dynamique PDF / Word / Excel |   |
+		|   +---------------------------------------------------------------------------+   |
+		+----------------------------------------+------------------------------------------+
+												|
+												| Mapping ORM Django
+												v
+		+-----------------------------------------------------------------------------------+
+		|                         COUCHE DE DONNÉES & STOCKAGE                              |
+		|                                                                                   |
+		|   +-----------------------------------+     +---------------------------------+   |
+		|   |  Base de Données Relationnelle    |     |  Stockage Fichiers Sécurisé     |   |
+		|   |  (PostgreSQL / SQLite)            |     |  (Preuves / Evidences Uploads)  |   |
+		|   |  - Organizations & Scopes         |     +---------------------------------+   |
+		|   |  - Assets, Risks & Treatments     |                                           |
+		|   |  - IsoControls, SoaEntries & Ver. |                                           |
+		|   +-----------------------------------+                                           |
+		+-----------------------------------------------------------------------------------+
 
 ```
 
@@ -170,7 +170,7 @@ cd frontend
 npm install
 
 # Démarrer le serveur de dev Vite
-npm run dev
+npm run start
 ```
 
 ---
@@ -182,15 +182,3 @@ npm run dev
 * **Traçabilité & Audit :** Journalisation (Logging) des actions critiques pour garantir la non-répudiation des éléments de preuve apportés aux contrôles ISO.
 
 ---
-
-## 🧪 Tests & Qualité
-
-```bash
-# Exécution des tests unitaires Backend
-cd backend
-python manage.py test
-
-# Exécution du linter Frontend
-cd frontend
-npm run lint
-```
