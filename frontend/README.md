@@ -79,6 +79,8 @@ Le mode mock permet de tester :
 
 L'inscription requiert seulement un identifiant, un email et un mot de passe côté API. La création ou la jonction d'une organisation est facultative ; un compte sans organisation peut créer la sienne depuis la sélection du contexte, avec un nom et un code unique. Les prénom et nom sont également facultatifs.
 
+En mode mock, les comptes créés restent disponibles pour une nouvelle connexion tant que l'application n'est pas rechargée. Ils apparaissent dans la liste des membres de leur organisation.
+
 Les preuves d'une tâche se déposent depuis « Mes tâches » ou, pour les personnes autorisées, directement depuis les cartes et la liste des traitements. Le dépôt utilise un formulaire `multipart/form-data` (`task_id`, `file_path`, `description`). Dans le tableau Kanban, déplacer une carte change son statut ; le sélecteur de statut n'est disponible qu'en vue liste. Une preuve est demandée avant de terminer une tâche.
 
 La liste des utilisateurs est rechargée et vidée immédiatement lors d'un changement d'organisation ou de périmètre. Les réponses arrivées en retard pour l'ancien contexte sont ignorées.

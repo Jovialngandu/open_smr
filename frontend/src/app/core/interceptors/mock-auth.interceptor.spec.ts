@@ -67,4 +67,21 @@ describe('mockAuthInterceptor', () => {
     }), () => { throw new Error('Requête non interceptée.'); })) as HttpResponse<{ active_organization_id: string }>;
     expect(switched.body?.active_organization_id).toBe(created.body?.id);
   });
+
+  it('permet à un compte créé en mode démonstration de se reconnecter', async () => {
+    const response = await firstValueFrom(mockAuthInterceptor(new HttpRequest('POST', AUTH_ENDPOINTS.login, {
+      username: 'sans.org', password: 'MotDePasse123!',
+    }), () => { throw new Error('Requête non interceptée.'); })) as HttpResponse<AuthResponse>;
+    expect(response.status).toBe(200);
+    expect(response.body?.access.split('.')).toHaveLength(3);
+  });
+
+  it('attribue une organisation distincte à chaque nouveau compte administrateur', async () => {
+    const signup = async (username: string) => firstValueFrom(mockAuthInterceptor(new HttpRequest('POST', AUTH_ENDPOINTS.register, {
+      username, email: `${username}@example.com`, password: 'MotDePasse123!', organization_name: username,
+    }), () => { throw new Error('Requête non interceptée.'); })) as Promise<HttpResponse<AuthResponse>>;
+    const first = await signup('org.premiere');
+    const second = await signup('org.seconde');
+    expect(first.body?.user?.roles[0].organization_id).not.toBe(second.body?.user?.roles[0].organization_id);
+  });
 });
