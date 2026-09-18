@@ -23,7 +23,7 @@ export class SoaService {
 
   fetch(scopeId: string): void {
     this.loadingState.set(true);
-    this.http.get<SoaEntry[]>(DOMAIN_ENDPOINTS.soa, { params: new HttpParams().set('scope_id', scopeId) }).pipe(finalize(() => this.loadingState.set(false))).subscribe((entries) => this.entriesState.set(entries));
+    this.http.get<SoaEntry[]>(DOMAIN_ENDPOINTS.soaEntries, { params: new HttpParams().set('scope_id', scopeId) }).pipe(finalize(() => this.loadingState.set(false))).subscribe((entries) => this.entriesState.set(entries));
     this.http.get<SoaVersion[]>(DOMAIN_ENDPOINTS.soaVersions, { params: new HttpParams().set('scope_id', scopeId) }).subscribe((versions) => this.versionsState.set(versions));
   }
 
