@@ -7,10 +7,13 @@ import { Evidence, IsoControl, ManagedUser, SoaEntry, SoaVersion, TreatmentTask 
 
 const DIGITAL_SCOPE = '8f4b8400-e29b-41d4-a716-446655440101';
 const DATACENTER_SCOPE = '8f4b8400-e29b-41d4-a716-446655440102';
-const members: ManagedUser[] = [
-  { id: '1', role_assignment_id: 'role-001', name: 'Camille Durand', email: 'camille.durand@opensmr.fr', role: 'RISK_OWNER', is_active: true, scope_ids: [DIGITAL_SCOPE, DATACENTER_SCOPE] },
-  { id: '2', role_assignment_id: 'role-002', name: 'Nadia Bernard', email: 'nadia.bernard@opensmr.fr', role: 'RSSI', is_active: true, scope_ids: [DIGITAL_SCOPE] },
-  { id: '3', role_assignment_id: 'role-003', name: 'Thomas Leroy', email: 'thomas.leroy@opensmr.fr', role: 'AUDITOR', is_active: true, scope_ids: [DIGITAL_SCOPE] },
+const ASTERIA_ORG = '8f4b8400-e29b-41d4-a716-446655440001';
+const NOVACARE_ORG = '8f4b8400-e29b-41d4-a716-446655440002';
+const members: (ManagedUser & { organization_id: string })[] = [
+  { id: '1', organization_id: ASTERIA_ORG, role_assignment_id: 'role-001', name: 'Camille Durand', email: 'camille.durand@opensmr.fr', role: 'RISK_OWNER', is_active: true, scope_ids: [DIGITAL_SCOPE, DATACENTER_SCOPE] },
+  { id: '2', organization_id: ASTERIA_ORG, role_assignment_id: 'role-002', name: 'Nadia Bernard', email: 'nadia.bernard@opensmr.fr', role: 'RSSI', is_active: true, scope_ids: [DIGITAL_SCOPE] },
+  { id: '3', organization_id: ASTERIA_ORG, role_assignment_id: 'role-003', name: 'Thomas Leroy', email: 'thomas.leroy@opensmr.fr', role: 'AUDITOR', is_active: true, scope_ids: [DIGITAL_SCOPE] },
+  { id: '4', organization_id: NOVACARE_ORG, role_assignment_id: 'role-004', name: 'Léa Morel', email: 'lea.morel@novacare.fr', role: 'ADMIN', is_active: true, scope_ids: ['8f4b8400-e29b-41d4-a716-446655440201'] },
 ];
 
 const controls: IsoControl[] = Array.from({ length: 93 }, (_, index) => {
@@ -51,10 +54,10 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
     return ok({ risks_by_level: { high: isDatacenter ? 0 : 2, medium: isDatacenter ? 1 : 2, low: 0 }, soa_completion: { total_applicable: 84, implemented: isDatacenter ? 31 : 30, percentage: isDatacenter ? 36.9 : 35.71 }, overdue_tasks_count: isDatacenter ? 0 : 1 });
   }
   const membersMatch = request.url.match(/\/organizations\/([^/]+)\/members\/$/);
-  if (membersMatch && request.method === 'GET') return ok(members.map(toBackendMember));
+  if (membersMatch && request.method === 'GET') return ok(members.filter((member) => member.organization_id === membersMatch[1]).map(toBackendMember));
   if (membersMatch && request.method === 'POST') {
     const body = request.body as { user_id: number; role: ManagedUser['role'] };
-    const existing = members.find((member) => member.id === String(body.user_id));
+    const existing = members.find((member) => member.id === String(body.user_id) && member.organization_id === membersMatch[1]);
     if (!existing) return fail(400, "Ce compte utilisateur n'existe pas.");
     existing.role = body.role;
     existing.is_active = true;
@@ -62,7 +65,7 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
   }
   const memberStatusMatch = request.url.match(/\/organizations\/([^/]+)\/members\/([^/]+)\/toggle-status\/$/);
   if (memberStatusMatch && request.method === 'PATCH') {
-    const member = members.find((item) => item.role_assignment_id === memberStatusMatch[2]);
+    const member = members.find((item) => item.role_assignment_id === memberStatusMatch[2] && item.organization_id === memberStatusMatch[1]);
     if (!member) return fail(404, 'Affectation introuvable.');
     member.is_active = Boolean((request.body as { is_active: boolean }).is_active);
     return ok(toBackendMember(member));
@@ -121,7 +124,7 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
     const file = form.get('file_path') as File;
     const current = treatments.find((item) => item.id === taskId);
     if (!current) return fail(404, 'Tâche introuvable.');
-    const evidence: Evidence = { id: createMockId('evidence'), task_id: taskId, file_name: file.name, file_type: file.type, description: String(form.get('description') ?? ''), uploaded_by_name: 'Camille Durand', uploaded_at: new Date().toISOString() };
+    const evidence: Evidence = { id: createMockId('evidence'), task_id: taskId, file_name: file.name, file_type: file.type, description: String(form.get('description') ?? ''), uploaded_by_name: 'Camille Durand', uploaded_at: new Date().toISOString(), download_url: URL.createObjectURL(file) };
     treatments = treatments.map((item) => item.id === taskId ? { ...item, evidences: [...item.evidences, evidence] } : item);
     return ok(toBackendEvidence(evidence), 201);
   }
@@ -149,7 +152,7 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
   if (request.url === DOMAIN_ENDPOINTS.users && request.method === 'GET') return ok(members);
   if (request.url === DOMAIN_ENDPOINTS.users && request.method === 'POST') {
     const created = { ...(request.body as Omit<ManagedUser, 'id'>), id: createMockId('user') };
-    members.push(created);
+    members.push({ ...created, organization_id: ASTERIA_ORG });
     return ok(created, 201);
   }
   const userId = collectionId(request.url, DOMAIN_ENDPOINTS.users);

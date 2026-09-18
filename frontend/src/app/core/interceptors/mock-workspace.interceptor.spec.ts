@@ -1,7 +1,7 @@
 import { HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
-import { DOMAIN_ENDPOINTS } from '../config/api.config';
+import { DOMAIN_ENDPOINTS, organizationMembersEndpoint } from '../config/api.config';
 import { HeatmapApiResponse, SoaEntry } from '../models/governance.models';
 import { mockWorkspaceInterceptor } from './mock-workspace.interceptor';
 
@@ -24,6 +24,13 @@ describe('mockWorkspaceInterceptor', () => {
     const response = await intercept<Array<{ risk: string; iso_control: string }>>(new HttpRequest('GET', DOMAIN_ENDPOINTS.treatments, null, { params: scopeParams() }));
     expect(response.body).toHaveLength(3);
     expect(response.body?.every((task) => Boolean(task.risk && task.iso_control))).toBe(true);
+  });
+
+  it('isole les membres de chaque organisation', async () => {
+    const asteria = await intercept<Array<{ user: { id: number } }>>(new HttpRequest('GET', organizationMembersEndpoint('8f4b8400-e29b-41d4-a716-446655440001')));
+    const novacare = await intercept<Array<{ user: { id: number } }>>(new HttpRequest('GET', organizationMembersEndpoint('8f4b8400-e29b-41d4-a716-446655440002')));
+    expect(asteria.body?.map((member) => member.user.id)).toEqual([1, 2, 3]);
+    expect(novacare.body?.map((member) => member.user.id)).toEqual([4]);
   });
 });
 
