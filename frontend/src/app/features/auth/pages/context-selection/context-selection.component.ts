@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { LucideShieldCheck, LucideInfo, LucideCircleAlert } from '@lucide/angular';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { finalize, switchMap } from 'rxjs';
 
 import { AuthService } from '../../../../core/services/auth.service';
 import { ContextService } from '../../../../core/services/context.service';
@@ -19,6 +20,20 @@ export class ContextSelectionComponent {
   protected readonly error = signal('');
   protected readonly canCreateScope = computed(() => ['ADMIN', 'RSSI'].includes(this.selectedOrganization()?.role ?? ''));
   protected readonly scopeForm = this.fb.nonNullable.group({ name: ['', [Validators.required, Validators.maxLength(255)]], description: [''] });
+  protected readonly organizationForm = this.fb.nonNullable.group({ name: ['', Validators.required], code: ['', Validators.required] });
+
+  protected createOrganization(): void {
+    if (this.organizationForm.invalid) { this.organizationForm.markAllAsTouched(); return; }
+    const { name, code } = this.organizationForm.getRawValue();
+    this.busy.set(true); this.error.set('');
+    this.context.createOrganization(name.trim(), code.trim().toUpperCase()).pipe(
+      switchMap((organization) => this.context.switchContext({ organization_id: organization.id, scope_id: null })),
+      finalize(() => this.busy.set(false)),
+    ).subscribe({
+      next: (response) => { this.organizationId.set(response.active_organization_id); this.scopeId.set(''); },
+      error: () => this.error.set('La création de l’organisation a échoué. Vérifiez le nom et le code.'),
+    });
+  }
 
   protected changeOrganization(event: Event): void {
     const id = (event.target as HTMLSelectElement).value;
