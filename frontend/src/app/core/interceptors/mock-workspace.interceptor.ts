@@ -3,6 +3,7 @@ import { delay, of, throwError } from 'rxjs';
 
 import { API_CONFIG, DOMAIN_ENDPOINTS } from '../config/api.config';
 import { createMockId } from '../utils/mock-id';
+import { UserProfile, UserRole } from '../models/auth.models';
 import { Evidence, IsoControl, ManagedUser, SoaEntry, SoaVersion, TreatmentTask } from '../models/governance.models';
 
 const DIGITAL_SCOPE = '8f4b8400-e29b-41d4-a716-446655440101';
@@ -15,6 +16,20 @@ const members: (ManagedUser & { organization_id: string })[] = [
   { id: '3', organization_id: ASTERIA_ORG, role_assignment_id: 'role-003', name: 'Thomas Leroy', email: 'thomas.leroy@opensmr.fr', role: 'AUDITOR', is_active: true, scope_ids: [DIGITAL_SCOPE] },
   { id: '4', organization_id: NOVACARE_ORG, role_assignment_id: 'role-004', name: 'Léa Morel', email: 'lea.morel@novacare.fr', role: 'ADMIN', is_active: true, scope_ids: ['8f4b8400-e29b-41d4-a716-446655440201'] },
 ];
+
+export function registerMockMember(profile: UserProfile, organizationId: string, role: UserRole): void {
+  if (members.some((member) => member.id === profile.id && member.organization_id === organizationId)) return;
+  members.push({
+    id: profile.id,
+    organization_id: organizationId,
+    role_assignment_id: createMockId('role'),
+    name: `${profile.first_name} ${profile.last_name}`.trim() || profile.username,
+    email: profile.email,
+    role,
+    is_active: true,
+    scope_ids: [],
+  });
+}
 
 const controls: IsoControl[] = Array.from({ length: 93 }, (_, index) => {
   const position = index + 1;
