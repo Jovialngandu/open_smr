@@ -26,6 +26,9 @@ body { min-width: 320px; }
 button, input, select, textarea { font: inherit; }
 
 .ui-icon { display: inline-block; flex: none; width: 1em; height: 1em; vertical-align: -.125em; stroke: currentColor; }
+.kanban-card__actions { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .65rem; }
+.kanban-card__actions .text-button { font-size: .7rem; }
+.data-panel td .text-button { margin-left: .5rem; }
 .brand__mark .ui-icon { width: 1.45rem; height: 1.45rem; }
 .alert > span .ui-icon { width: .85rem; height: .85rem; }
 .dashboard-metrics article > span .ui-icon { width: 1.35rem; height: 1.35rem; }
