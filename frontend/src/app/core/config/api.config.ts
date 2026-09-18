@@ -22,6 +22,8 @@ export const DOMAIN_ENDPOINTS = {
   evidences: `${API_CONFIG.baseUrl}/treatments/evidences/`,
   soa: `${API_CONFIG.baseUrl}/soa/`,
   soaVersions: `${API_CONFIG.baseUrl}/soa/versions/`,
+  soaEntries: `${API_CONFIG.baseUrl}/soa/entries/`,
+
   users: `${API_CONFIG.baseUrl}/users/`,
 } as const;
 
