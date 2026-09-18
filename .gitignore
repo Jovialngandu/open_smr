@@ -47,3 +47,59 @@ Thumbs.db
 export_project.sh
 project_dump.txt
 .angular
+project_dump_back.txt
+project_dump_front.txt
+
+
+.angular
+
+# ==========================================
+# Fichiers auxiliaires et de compilation LaTeX
+# ==========================================
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.glg
+*.glo
+*.gls
+*.idx
+*.ilg
+*.ind
+*.ist
+*.lof
+*.log
+*.lot
+*.maf
+*.mtc
+*.mtc0
+*.nav
+*.out
+*.pdfsync
+*.run.xml
+*.snm
+*.synctex.gz
+*.synctex(busy)
+*.toc
+*.vrb
+
+# ==========================================
+# Fichiers temporaires VS Code / Latex Workshop
+# ==========================================
+.vscode/
+*.bak
+*.sav
+
+# ==========================================
+# Fichiers système et OS
+# ==========================================
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Fichiers PDF générés (Optionnel)
+# ==========================================
+# Décommente la ligne suivante si tu ne veux PAS synchroniser le PDF final sur Git :
+*.pdf
