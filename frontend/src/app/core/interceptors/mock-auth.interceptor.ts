@@ -85,7 +85,10 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
     const body = request.body as { organization_id: string; name: string; description?: string };
     const role = currentProfile.roles.find((item) => item.organization_id === body.organization_id);
     if (!role || !['ADMIN', 'RSSI'].includes(role.role)) return mockError(403, 'Vous ne pouvez pas créer de périmètre dans cette organisation.');
-    const scope = { id: createMockId('scope'), organization_id: body.organization_id, name: body.name, description: body.description ?? '' };
+    const name = body.name?.trim();
+    if (!name) return mockError(400, 'Le nom du périmètre est obligatoire.');
+    if (role.scopes.some((scope) => scope.name.toLocaleLowerCase('fr') === name.toLocaleLowerCase('fr'))) return mockError(400, 'Un périmètre avec ce nom existe déjà dans cette organisation.');
+    const scope = { id: createMockId('scope'), organization_id: body.organization_id, name, description: body.description?.trim() ?? '' };
     role.scopes = [...role.scopes, scope];
     return mockOk(scope, 201);
   }
@@ -107,7 +110,7 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
       return mockError(401, 'Identifiant ou mot de passe incorrect.');
     }
     currentProfile = account?.profile ?? (body.username === 'demo.owner' ? OWNER_PROFILE : DEMO_PROFILE);
-    activeOrganizationId = currentProfile.roles[0].organization_id;
+    activeOrganizationId = currentProfile.roles[0]?.organization_id ?? '';
     activeScopeId = currentProfile.roles[0].scopes?.[0]?.id ?? '';
     return mockOk(tokensFor(currentProfile));
   }

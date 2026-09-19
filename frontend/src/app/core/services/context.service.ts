@@ -61,7 +61,7 @@ export class ContextService {
 
   createScope(organizationId: string, name: string, description: string): Observable<{ id: string; organization_id: string; name: string; description: string }> {
     return this.http.post<{ id: string; organization_id: string; name: string; description: string }>(DOMAIN_ENDPOINTS.scopes, { organization_id: organizationId, name, description }).pipe(
-      tap((scope) => this.profileState.update((profile) => profile ? { ...profile, roles: profile.roles.map((role) => role.organization_id === organizationId ? { ...role, scopes: [...role.scopes, scope] } : role) } : profile)),
+      tap((scope) => this.profileState.update((profile) => profile ? { ...profile, roles: profile.roles.map((role) => role.organization_id === organizationId ? { ...role, scopes: role.scopes.some((item) => item.id === scope.id) ? role.scopes : [...role.scopes, scope] } : role) } : profile)),
     );
   }
 
