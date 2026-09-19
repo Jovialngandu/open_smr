@@ -228,7 +228,10 @@ form { display: grid; gap: 1.15rem; }
 
 .welcome-page { min-height: 100dvh; padding: 1.5rem clamp(1.2rem, 5vw, 5rem); background: radial-gradient(circle at 80% 0, #e9f4d0, transparent 28%), #f5f7f4; }
 .topbar { position: relative; z-index: 10; display: grid; grid-template-columns: auto minmax(300px, 620px) auto; align-items: center; gap: clamp(1rem, 3vw, 2.5rem); max-width: 1280px; min-height: 4.5rem; padding: .65rem 1rem; margin: 0 auto; border: 1px solid rgba(207,216,211,.85); border-radius: 1rem; background: rgba(255,255,255,.9); box-shadow: 0 10px 35px rgba(22,58,44,.07); backdrop-filter: blur(14px); }
-.context-picker { display: grid; grid-template-columns: minmax(130px, 1fr) auto minmax(130px, 1fr) auto; align-items: center; gap: .65rem; padding: .45rem .7rem; border: 1px solid #e0e6e2; border-radius: .75rem; background: #f7f9f7; transition: opacity .18s; }
+.context-picker { display: grid; grid-template-columns: minmax(130px, 1fr) auto minmax(130px, 1fr) auto auto; align-items: center; gap: .65rem; padding: .45rem .7rem; border: 1px solid #e0e6e2; border-radius: .75rem; background: #f7f9f7; transition: opacity .18s; }
+.scope-create-trigger { display: grid; place-items: center; justify-self: end; width: 1.8rem; height: 1.8rem; color: var(--brand); border: 1px solid #cddbd2; border-radius: .45rem; background: white; }
+.scope-create-trigger:hover { background: #e5f2eb; }
+.scope-create-trigger:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .context-picker--busy { opacity: .7; }
 .context-field { display: grid; min-width: 0; }
 .context-field label { color: #7a8781; font-size: .62rem; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; }

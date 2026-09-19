@@ -85,6 +85,8 @@ Les preuves d'une tâche se déposent depuis « Mes tâches » ou, pour les pers
 
 La liste des utilisateurs est rechargée et vidée immédiatement lors d'un changement d'organisation ou de périmètre. Les réponses arrivées en retard pour l'ancien contexte sont ignorées.
 
+Un ADMIN ou un RSSI peut créer d'autres périmètres à tout moment avec le bouton « + » situé à côté du sélecteur de périmètre, dans la barre supérieure. Le formulaire utilise `POST /scopes/` avec l'organisation active ; après création, l'application bascule vers le nouveau périmètre. Le backend accorde automatiquement l'accès au créateur et initialise les entrées SoA.
+
 ```text
 Compte → Organisation → Périmètre → Actif → Risque
        → Mesure ISO → Tâche assignée → Preuve → SoA versionnée
