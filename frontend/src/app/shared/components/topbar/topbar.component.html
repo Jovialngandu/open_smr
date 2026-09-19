@@ -26,6 +26,9 @@
         }
       </select>
     </div>
+    @if (canCreateScope()) {
+      <button class="scope-create-trigger" type="button" (click)="scopeModalOpen.set(true)" [disabled]="switching()" aria-label="Créer un périmètre" title="Créer un périmètre"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg></button>
+    }
     @if (switching()) { <span class="context-loader" aria-label="Changement de contexte en cours"></span> }
   </div>
 
@@ -72,4 +75,18 @@
 
 @if (contextError()) {
   <div class="context-error" role="alert">{{ contextError() }}</div>
+}
+
+@if (scopeModalOpen() && canCreateScope()) {
+  <div class="modal-backdrop" (click)="$event.target === $event.currentTarget && closeScopeModal()">
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="scope-create-title" (click)="$event.stopPropagation()">
+      <header class="modal-card__header"><div><p class="eyebrow">Organisation active</p><h2 id="scope-create-title">Créer un périmètre</h2><p>{{ context.activeOrganization()?.organization_name }}</p></div><button class="icon-button" type="button" (click)="closeScopeModal()" [disabled]="creatingScope()" aria-label="Fermer"><svg lucideX class="ui-icon" aria-hidden="true"></svg></button></header>
+      <form [formGroup]="scopeForm" (ngSubmit)="createScope()">
+        <div class="field"><label for="new-scope-name">Nom du périmètre</label><input id="new-scope-name" formControlName="name" maxlength="255" placeholder="Ex. Direction financière" [attr.aria-invalid]="scopeForm.controls.name.invalid && scopeForm.controls.name.touched">@if (scopeForm.controls.name.invalid && scopeForm.controls.name.touched) { <small class="field__error">Saisissez un nom de 255 caractères maximum.</small> }</div>
+        <div class="field"><label for="new-scope-description">Description</label><textarea id="new-scope-description" rows="3" formControlName="description" placeholder="Départements, équipes ou systèmes inclus"></textarea></div>
+        @if (scopeError()) { <p class="inline-error" role="alert">{{ scopeError() }}</p> }
+        <footer class="modal-card__actions"><button class="button button--ghost" type="button" (click)="closeScopeModal()" [disabled]="creatingScope()">Annuler</button><button class="button button--primary" type="submit" [disabled]="creatingScope()">{{ creatingScope() ? 'Création…' : 'Créer et ouvrir' }}</button></footer>
+      </form>
+    </section>
+  </div>
 }
