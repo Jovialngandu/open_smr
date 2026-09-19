@@ -1,4 +1,4 @@
-import { HttpRequest, HttpResponse } from '@angular/common/http';
+import { HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
 import { AUTH_ENDPOINTS, DOMAIN_ENDPOINTS } from '../config/api.config';
@@ -83,5 +83,24 @@ describe('mockAuthInterceptor', () => {
     const first = await signup('org.premiere');
     const second = await signup('org.seconde');
     expect(first.body?.user?.roles[0].organization_id).not.toBe(second.body?.user?.roles[0].organization_id);
+  });
+
+  it('permet de créer un autre périmètre dans une organisation existante', async () => {
+    const intercept = <T>(request: HttpRequest<unknown>) => firstValueFrom(mockAuthInterceptor(request, () => {
+      throw new Error('Requête non interceptée.');
+    })) as Promise<HttpResponse<T>>;
+    await intercept(new HttpRequest('POST', AUTH_ENDPOINTS.login, { username: 'demo.rssi', password: 'Demo1234!' }));
+    const organizationId = '8f4b8400-e29b-41d4-a716-446655440001';
+    const created = await intercept<{ id: string }>(new HttpRequest('POST', DOMAIN_ENDPOINTS.scopes, {
+      organization_id: organizationId, name: 'Nouveau périmètre', description: 'Équipe de test',
+    }));
+    expect(created.status).toBe(201);
+    const scopes = await intercept<Array<{ id: string }>>(new HttpRequest('GET', DOMAIN_ENDPOINTS.scopes, null, {
+      params: new HttpParams().set('organization_id', organizationId),
+    }));
+    expect(scopes.body?.some((scope) => scope.id === created.body?.id)).toBe(true);
+    await expect(intercept(new HttpRequest('POST', DOMAIN_ENDPOINTS.scopes, {
+      organization_id: organizationId, name: 'Nouveau périmètre',
+    }))).rejects.toMatchObject({ status: 400 });
   });
 });
