@@ -7,8 +7,7 @@ User = get_user_model()
 
 class OrganizationInputSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=255)
-    code = serializers.CharField(max_length=50)
-    description = serializers.CharField(required=False, allow_blank=True)
+    description = serializers.CharField(required=False, allow_blank=True, default="")
 
 
 class OrganizationOutputSerializer(serializers.ModelSerializer):

@@ -1,11 +1,10 @@
 from rest_framework import serializers
-
 from api.models import Risk
 
 
 class RiskCreateSerializer(serializers.Serializer):
     asset_id = serializers.UUIDField()
-    code = serializers.CharField(max_length=50)
+    # Le champ 'code' a été retiré car il est généré automatiquement côté backend
     threat_description = serializers.CharField()
 
     likelihood = serializers.IntegerField(
@@ -29,11 +28,8 @@ class RiskCreateSerializer(serializers.Serializer):
     )
 
 
-
 class RiskUpdateSerializer(serializers.Serializer):
-    threat_description = serializers.CharField(
-        required=False
-    )
+    threat_description = serializers.CharField(required=False)
 
     likelihood = serializers.IntegerField(
         min_value=1,
@@ -57,9 +53,9 @@ class RiskUpdateSerializer(serializers.Serializer):
         required=False,
     )
 
+
 class RiskOutputSerializer(serializers.ModelSerializer):
     score = serializers.IntegerField(read_only=True)
-
     asset = serializers.SerializerMethodField()
 
     class Meta:
@@ -67,7 +63,7 @@ class RiskOutputSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "asset",
-            "code",
+            "code",  # Présent en sortie (lecture seule)
             "threat_description",
             "likelihood",
             "impact",
@@ -84,5 +80,3 @@ class RiskOutputSerializer(serializers.ModelSerializer):
             "category": obj.asset.category,
             "scope_id": str(obj.asset.scope_id),
         }
-
-    
