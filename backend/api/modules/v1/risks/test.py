@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.utils import timezone
 from rest_framework.test import APIClient
-
 from api.models import (
     Asset,
     Organization,
@@ -11,14 +11,13 @@ from api.models import (
     UserScopeAccess,
 )
 
-
 User = get_user_model()
 
 
 class RiskAPITests(TestCase):
-
     def setUp(self):
         self.client = APIClient()
+        current_year = timezone.now().year
 
         # Création de l'utilisateur de test
         self.user = User.objects.create_user(
@@ -65,10 +64,11 @@ class RiskAPITests(TestCase):
             availability=3,
         )
 
-        # Création d'un risque initial
+        # Création d'un risque initial (RSK-2026-001)
+        self.initial_code = f"RSK-{current_year}-001"
         self.risk = Risk.objects.create(
             asset=self.asset,
-            code="RISK-001",
+            code=self.initial_code,
             threat_description="Accès non autorisé",
             likelihood=4,
             impact=5,
@@ -85,12 +85,11 @@ class RiskAPITests(TestCase):
                 "scope_id": str(self.scope.id),
             },
         )
-
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(
             response.data[0]["code"],
-            "RISK-001",
+            self.initial_code,
         )
 
     def test_list_risks_by_asset(self):
@@ -100,48 +99,43 @@ class RiskAPITests(TestCase):
                 "asset_id": str(self.asset.id),
             },
         )
-
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
-
         self.assertEqual(
             response.data[0]["code"],
-            "RISK-001",
+            self.initial_code,
         )
 
     def test_create_risk(self):
+        current_year = timezone.now().year
+        expected_code = f"RSK-{current_year}-002"
+
+        # Le 'code' n'est plus fourni dans les données du client
         data = {
             "asset_id": str(self.asset.id),
-            "code": "RISK-002",
             "threat_description": "Panne du serveur",
             "likelihood": 3,
             "impact": 4,
             "status": "OPEN",
         }
-
         response = self.client.post(
             "/api/v1/risks/",
             data,
             format="json",
         )
-
         self.assertEqual(response.status_code, 201)
-
+        # Vérification du code généré automatiquement
         self.assertEqual(
             response.data["code"],
-            "RISK-002",
+            expected_code,
         )
-
         # 3 × 4 = 12
         self.assertEqual(
             response.data["score"],
             12,
         )
-
         self.assertTrue(
-            Risk.objects.filter(
-                code="RISK-002"
-            ).exists()
+            Risk.objects.filter(code=expected_code).exists()
         )
 
     def test_update_risk_status(self):
@@ -152,36 +146,28 @@ class RiskAPITests(TestCase):
             },
             format="json",
         )
-
         self.assertEqual(response.status_code, 200)
-
         self.risk.refresh_from_db()
-
         self.assertEqual(
             self.risk.status,
             "IN_MITIGATION",
         )
 
     def test_invalid_likelihood(self):
+        # 'code' retiré du payload
         data = {
             "asset_id": str(self.asset.id),
-            "code": "RISK-003",
             "threat_description": "Test invalid likelihood",
             "likelihood": 8,
             "impact": 4,
             "status": "OPEN",
         }
-
         response = self.client.post(
             "/api/v1/risks/",
             data,
             format="json",
         )
-
         self.assertEqual(response.status_code, 400)
-
-
-
 
     def test_update_risk_fields_and_score(self):
         response = self.client.patch(
@@ -194,11 +180,8 @@ class RiskAPITests(TestCase):
             },
             format="json",
         )
-
         self.assertEqual(response.status_code, 200)
-
         self.risk.refresh_from_db()
-
         self.assertEqual(
             self.risk.threat_description,
             "Menace mise à jour",
@@ -209,10 +192,8 @@ class RiskAPITests(TestCase):
             self.risk.status,
             "IN_MITIGATION",
         )
-
         # 2 × 3 = 6
         self.assertEqual(response.data["score"], 6)
-
 
     def test_partial_update_risk(self):
         response = self.client.patch(
@@ -222,31 +203,22 @@ class RiskAPITests(TestCase):
             },
             format="json",
         )
-
         self.assertEqual(response.status_code, 200)
-
         self.risk.refresh_from_db()
-
         self.assertEqual(self.risk.likelihood, 2)
-
-        # L'impact n'a pas été envoyé :
-        # il doit rester à 5.
+        # L'impact n'a pas été envoyé : il doit rester à 5
         self.assertEqual(self.risk.impact, 5)
-
         # 2 × 5 = 10
         self.assertEqual(response.data["score"], 10)
 
-
     def test_unauthenticated_user_cannot_access_risks(self):
         self.client.force_authenticate(user=None)
-
         response = self.client.get(
             "/api/v1/risks/",
             {
                 "scope_id": str(self.scope.id),
             },
         )
-
         self.assertIn(
             response.status_code,
             [401, 403],

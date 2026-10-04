@@ -1,23 +1,38 @@
 from django.db import transaction
-
+from django.utils import timezone
 from api.models import Asset, Risk
+
+
+def generate_risk_code(asset: Asset) -> str:
+    """
+    Génère un identifiant unique au format RSK-YYYY-XXX basé sur l'année
+    et le nombre de risques existants dans le scope de l'actif.
+    """
+    current_year = timezone.now().year
+    prefix = f"RSK-{current_year}"
+
+    # Compte le nombre de risques déjà créés dans le même scope cette année
+    count = Risk.objects.filter(
+        asset__scope=asset.scope,
+        created_at__year=current_year
+    ).count() + 1
+
+    return f"{prefix}-{count:03d}"
 
 
 @transaction.atomic
 def create_risk(
     *,
     asset: Asset,
-    code: str,
     threat_description: str,
     likelihood: int,
     impact: int,
     status: str = "OPEN",
 ) -> Risk:
     """
-    Crée un risque associé à un actif.
-    Le score brut est calculé automatiquement par le modèle :
-    score = likelihood * impact
+    Crée un risque associé à un actif avec un code généré automatiquement.
     """
+    code = generate_risk_code(asset)
 
     risk = Risk.objects.create(
         asset=asset,
@@ -42,10 +57,7 @@ def update_risk(
 ) -> Risk:
     """
     Met à jour les informations modifiables d'un risque.
-    Le score est recalculé automatiquement par le modèle
-    à partir de likelihood et impact.
     """
-
     if threat_description is not None:
         risk.threat_description = threat_description
 
