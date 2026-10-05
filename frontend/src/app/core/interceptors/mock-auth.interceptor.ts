@@ -108,7 +108,7 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
     const account = registeredAccounts.get(body.username ?? '');
     const demo = ['demo.rssi', 'demo.owner'].includes(body.username ?? '');
     if ((!demo || body.password !== 'Demo1234!') && (!account || account.password !== body.password)) {
-      return mockError(401, 'Identifiant ou mot de passe incorrect.');
+      return mockError(401, 'Nom d’utilisateur ou mot de passe incorrect.');
     }
     currentProfile = account?.profile ?? (body.username === 'demo.owner' ? OWNER_PROFILE : DEMO_PROFILE);
     activeOrganizationId = currentProfile.roles[0]?.organization_id ?? '';
@@ -119,7 +119,7 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
   if (request.url === AUTH_ENDPOINTS.register && request.method === 'POST') {
     const body = request.body as RegisterRequest;
     if ([DEMO_PROFILE, OWNER_PROFILE, ...Array.from(registeredAccounts.values(), (account) => account.profile)].some((profile) => profile.email === body.email || profile.username === body.username)) {
-      return mockError(400, 'Un compte utilise déjà cet email ou cet identifiant.');
+      return mockError(400, 'Un compte utilise déjà cet email ou ce nom d’utilisateur.');
     }
     const joinCode = body.join_organization_code?.trim().toUpperCase();
     const joinedOrganization = joinCode

@@ -95,7 +95,7 @@ export class AuthService {
       if (typeof apiMessage === 'string') return new Error(apiMessage);
       if (Array.isArray(apiMessage) && apiMessage[0]) return new Error(String(apiMessage[0]));
       if (error.status === 0) return new Error("Le service est indisponible. Réessayez dans un instant.");
-      if (error.status === 401) return new Error('Identifiant ou mot de passe incorrect.');
+      if (error.status === 401) return new Error('Nom d’utilisateur ou mot de passe incorrect.');
     }
     return error instanceof Error ? error : new Error('Une erreur inattendue est survenue.');
   }
