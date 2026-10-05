@@ -39,17 +39,13 @@ export class LoginComponent {
     else localStorage.removeItem('opensmr.saved_identity');
 
     this.auth.login({ username: identity.trim(), password }).subscribe({
-      next: () => void this.router.navigateByUrl(this.safeReturnUrl()),
+      next: (profile) => void this.router.navigateByUrl(profile.roles.length ? '/select-context' : '/dashboard'),
       error: (error: Error) => this.errorMessage.set(error.message),
     });
   }
 
   protected showRecoveryMessage(): void {
     this.errorMessage.set('La réinitialisation sera disponible dès que le prochain endpoint du backend sera prêt.');
-  }
-
-  private safeReturnUrl(): string {
-    return '/select-context';
   }
 
   constructor() {

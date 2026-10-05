@@ -111,7 +111,7 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
     }
     currentProfile = account?.profile ?? (body.username === 'demo.owner' ? OWNER_PROFILE : DEMO_PROFILE);
     activeOrganizationId = currentProfile.roles[0]?.organization_id ?? '';
-    activeScopeId = currentProfile.roles[0].scopes?.[0]?.id ?? '';
+    activeScopeId = currentProfile.roles[0]?.scopes?.[0]?.id ?? '';
     return mockOk(tokensFor(currentProfile));
   }
 
