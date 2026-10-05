@@ -81,6 +81,8 @@ L'inscription ne contient aucun champ lié à l'organisation : elle crée unique
 
 Le backend autorise bien un compte sans organisation et expose ensuite `POST /organizations/`, puis `POST /scopes/`. Le frontend enchaîne ces deux appels, régénère le contexte JWT et ouvre le nouveau périmètre. La jonction à une organisation existante demeure liée au contrat d'inscription actuel (`join_organization_code`) tant qu'un endpoint de rattachement après inscription n'est pas exposé.
 
+Depuis le dashboard, tout utilisateur authentifié peut créer une organisation supplémentaire avec son premier périmètre. Le formulaire ne demande aucun code : Django le génère et le renvoie. Le nouvel espace est ajouté au sélecteur global puis activé immédiatement.
+
 En mode mock, les comptes créés restent disponibles pour une nouvelle connexion tant que l'application n'est pas rechargée. Ils apparaissent dans la liste des membres de leur organisation.
 
 Les preuves d'une tâche se déposent depuis « Mes tâches » ou, pour les personnes autorisées, directement depuis les cartes et la liste des traitements. Le dépôt utilise un formulaire `multipart/form-data` (`task_id`, `file_path`, `description`). Dans le tableau Kanban, déplacer une carte change son statut ; le sélecteur de statut n'est disponible qu'en vue liste. Une preuve est demandée avant de terminer une tâche.
@@ -94,7 +96,7 @@ Compte → Organisation → Périmètre → Actif → Risque
        → Mesure ISO → Tâche assignée → Preuve → SoA versionnée
 ```
 
-Après la connexion ou l'inscription, l'utilisateur passe par `/select-context`. Il doit choisir une organisation et un périmètre avant d'ouvrir son dashboard. Un Admin ou un RSSI peut créer le premier périmètre d'une nouvelle organisation directement depuis cet écran.
+Après la connexion ou l'inscription, l'utilisateur passe par `/select-context`. Il peut choisir un contexte existant, créer une organisation et son premier périmètre, ou continuer vers un dashboard vide. Les pages métier nécessitent toujours une organisation, un périmètre et un rôle autorisé.
 
 Le dashboard dépend du rôle : l'Admin et le RSSI pilotent le périmètre, le responsable de risque retrouve ses propres tâches et preuves, et l'auditeur consulte les informations sans action d'édition.
 
@@ -341,6 +343,10 @@ Le frontend s'aligne sur les serializers actuellement exposés :
 - les tâches utilisent les clés Django `risk`, `iso_control`, `assignee` et `iso_control_code` ; une couche d'adaptation les convertit vers le modèle d'affichage Angular ;
 - les preuves sont envoyées en multipart avec `task_id`, `file_path` et `description` ;
 - la heatmap consomme l'enveloppe `{ scope_id, total_risks, matrix }`.
+- une organisation est créée avec `name` et `description` ; son `code` est généré par Django ;
+- les actifs utilisent `scope_id` et `owner_id` à l'écriture ; leurs réponses imbriquées `scope` et `owner` sont adaptées au modèle d'affichage ;
+- les risques utilisent `asset_id` à la création ; leur `code` est généré par Django et leur objet `asset` imbriqué est adapté par le service Angular ;
+- les modifications d'actifs et de risques utilisent `PATCH` conformément aux vues Django.
 
 ### Rejoindre un espace de travail partagé
 
@@ -350,15 +356,13 @@ Un Admin gère ensuite l'espace commun depuis `/users` : il peut changer le rôl
 
 Les mocks renvoient volontairement ces mêmes formes Django. Ils testent ainsi les adaptateurs utilisés lors du futur passage au serveur réel.
 
-## Travail restant : endpoints métier non exposés
+## Travail restant : connexion réelle et validation d'intégration
 
 Le frontend du MVP est fonctionnel en mode mock. Pour le raccorder à Django :
 
-1. implémenter côté backend les endpoints encore absents : actifs, risques, SoA, versions SoA et exports ;
-2. valider leurs serializers puis, si nécessaire, ajuster uniquement les adaptateurs des services Angular ;
-3. garantir l'isolation par `organization_id` et `scope_id` côté serveur ;
-4. implémenter côté Django les snapshots `SoaVersion` et la notification quotidienne des tâches en retard ;
-5. remplacer `useMocks: true` par `useMocks: false` lorsque ces routes seront disponibles ;
-6. exécuter les tests d'intégration avec le backend et vérifier les téléchargements réels.
+1. remplacer `useMocks: true` par `useMocks: false` quand l'équipe décide de brancher Django ;
+2. exécuter les tests d'intégration avec le backend et vérifier les permissions de chaque rôle ;
+3. vérifier les téléchargements réels de preuves et d'exports ;
+4. confirmer l'isolation des données lors de chaque changement d'organisation et de périmètre.
 
 Les guards et filtres frontend améliorent l'expérience utilisateur, mais les permissions RBAC doivent toujours être appliquées par Django.
