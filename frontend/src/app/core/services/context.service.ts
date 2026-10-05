@@ -65,8 +65,8 @@ export class ContextService {
     );
   }
 
-  createOrganization(name: string, code: string): Observable<{ id: string; name: string; code: string }> {
-    return this.http.post<{ id: string; name: string; code: string }>(DOMAIN_ENDPOINTS.organizations, { name, code }).pipe(
+  createOrganization(name: string, description = ''): Observable<{ id: string; name: string; code: string; description: string }> {
+    return this.http.post<{ id: string; name: string; code: string; description: string }>(DOMAIN_ENDPOINTS.organizations, { name, description }).pipe(
       tap((organization) => this.profileState.update((profile) => profile ? {
         ...profile,
         roles: profile.roles.some((role) => role.organization_id === organization.id) ? profile.roles : [...profile.roles, { organization_id: organization.id, organization_name: organization.name, role: 'ADMIN', scopes: [] }],

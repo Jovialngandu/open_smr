@@ -68,17 +68,18 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
   }
 
   if (request.url === DOMAIN_ENDPOINTS.organizations && request.method === 'POST') {
-    const body = request.body as { name: string; code: string };
+    const body = request.body as { name: string; description?: string };
     const name = body.name?.trim();
-    const code = body.code?.trim().toUpperCase();
-    if (!name || !code) return mockError(400, 'Le nom et le code de l’organisation sont obligatoires.');
-    if (ORGANIZATION_CODES[code]) return mockError(400, 'Ce code d’organisation est déjà utilisé.');
+    if (!name) return mockError(400, 'Le nom de l’organisation est obligatoire.');
+    const prefix = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/gi, '').slice(0, 6).toUpperCase() || 'ORG';
+    let code = `${prefix}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+    while (ORGANIZATION_CODES[code]) code = `${prefix}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
     const id = createMockId('organization');
     ORGANIZATION_CODES[code] = id;
     ORGANIZATIONS.push({ organization_id: id, organization_name: name, role: 'ADMIN', scopes: [] });
     currentProfile.roles = [...currentProfile.roles, { organization_id: id, organization_name: name, role: 'ADMIN', scopes: [] }];
     registerMockMember(currentProfile, id, 'ADMIN');
-    return mockOk({ id, name, code }, 201);
+    return mockOk({ id, name, code, description: body.description?.trim() ?? '' }, 201);
   }
 
   if (request.url === DOMAIN_ENDPOINTS.scopes && request.method === 'POST') {
