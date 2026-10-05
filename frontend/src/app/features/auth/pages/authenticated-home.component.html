@@ -1,9 +1,9 @@
 <main class="workspace-page">
   <app-topbar />
   <div class="workspace-content">
-    <header class="page-heading"><div><p class="eyebrow">Vue de pilotage</p><h1>Bonjour, {{ auth.user()?.first_name || auth.user()?.username }}.</h1><p>{{ context.activeScopeId() ? 'Voici la situation du SMSI pour le périmètre actif.' : 'Votre compte est prêt. Configurez votre espace lorsque vous le souhaitez.' }}</p></div></header>
+    <header class="page-heading"><div><p class="eyebrow">Tableau de bord</p><h1>Bonjour, {{ auth.user()?.first_name || auth.user()?.username }}.</h1><p>{{ context.activeScopeId() ? 'Consultez les indicateurs du périmètre actif.' : 'Aucun périmètre n’est sélectionné.' }}</p></div></header>
     @if (!context.activeOrganizationId()) {
-      <section class="empty-workspace"><span aria-hidden="true"><svg lucidePackage class="ui-icon"></svg></span><p class="eyebrow">Démarrage flexible</p><h2>Votre tableau de bord est prêt</h2><p>Vous pouvez explorer OpenSMR sans configurer immédiatement votre organisation. Créez ensuite un espace de travail pour inventorier vos actifs, évaluer les risques et préparer votre SoA.</p><div class="onboarding-actions"><a class="button button--primary" routerLink="/select-context">Créer une organisation</a><span>Cette étape reste facultative.</span></div></section>
+      <section class="empty-workspace"><span aria-hidden="true"><svg lucidePackage class="ui-icon"></svg></span><p class="eyebrow">Première configuration</p><h2>Aucune organisation</h2><p>Créez une organisation pour définir un périmètre, inventorier les actifs et commencer l’analyse des risques.</p><div class="onboarding-actions"><a class="button button--primary" routerLink="/select-context">Créer une organisation</a><span>Vous pourrez également le faire plus tard.</span></div></section>
     } @else if (!context.activeScopeId()) {
       <section class="empty-workspace"><span aria-hidden="true"><svg lucidePackage class="ui-icon"></svg></span><p class="eyebrow">Organisation créée</p><h2>Ajoutez votre premier périmètre</h2><p>Définissez la partie de l’organisation couverte par votre audit : toute l’entreprise, un département ou une équipe.</p><a class="button button--primary" routerLink="/select-context">Configurer le périmètre</a></section>
     } @else if (context.activeRole() === 'RISK_OWNER') {
