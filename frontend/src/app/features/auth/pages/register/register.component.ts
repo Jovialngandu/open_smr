@@ -19,19 +19,18 @@ export class RegisterComponent {
   protected readonly errorMessage = signal('');
   protected readonly form = this.formBuilder.nonNullable.group(
     {
+      username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
+      email: ['', [Validators.required, Validators.email]],
       firstName: [''],
       lastName: [''],
-      email: ['', [Validators.required, Validators.email]],
-      username: ['', [Validators.required, Validators.minLength(3)]],
-      password: ['', [Validators.required, Validators.minLength(12), Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)]],
+      password: ['', [Validators.required, Validators.minLength(8)]],
       confirmation: ['', Validators.required],
-      terms: [false, Validators.requiredTrue],
     },
     { validators: passwordMatchValidator },
   );
   protected passwordStrength(): number {
     const value = this.form.controls.password.value;
-    return [value.length >= 12, /[a-z]/.test(value) && /[A-Z]/.test(value), /\d/.test(value), /[^\w]/.test(value)].filter(Boolean).length;
+    return [value.length >= 8, value.length >= 12, /[a-z]/.test(value) && /[A-Z]/.test(value), /\d/.test(value) || /[^\w]/.test(value)].filter(Boolean).length;
   }
 
   protected invalid(controlName: keyof typeof this.form.controls): boolean {
