@@ -24,7 +24,6 @@ export class RiskFormModalComponent {
   protected readonly statuses = Object.entries(RISK_STATUS_LABELS) as [RiskStatus, string][];
 
   protected readonly form = this.formBuilder.nonNullable.group({
-    code: ['', [Validators.required, Validators.maxLength(50)]],
     assetId: ['', Validators.required],
     threatDescription: ['', [Validators.required, Validators.maxLength(1500)]],
     likelihood: [1 as 1 | 2 | 3 | 4 | 5, [Validators.required, Validators.min(1), Validators.max(5)]],
@@ -36,7 +35,6 @@ export class RiskFormModalComponent {
     effect(() => {
       const risk = this.risk();
       this.form.reset({
-        code: risk?.code ?? '',
         assetId: risk?.asset_id ?? '',
         threatDescription: risk?.threat_description ?? '',
         likelihood: risk?.likelihood ?? 1,
@@ -69,14 +67,12 @@ export class RiskFormModalComponent {
     }
     this.submitError.set('');
     const value = this.form.getRawValue();
-    if (!value.code.trim() || !value.threatDescription.trim()) {
-      if (!value.code.trim()) this.form.controls.code.setErrors({ required: true });
+    if (!value.threatDescription.trim()) {
       if (!value.threatDescription.trim()) this.form.controls.threatDescription.setErrors({ required: true });
       this.form.markAllAsTouched();
       return;
     }
     const payload: RiskPayload = {
-      code: value.code.trim().toUpperCase(),
       asset_id: value.assetId,
       threat_description: value.threatDescription.trim(),
       likelihood: Number(value.likelihood) as 1 | 2 | 3 | 4 | 5,

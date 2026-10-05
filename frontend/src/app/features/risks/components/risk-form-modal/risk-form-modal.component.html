@@ -15,18 +15,17 @@
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <div class="form-grid">
         <div class="field">
-          <label for="risk-code">Code</label>
-          <input id="risk-code" formControlName="code" placeholder="RSK-PAY-001" autofocus [attr.aria-invalid]="invalid('code')" />
-          @if (invalid('code')) { <small class="field__error">Le code est obligatoire.</small> }
-        </div>
-        <div class="field">
           <label for="risk-asset">Actif concerné</label>
-          <select id="risk-asset" formControlName="assetId" [attr.aria-invalid]="invalid('assetId')">
+          <select id="risk-asset" formControlName="assetId" autofocus [attr.aria-invalid]="invalid('assetId')">
             @if (assetsService.loading()) { <option value="">Chargement des actifs…</option> }
             @else if (!assetsService.assets().length) { <option value="">Aucun actif disponible</option> }
             @for (asset of assetsService.assets(); track asset.id) { <option [value]="asset.id">{{ asset.name }}</option> }
           </select>
           @if (invalid('assetId')) { <small class="field__error">Sélectionnez un actif.</small> }
+        </div>
+        <div class="field">
+          <label>Code du risque</label>
+          <p class="field__hint">Il sera généré automatiquement lors de l'enregistrement.</p>
         </div>
       </div>
 
