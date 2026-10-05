@@ -29,8 +29,7 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     title: 'Tableau de bord | OpenSMR',
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['ADMIN', 'RSSI', 'RISK_OWNER', 'AUDITOR'] },
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/auth/pages/authenticated-home.component').then(
         (module) => module.AuthenticatedHomeComponent,
