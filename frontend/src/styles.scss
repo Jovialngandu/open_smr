@@ -26,6 +26,16 @@ body { min-width: 320px; }
 button, input, select, textarea { font: inherit; }
 
 .ui-icon { display: inline-block; flex: none; width: 1em; height: 1em; vertical-align: -.125em; stroke: currentColor; }
+.onboarding-form { display: grid; gap: .85rem; }
+.onboarding-form .field { margin: 0; }
+.onboarding-form__scope { padding-top: 1rem; margin-top: .25rem; border-top: 1px solid var(--line); }
+.onboarding-actions { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; }
+.onboarding-actions > span { color: var(--muted); font-size: .72rem; }
+.topbar-workspace-action { justify-self: center; white-space: nowrap; }
+.empty-workspace { display: grid; justify-items: center; max-width: 720px; padding: clamp(2rem, 6vw, 4.5rem); margin: 2rem auto; border: 1px solid var(--line); border-radius: 1.2rem; background: white; box-shadow: 0 18px 55px rgba(22,55,43,.08); text-align: center; }
+.empty-workspace > span { display: grid; place-items: center; width: 4rem; height: 4rem; margin-bottom: 1rem; color: var(--brand); border-radius: 1rem; background: #e5f2eb; font-size: 2rem; }
+.empty-workspace h2 { margin: .35rem 0 .65rem; font-size: clamp(1.5rem, 4vw, 2.25rem); letter-spacing: -.035em; }
+.empty-workspace > p:not(.eyebrow) { max-width: 580px; margin: 0 0 1.4rem; color: var(--muted); line-height: 1.65; }
 .kanban-card__actions { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .65rem; }
 .kanban-card__actions .text-button { font-size: .7rem; }
 .data-panel td .text-button { margin-left: .5rem; }

@@ -6,7 +6,7 @@
     <span>OpenSMR</span>
   </a>
 
-  <div class="context-picker" [class.context-picker--busy]="switching()">
+  @if (context.organizations().length) { <div class="context-picker" [class.context-picker--busy]="switching()">
     <div class="context-field">
       <label for="organization-select">Organisation</label>
       <select id="organization-select" [value]="context.activeOrganizationId() ?? ''" (change)="changeOrganization($event)" [disabled]="switching()">
@@ -30,14 +30,14 @@
       <button class="scope-create-trigger" type="button" (click)="scopeModalOpen.set(true)" [disabled]="switching()" aria-label="Créer un périmètre" title="Créer un périmètre"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg></button>
     }
     @if (switching()) { <span class="context-loader" aria-label="Changement de contexte en cours"></span> }
-  </div>
+  </div> } @else { <a class="button button--ghost topbar-workspace-action" routerLink="/select-context"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg> Créer un espace</a> }
 
   <div class="profile-menu">
     <button class="profile-menu__trigger" type="button" (click)="menuOpen.set(!menuOpen())" [attr.aria-expanded]="menuOpen()" aria-controls="profile-dropdown">
       <span class="avatar" aria-hidden="true">{{ initials() }}</span>
       <span class="profile-menu__identity">
         <strong>{{ auth.user()?.first_name }} {{ auth.user()?.last_name }}</strong>
-        <small>{{ context.activeRole() }}</small>
+        <small>{{ context.activeRole() || 'Compte personnel' }}</small>
       </span>
       <svg lucideChevronDown class="ui-icon" aria-hidden="true"></svg>
     </button>
@@ -55,13 +55,13 @@
   @if (context.activeRole() === 'ADMIN' || context.activeRole() === 'RSSI') {
     <a routerLink="/assets" routerLinkActive="module-nav__link--active">Actifs</a>
   }
-  @if (context.activeRole() !== 'RISK_OWNER') {
+  @if (context.activeRole() && context.activeRole() !== 'RISK_OWNER') {
     <a routerLink="/risks" routerLinkActive="module-nav__link--active">Risques</a>
   }
   @if (context.activeRole() === 'ADMIN' || context.activeRole() === 'RSSI') {
     <a routerLink="/treatments" routerLinkActive="module-nav__link--active">Traitements</a>
   }
-  <a routerLink="/soa" routerLinkActive="module-nav__link--active">SoA</a>
+  @if (context.activeRole()) { <a routerLink="/soa" routerLinkActive="module-nav__link--active">SoA</a> }
   @if (context.activeRole() === 'RISK_OWNER') {
     <a routerLink="/my-tasks" routerLinkActive="module-nav__link--active">Mes tâches</a>
   }
