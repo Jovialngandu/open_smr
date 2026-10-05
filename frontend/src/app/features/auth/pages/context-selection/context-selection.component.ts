@@ -22,23 +22,23 @@ export class ContextSelectionComponent {
   protected readonly scopeForm = this.fb.nonNullable.group({ name: ['', [Validators.required, Validators.maxLength(255)]], description: [''] });
   protected readonly organizationForm = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(255)]],
-    code: ['', [Validators.required, Validators.maxLength(50)]],
+    description: [''],
     scopeName: ['', [Validators.required, Validators.maxLength(255)]],
     scopeDescription: [''],
   });
 
   protected createWorkspace(): void {
     if (this.organizationForm.invalid) { this.organizationForm.markAllAsTouched(); return; }
-    const { name, code, scopeName, scopeDescription } = this.organizationForm.getRawValue();
+    const { name, description, scopeName, scopeDescription } = this.organizationForm.getRawValue();
     this.busy.set(true); this.error.set('');
-    this.context.createOrganization(name.trim(), code.trim().toUpperCase()).pipe(
+    this.context.createOrganization(name.trim(), description.trim()).pipe(
       switchMap((organization) => this.context.switchContext({ organization_id: organization.id, scope_id: null })),
       switchMap((response) => this.context.createScope(response.active_organization_id, scopeName.trim(), scopeDescription.trim())),
       switchMap((scope) => this.context.switchContext({ organization_id: scope.organization_id, scope_id: scope.id })),
       finalize(() => this.busy.set(false)),
     ).subscribe({
       next: () => void this.router.navigateByUrl('/dashboard'),
-      error: () => this.error.set('La création de l’espace a échoué. Vérifiez le nom, le code et le périmètre.'),
+      error: () => this.error.set('La création de l’espace a échoué. Vérifiez le nom de l’organisation et le périmètre.'),
     });
   }
 
