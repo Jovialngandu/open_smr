@@ -83,7 +83,7 @@
   <div class="modal-backdrop" (click)="$event.target === $event.currentTarget && closeOrganizationModal()">
     <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="organization-create-title" (click)="$event.stopPropagation()">
       <header class="modal-card__header">
-        <div><p class="eyebrow">Nouvel espace de travail</p><h2 id="organization-create-title">Créer une organisation</h2><p>Le code de partage sera généré automatiquement.</p></div>
+        <div><p class="eyebrow">Organisation</p><h2 id="organization-create-title">Créer une organisation</h2><p>Renseignez son nom et le premier périmètre à gérer.</p></div>
         <button class="icon-button" type="button" (click)="closeOrganizationModal()" [disabled]="creatingOrganization()" aria-label="Fermer"><svg lucideX class="ui-icon" aria-hidden="true"></svg></button>
       </header>
       <form [formGroup]="organizationForm" (ngSubmit)="createOrganization()">
