@@ -23,7 +23,7 @@ export class SoaService {
 
   fetch(scopeId: string): void {
     this.loadingState.set(true);
-    this.http.get<SoaEntry[]>(DOMAIN_ENDPOINTS.soa, { params: new HttpParams().set('scope_id', scopeId) }).pipe(finalize(() => this.loadingState.set(false))).subscribe((entries) => this.entriesState.set(entries));
+    this.http.get<SoaEntry[]>(DOMAIN_ENDPOINTS.soaEntries, { params: new HttpParams().set('scope_id', scopeId) }).pipe(finalize(() => this.loadingState.set(false))).subscribe((entries) => this.entriesState.set(entries));
     this.http.get<SoaVersion[]>(DOMAIN_ENDPOINTS.soaVersions, { params: new HttpParams().set('scope_id', scopeId) }).subscribe((versions) => this.versionsState.set(versions));
   }
 
@@ -33,18 +33,21 @@ export class SoaService {
 
   update(id: string, changes: Pick<SoaEntry, 'is_applicable' | 'justification'>): void {
     this.savingIdsState.update((ids) => new Set(ids).add(id));
-    this.http.patch<SoaEntry>(`${DOMAIN_ENDPOINTS.soa}${id}/`, changes).pipe(finalize(() => this.savingIdsState.update((ids) => { const next = new Set(ids); next.delete(id); return next; }))).subscribe((updated) => this.entriesState.update((entries) => entries.map((entry) => entry.id === id ? updated : entry)));
+    this.http.patch<SoaEntry>(`${DOMAIN_ENDPOINTS.soaEntries}${id}/`, changes).pipe(finalize(() => this.savingIdsState.update((ids) => { const next = new Set(ids); next.delete(id); return next; }))).subscribe((updated) => this.entriesState.update((entries) => entries.map((entry) => entry.id === id ? updated : entry)));
   }
 
-  export(scopeId: string, format: 'pdf' | 'csv'): void {
-    const params = new HttpParams().set('format', format);
-    this.http.get(soaExportEndpoint(scopeId, format), { params, responseType: 'blob' }).subscribe((blob) => {
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download = `soa-${scopeId}.${format}`;
-      anchor.click();
-      URL.revokeObjectURL(url);
+  export(scopeId: string, format: 'pdf' | 'xlsx' = 'pdf'): void {
+    const params = new HttpParams().set('file_type', format);
+    this.http.get(soaExportEndpoint(scopeId), { params, responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `soa-${scopeId}.${format}`;
+        anchor.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => undefined,
     });
   }
 }

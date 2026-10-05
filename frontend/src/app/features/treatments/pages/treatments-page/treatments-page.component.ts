@@ -40,7 +40,7 @@ export class TreatmentsPageComponent {
     );
   });
   protected readonly completedCount = computed(() => this.service.items().filter((item) => item.status === 'COMPLETED').length);
-  protected readonly controls = computed(() => this.soa.entries().map((entry) => entry.control));
+  protected readonly controls = computed(() => this.soa.entries().map((entry) => entry.iso_control));
   protected readonly assignees = computed(() => Array.from(new Map(this.service.items().map((item) => [item.assignee_id, item.assignee_name])).entries()));
   protected readonly columns: { status: TreatmentStatus; title: string; hint: string }[] = [
     { status: 'TODO', title: 'À faire', hint: 'Actions planifiées' },

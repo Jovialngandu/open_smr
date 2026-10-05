@@ -1,13 +1,15 @@
 import { HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
-import { DOMAIN_ENDPOINTS, organizationMembersEndpoint } from '../config/api.config';
+import { API_CONFIG, DOMAIN_ENDPOINTS, organizationMembersEndpoint } from '../config/api.config';
 import { HeatmapApiResponse, SoaEntry } from '../models/governance.models';
 import { mockWorkspaceInterceptor } from './mock-workspace.interceptor';
 
 const SCOPE_ID = '8f4b8400-e29b-41d4-a716-446655440101';
 
 describe('mockWorkspaceInterceptor', () => {
+  beforeAll(() => Object.defineProperty(API_CONFIG, 'useMocks', { value: true, configurable: true }));
+  afterAll(() => Object.defineProperty(API_CONFIG, 'useMocks', { value: false, configurable: true }));
   it('retourne les 25 cases de la matrice du périmètre', async () => {
     const response = await intercept<HeatmapApiResponse>(new HttpRequest('GET', DOMAIN_ENDPOINTS.heatmap, null, { params: scopeParams() }));
     expect(response.body?.matrix).toHaveLength(25);
@@ -15,7 +17,7 @@ describe('mockWorkspaceInterceptor', () => {
   });
 
   it('retourne les 93 mesures de la SoA', async () => {
-    const response = await intercept<SoaEntry[]>(new HttpRequest('GET', DOMAIN_ENDPOINTS.soa, null, { params: scopeParams() }));
+    const response = await intercept<SoaEntry[]>(new HttpRequest('GET', DOMAIN_ENDPOINTS.soaEntries, null, { params: scopeParams() }));
     expect(response.body).toHaveLength(93);
     expect(response.body?.every((entry) => entry.scope_id === SCOPE_ID)).toBe(true);
   });

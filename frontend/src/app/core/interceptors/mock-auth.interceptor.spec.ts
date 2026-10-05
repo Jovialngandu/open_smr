@@ -1,11 +1,13 @@
 import { HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
-import { AUTH_ENDPOINTS, DOMAIN_ENDPOINTS } from '../config/api.config';
+import { API_CONFIG, AUTH_ENDPOINTS, DOMAIN_ENDPOINTS } from '../config/api.config';
 import { AuthResponse } from '../models/auth.models';
 import { mockAuthInterceptor } from './mock-auth.interceptor';
 
 describe('mockAuthInterceptor', () => {
+  beforeAll(() => Object.defineProperty(API_CONFIG, 'useMocks', { value: true, configurable: true }));
+  afterAll(() => Object.defineProperty(API_CONFIG, 'useMocks', { value: false, configurable: true }));
   it('retourne une session JWT au compte de demonstration', async () => {
     const request = new HttpRequest('POST', AUTH_ENDPOINTS.login, {
       username: 'demo.rssi',

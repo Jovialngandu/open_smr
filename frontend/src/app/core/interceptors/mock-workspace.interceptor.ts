@@ -48,7 +48,7 @@ let treatments: TreatmentTask[] = [
 ];
 
 let soaEntries: SoaEntry[] = [DIGITAL_SCOPE, DATACENTER_SCOPE].flatMap((scopeId) => controls.map((control, index) => ({
-  id: `${scopeId}-${control.id}`, scope_id: scopeId, control,
+  id: `${scopeId}-${control.id}`, scope_id: scopeId, iso_control: control,
   is_applicable: index % 11 !== 0,
   justification: index % 11 === 0 ? 'Mesure non pertinente pour les activités couvertes par ce périmètre.' : 'Mesure retenue dans le plan de sécurité du périmètre.',
   implementation_status: index < 34 ? 'IMPLEMENTED' : index < 67 ? 'IN_PROGRESS' : 'NOT_IMPLEMENTED',
@@ -150,8 +150,8 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
     soaVersions = [created, ...soaVersions];
     return ok(created, 201);
   }
-  if (request.url === DOMAIN_ENDPOINTS.soa && request.method === 'GET') return ok(soaEntries.filter((item) => !scopeId || item.scope_id === scopeId));
-  const soaId = collectionId(request.url, DOMAIN_ENDPOINTS.soa);
+  if (request.url === DOMAIN_ENDPOINTS.soaEntries && request.method === 'GET') return ok(soaEntries.filter((item) => !scopeId || item.scope_id === scopeId));
+  const soaId = collectionId(request.url, DOMAIN_ENDPOINTS.soaEntries);
   if (soaId && request.method === 'PATCH') {
     const current = soaEntries.find((entry) => entry.id === soaId);
     if (!current) return fail(404, 'Entrée SoA introuvable.');
@@ -189,7 +189,7 @@ function task(id: string, scopeId: string, riskId: string, riskCode: string, con
 
 function synchronizeSoa(taskItem: TreatmentTask): void {
   const implementation_status = taskItem.status === 'COMPLETED' && taskItem.evidences.length ? 'IMPLEMENTED' : 'IN_PROGRESS';
-  soaEntries = soaEntries.map((entry) => entry.scope_id === taskItem.scope_id && entry.control.id === taskItem.iso_control_id ? { ...entry, implementation_status, updated_at: new Date().toISOString(), updated_by_name: 'Synchronisation automatique' } : entry);
+  soaEntries = soaEntries.map((entry) => entry.scope_id === taskItem.scope_id && entry.iso_control.id === taskItem.iso_control_id ? { ...entry, implementation_status, updated_at: new Date().toISOString(), updated_by_name: 'Synchronisation automatique' } : entry);
 }
 
 function toBackendTask(item: TreatmentTask) {

@@ -91,7 +91,7 @@ export type TreatmentPayload = Pick<TreatmentTask, 'risk_id' | 'iso_control_id' 
 export interface SoaEntry {
   id: string;
   scope_id: string;
-  control: IsoControl;
+  iso_control: IsoControl;
   is_applicable: boolean;
   justification: string;
   implementation_status: ImplementationStatus;

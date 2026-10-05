@@ -1,13 +1,15 @@
 import { HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
-import { DOMAIN_ENDPOINTS } from '../config/api.config';
+import { API_CONFIG, DOMAIN_ENDPOINTS } from '../config/api.config';
 import { Asset, Risk } from '../models/governance.models';
 import { mockGovernanceInterceptor } from './mock-governance.interceptor';
 
 const DIGITAL_SCOPE_ID = '8f4b8400-e29b-41d4-a716-446655440101';
 
 describe('mockGovernanceInterceptor', () => {
+  beforeAll(() => Object.defineProperty(API_CONFIG, 'useMocks', { value: true, configurable: true }));
+  afterAll(() => Object.defineProperty(API_CONFIG, 'useMocks', { value: false, configurable: true }));
   it('filtre les actifs selon le périmètre actif', async () => {
     const request = new HttpRequest('GET', DOMAIN_ENDPOINTS.assets, null, {
       params: new HttpParams().set('scope_id', DIGITAL_SCOPE_ID),
