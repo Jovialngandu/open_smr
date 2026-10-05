@@ -30,7 +30,8 @@
       <button class="scope-create-trigger" type="button" (click)="scopeModalOpen.set(true)" [disabled]="switching()" aria-label="Créer un périmètre" title="Créer un périmètre"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg></button>
     }
     @if (switching()) { <span class="context-loader" aria-label="Changement de contexte en cours"></span> }
-  </div> } @else { <a class="button button--ghost topbar-workspace-action" routerLink="/select-context"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg> Créer un espace</a> }
+    <button class="button button--ghost topbar-workspace-action" type="button" (click)="openOrganizationModal()" [disabled]="switching()"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg> Nouvelle organisation</button>
+  </div> } @else { <button class="button button--ghost topbar-workspace-action" type="button" (click)="openOrganizationModal()"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg> Créer une organisation</button> }
 
   <div class="profile-menu">
     <button class="profile-menu__trigger" type="button" (click)="menuOpen.set(!menuOpen())" [attr.aria-expanded]="menuOpen()" aria-controls="profile-dropdown">
@@ -44,6 +45,7 @@
     @if (menuOpen()) {
       <div class="profile-dropdown" id="profile-dropdown">
         <p>{{ auth.user()?.email }}</p>
+        <button type="button" (click)="openOrganizationModal()">Créer une organisation</button>
         <button type="button" (click)="logout()">Se déconnecter</button>
       </div>
     }
@@ -75,6 +77,25 @@
 
 @if (contextError()) {
   <div class="context-error" role="alert">{{ contextError() }}</div>
+}
+
+@if (organizationModalOpen()) {
+  <div class="modal-backdrop" (click)="$event.target === $event.currentTarget && closeOrganizationModal()">
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="organization-create-title" (click)="$event.stopPropagation()">
+      <header class="modal-card__header">
+        <div><p class="eyebrow">Nouvel espace de travail</p><h2 id="organization-create-title">Créer une organisation</h2><p>Le code de partage sera généré automatiquement.</p></div>
+        <button class="icon-button" type="button" (click)="closeOrganizationModal()" [disabled]="creatingOrganization()" aria-label="Fermer"><svg lucideX class="ui-icon" aria-hidden="true"></svg></button>
+      </header>
+      <form [formGroup]="organizationForm" (ngSubmit)="createOrganization()">
+        <div class="field"><label for="new-organization-name">Nom de l'organisation</label><input id="new-organization-name" formControlName="name" maxlength="255" placeholder="Ex. Acme France" autofocus [attr.aria-invalid]="organizationForm.controls.name.invalid && organizationForm.controls.name.touched">@if (organizationForm.controls.name.invalid && organizationForm.controls.name.touched) { <small class="field__error">Saisissez un nom de 255 caractères maximum.</small> }</div>
+        <div class="field"><label for="new-organization-description">Description <span>(facultatif)</span></label><textarea id="new-organization-description" rows="2" formControlName="description" placeholder="Activité ou raison d'être de l'organisation"></textarea></div>
+        <div class="field"><label for="first-scope-name">Premier périmètre</label><input id="first-scope-name" formControlName="scopeName" maxlength="255" placeholder="Ex. Système d'information" [attr.aria-invalid]="organizationForm.controls.scopeName.invalid && organizationForm.controls.scopeName.touched">@if (organizationForm.controls.scopeName.invalid && organizationForm.controls.scopeName.touched) { <small class="field__error">Saisissez le nom du premier périmètre.</small> }</div>
+        <div class="field"><label for="first-scope-description">Description du périmètre <span>(facultatif)</span></label><textarea id="first-scope-description" rows="2" formControlName="scopeDescription" placeholder="Départements, équipes ou systèmes inclus"></textarea></div>
+        @if (organizationError()) { <p class="inline-error" role="alert">{{ organizationError() }}</p> }
+        <footer class="modal-card__actions"><button class="button button--ghost" type="button" (click)="closeOrganizationModal()" [disabled]="creatingOrganization()">Annuler</button><button class="button button--primary" type="submit" [disabled]="creatingOrganization()">{{ creatingOrganization() ? 'Création…' : 'Créer et ouvrir' }}</button></footer>
+      </form>
+    </section>
+  </div>
 }
 
 @if (scopeModalOpen() && canCreateScope()) {
