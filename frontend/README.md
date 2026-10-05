@@ -45,7 +45,7 @@ Le serveur recharge automatiquement l'application après une modification du cod
 
 ## Mode de démonstration
 
-Le frontend fonctionne actuellement sans le backend grâce aux mocks couvrant l'ensemble du parcours MVP, activés dans `src/app/core/config/api.config.ts`.
+Le frontend peut fonctionner sans le backend grâce aux mocks couvrant l'ensemble du parcours MVP. Ils sont contrôlés par `useMocks` dans `src/app/core/config/api.config.ts`. La configuration actuelle utilise l’API déployée ; activez explicitement les mocks pour travailler hors connexion.
 
 Compte disponible :
 
@@ -77,7 +77,9 @@ Le mode mock permet de tester :
 
 ## Parcours métier
 
-L'inscription requiert seulement un identifiant, un email et un mot de passe côté API. La création ou la jonction d'une organisation est facultative ; un compte sans organisation peut créer la sienne depuis la sélection du contexte, avec un nom et un code unique. Les prénom et nom sont également facultatifs.
+L'inscription ne contient aucun champ lié à l'organisation : elle crée uniquement le compte avec un identifiant, un email et un mot de passe ; les prénom et nom restent facultatifs. Juste après, un onboarding distinct propose de créer une organisation et son premier périmètre. Cette configuration peut être ignorée : le compte ouvre alors un dashboard vide, depuis lequel l'utilisateur pourra reprendre la création avec « Créer une organisation ».
+
+Le backend autorise bien un compte sans organisation et expose ensuite `POST /organizations/`, puis `POST /scopes/`. Le frontend enchaîne ces deux appels, régénère le contexte JWT et ouvre le nouveau périmètre. La jonction à une organisation existante demeure liée au contrat d'inscription actuel (`join_organization_code`) tant qu'un endpoint de rattachement après inscription n'est pas exposé.
 
 En mode mock, les comptes créés restent disponibles pour une nouvelle connexion tant que l'application n'est pas rechargée. Ils apparaissent dans la liste des membres de leur organisation.
 
