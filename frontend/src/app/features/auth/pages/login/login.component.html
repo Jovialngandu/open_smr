@@ -31,7 +31,7 @@
       </div>
       <p class="eyebrow">Connexion</p>
       <h2 id="login-title">Accédez à OpenSMR</h2>
-      <p class="auth-intro">Saisissez vos identifiants pour ouvrir votre tableau de bord.</p>
+      <p class="auth-intro">Saisissez votre nom d’utilisateur et votre mot de passe.</p>
 
       @if (errorMessage()) {
         <div class="alert alert--error" role="alert">
@@ -42,18 +42,19 @@
 
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <div class="field">
-          <label for="identity">Identifiant</label>
+          <label for="username">Nom d’utilisateur</label>
           <input
-            id="identity"
+            id="username"
+            name="username"
             type="text"
-            formControlName="identity"
+            formControlName="username"
             autocomplete="username"
             placeholder="camille.durand"
-            [attr.aria-invalid]="showError('identity')"
-            aria-describedby="identity-hint"
+            [attr.aria-invalid]="showError('username')"
+            aria-describedby="username-hint"
           />
-          @if (showError('identity')) {
-            <small id="identity-hint" class="field__error">Saisissez votre identifiant OpenSMR.</small>
+          @if (showError('username')) {
+            <small id="username-hint" class="field__error">Saisissez votre nom d’utilisateur.</small>
           }
         </div>
 
@@ -65,6 +66,7 @@
           <div class="password-input">
             <input
               id="password"
+              name="password"
               [type]="passwordVisible() ? 'text' : 'password'"
               formControlName="password"
               autocomplete="current-password"
@@ -82,7 +84,7 @@
 
         <label class="checkbox">
           <input type="checkbox" formControlName="remember" />
-          <span>Se souvenir de mon identifiant</span>
+          <span>Se souvenir de mon nom d’utilisateur</span>
         </label>
 
         <button class="button button--primary button--full" type="submit" [disabled]="auth.busy()">

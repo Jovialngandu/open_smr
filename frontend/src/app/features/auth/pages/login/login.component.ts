@@ -18,12 +18,12 @@ export class LoginComponent {
   protected readonly passwordVisible = signal(false);
   protected readonly errorMessage = signal('');
   protected readonly form = this.formBuilder.nonNullable.group({
-    identity: ['', Validators.required],
+    username: ['', Validators.required],
     password: ['', Validators.required],
     remember: [true],
   });
 
-  protected showError(controlName: 'identity' | 'password'): boolean {
+  protected showError(controlName: 'username' | 'password'): boolean {
     const control = this.form.controls[controlName];
     return control.invalid && (control.dirty || control.touched);
   }
@@ -34,11 +34,11 @@ export class LoginComponent {
       this.form.markAllAsTouched();
       return;
     }
-    const { identity, password, remember } = this.form.getRawValue();
-    if (remember) localStorage.setItem('opensmr.saved_identity', identity.trim());
-    else localStorage.removeItem('opensmr.saved_identity');
+    const { username, password, remember } = this.form.getRawValue();
+    if (remember) localStorage.setItem('opensmr.saved_username', username.trim());
+    else localStorage.removeItem('opensmr.saved_username');
 
-    this.auth.login({ username: identity.trim(), password }).subscribe({
+    this.auth.login({ username: username.trim(), password }).subscribe({
       next: (profile) => void this.router.navigateByUrl(profile.roles.length ? '/select-context' : '/dashboard'),
       error: (error: Error) => this.errorMessage.set(error.message),
     });
@@ -49,7 +49,8 @@ export class LoginComponent {
   }
 
   constructor() {
-    const savedIdentity = localStorage.getItem('opensmr.saved_identity');
-    if (savedIdentity) this.form.controls.identity.setValue(savedIdentity);
+    const savedUsername = localStorage.getItem('opensmr.saved_username') ?? localStorage.getItem('opensmr.saved_identity');
+    if (savedUsername) this.form.controls.username.setValue(savedUsername);
+    localStorage.removeItem('opensmr.saved_identity');
   }
 }
