@@ -46,10 +46,10 @@ export const mockGovernanceInterceptor: HttpInterceptorFn = (request, next) => {
   }
 
   const assetId = resourceId(request.url, DOMAIN_ENDPOINTS.assets);
-  if (assetId && request.method === 'PUT') {
+  if (assetId && (request.method === 'PATCH' || request.method === 'PUT')) {
     const index = assets.findIndex((item) => item.id === assetId);
     if (index < 0) return mockError(404, 'Actif introuvable.');
-    const updated = buildAsset(request.body as AssetPayload, assets[index]);
+    const updated = buildAsset(request.body as Partial<AssetPayload>, assets[index]);
     assets = assets.map((item) => item.id === assetId ? updated : item);
     return mockOk(updated);
   }
@@ -76,10 +76,10 @@ export const mockGovernanceInterceptor: HttpInterceptorFn = (request, next) => {
   }
 
   const riskId = resourceId(request.url, DOMAIN_ENDPOINTS.risks);
-  if (riskId && request.method === 'PUT') {
+  if (riskId && (request.method === 'PATCH' || request.method === 'PUT')) {
     const index = risks.findIndex((item) => item.id === riskId);
     if (index < 0) return mockError(404, 'Risque introuvable.');
-    const updated = buildRisk(request.body as RiskPayload, risks[index]);
+    const updated = buildRisk(request.body as Partial<RiskPayload>, risks[index]);
     risks = risks.map((item) => item.id === riskId ? updated : item);
     return mockOk(updated);
   }
@@ -126,25 +126,30 @@ function risk(
   };
 }
 
-function buildAsset(payload: AssetPayload, current?: Asset): Asset {
+function buildAsset(payload: Partial<AssetPayload>, current?: Asset): Asset {
+  const complete = { ...current, ...payload } as AssetPayload;
+  const ownerId = complete.owner_id === null || complete.owner_id === undefined ? null : String(complete.owner_id);
   return {
-    ...payload,
+    ...complete,
+    owner_id: ownerId,
     id: current?.id ?? createMockId('asset'),
-    owner_name: payload.owner_id ? OWNER_NAMES[payload.owner_id] ?? 'Utilisateur inconnu' : 'Non attribué',
-    criticality: Math.max(payload.confidentiality, payload.integrity, payload.availability),
+    owner_name: ownerId ? OWNER_NAMES[ownerId] ?? 'Utilisateur inconnu' : 'Non attribué',
+    criticality: Math.max(complete.confidentiality, complete.integrity, complete.availability),
     created_at: current?.created_at ?? new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
 }
 
-function buildRisk(payload: RiskPayload, current?: Risk): Risk {
-  const linkedAsset = assets.find((item) => item.id === payload.asset_id)!;
+function buildRisk(payload: Partial<RiskPayload>, current?: Risk): Risk {
+  const complete = { ...current, ...payload } as RiskPayload;
+  const linkedAsset = assets.find((item) => item.id === complete.asset_id)!;
   return {
-    ...payload,
+    ...complete,
     id: current?.id ?? createMockId('risk'),
+    code: current?.code ?? `RSK-${String(risks.length + 1).padStart(3, '0')}`,
     asset_name: linkedAsset.name,
     scope_id: linkedAsset.scope_id,
-    score: payload.likelihood * payload.impact,
+    score: complete.likelihood * complete.impact,
     created_at: current?.created_at ?? new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };

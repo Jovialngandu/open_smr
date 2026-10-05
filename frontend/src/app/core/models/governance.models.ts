@@ -39,7 +39,7 @@ export interface Risk {
 
 export type RiskPayload = Omit<
   Risk,
-  'id' | 'asset_name' | 'scope_id' | 'score' | 'created_at' | 'updated_at'
+  'id' | 'asset_name' | 'scope_id' | 'code' | 'score' | 'created_at' | 'updated_at'
 >;
 
 export interface MemberOption {
