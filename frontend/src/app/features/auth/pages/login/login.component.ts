@@ -45,7 +45,7 @@ export class LoginComponent {
   }
 
   protected showRecoveryMessage(): void {
-    this.errorMessage.set('La réinitialisation sera disponible dès que le prochain endpoint du backend sera prêt.');
+    this.errorMessage.set('La réinitialisation du mot de passe n’est pas encore disponible. Contactez un administrateur si vous ne pouvez plus accéder à votre compte.');
   }
 
   constructor() {
