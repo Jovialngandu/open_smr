@@ -45,8 +45,9 @@
     @if (menuOpen()) {
       <div class="profile-dropdown" id="profile-dropdown">
         <p>{{ auth.user()?.email }}</p>
-        <button type="button" (click)="openOrganizationModal()">Créer une organisation</button>
-        <button type="button" (click)="logout()">Se déconnecter</button>
+        <a routerLink="/settings" (click)="menuOpen.set(false)"><svg lucideSettings class="ui-icon" aria-hidden="true"></svg> Paramètres</a>
+        <button class="profile-dropdown__action" type="button" (click)="openOrganizationModal()"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg> Créer une organisation</button>
+        <button class="profile-dropdown__logout" type="button" (click)="logout()">Se déconnecter</button>
       </div>
     }
   </div>

@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { LucideShieldCheck, LucideChevronDown, LucidePlus, LucideX } from '@lucide/angular';
+import { LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX } from '@lucide/angular';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink, RouterLinkActive } from '@angular/router';
@@ -10,7 +10,7 @@ import { ContextService } from '../../../core/services/context.service';
 
 @Component({
   selector: 'app-topbar',
-  imports: [RouterLink, RouterLinkActive, ReactiveFormsModule, LucideShieldCheck, LucideChevronDown, LucidePlus, LucideX],
+  imports: [RouterLink, RouterLinkActive, ReactiveFormsModule, LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX],
   templateUrl: './topbar.component.html',
 })
 export class TopbarComponent {
