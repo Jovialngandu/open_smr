@@ -1,0 +1,78 @@
+<main class="workspace-page">
+  <app-topbar />
+  <div class="workspace-content settings-page">
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">Compte personnel</p>
+        <h1>Paramètres</h1>
+        <p>Adaptez l’affichage, le fuseau horaire et les notifications à votre usage.</p>
+      </div>
+    </header>
+
+    @if (service.loading()) {
+      <section class="settings-loading" aria-label="Chargement des paramètres">
+        <span class="spinner" aria-hidden="true"></span>
+        <p>Chargement de vos préférences…</p>
+      </section>
+    } @else {
+      @if (feedback()) {
+        <div class="alert alert--success" role="status"><span aria-hidden="true"><svg lucideCheck class="ui-icon"></svg></span><p>{{ feedback() }}</p></div>
+      }
+      @if (submitError() || service.error()) {
+        <div class="alert alert--error" role="alert"><p>{{ submitError() || service.error() }}</p></div>
+      }
+
+      <div class="settings-layout">
+        <aside class="settings-summary" aria-label="Informations du compte">
+          <span class="settings-summary__avatar" aria-hidden="true"><svg lucideUserRound class="ui-icon"></svg></span>
+          <div>
+            <small>Compte connecté</small>
+            <strong>{{ auth.user()?.first_name }} {{ auth.user()?.last_name }}</strong>
+            <span>&#64;{{ auth.user()?.username }}</span>
+          </div>
+          <dl>
+            <div><dt>Adresse email</dt><dd>{{ auth.user()?.email }}</dd></div>
+            <div><dt>Organisation active</dt><dd>{{ auth.user()?.roles?.length ? 'Contexte sélectionné' : 'Aucune organisation' }}</dd></div>
+          </dl>
+        </aside>
+
+        <form class="settings-form" [formGroup]="form" (ngSubmit)="submit()">
+          <section class="settings-section">
+            <header><span aria-hidden="true"><svg lucidePalette class="ui-icon"></svg></span><div><h2>Apparence</h2><p>Choisissez le thème utilisé dans l’application.</p></div></header>
+            <div class="theme-options">
+              @for (theme of themes; track theme.value) {
+                <label class="theme-option" [class.theme-option--selected]="form.controls.theme.value === theme.value">
+                  <input type="radio" formControlName="theme" [value]="theme.value" (change)="previewTheme(theme.value)">
+                  <span class="theme-option__preview" [attr.data-theme-preview]="theme.value"></span>
+                  <strong>{{ theme.label }}</strong>
+                  <small>{{ theme.description }}</small>
+                </label>
+              }
+            </div>
+          </section>
+
+          <section class="settings-section">
+            <header><span aria-hidden="true"><svg lucideGlobe2 class="ui-icon"></svg></span><div><h2>Langue et région</h2><p>Ces réglages déterminent la langue et l’heure affichées.</p></div></header>
+            <div class="form-grid">
+              <div class="field"><label for="settings-language">Langue</label><select id="settings-language" formControlName="language"><option value="fr">Français</option></select><small class="field__hint">D’autres langues pourront être ajoutées ultérieurement.</small></div>
+              <div class="field"><label for="settings-timezone"><svg lucideClock3 class="ui-icon" aria-hidden="true"></svg> Fuseau horaire</label><select id="settings-timezone" formControlName="timezone">@for (timezone of timezones; track timezone.value) { <option [value]="timezone.value">{{ timezone.label }}</option> }</select></div>
+            </div>
+          </section>
+
+          <section class="settings-section">
+            <header><span aria-hidden="true"><svg lucideBell class="ui-icon"></svg></span><div><h2>Notifications</h2><p>Contrôlez les messages envoyés à l’adresse associée à votre compte.</p></div></header>
+            <label class="settings-toggle">
+              <span><strong>Notifications par email</strong><small>Recevoir les rappels liés aux tâches et aux échéances.</small></span>
+              <span class="switch"><input type="checkbox" formControlName="emailNotifications"><span></span></span>
+            </label>
+          </section>
+
+          <footer class="settings-actions">
+            <span>{{ form.dirty ? 'Modifications non enregistrées' : 'Préférences à jour' }}</span>
+            <button class="button button--primary" type="submit" [disabled]="form.pristine || form.invalid || service.saving()">{{ service.saving() ? 'Enregistrement…' : 'Enregistrer les modifications' }}</button>
+          </footer>
+        </form>
+      </div>
+    }
+  </div>
+</main>
