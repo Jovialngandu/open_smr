@@ -64,7 +64,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+       	'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -198,3 +198,16 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
+FRONTEND_URL=os.getenv('FRONTEND_URL', 'http://localhost:4200')
+
+EMAIL_BACKEND = 'api.modules.v1.emails.providers.backend.ProviderEmailBackend'
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL','jovialngandu2@gmail.com')
+BREVO_API_KEY = os.getenv('BREVO_API_KEY')
+EMAIL_TIMEOUT = 15
+
+# # 3. Adresse d'expédition par défaut
+# DEFAULT_FROM_EMAIL = 'Open SMR <noreply@opensmr.com>'
+
+# 4. URL Frontend (pour les liens dans les mails)
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
