@@ -11,4 +11,5 @@ urlpatterns = [
     path('v1/soa/', include('api.modules.v1.soa.urls')),
     path('v1/risks/', include('api.modules.v1.risks.urls')),
     path('v1/exporter/', include('api.modules.v1.exporter.urls')),
+    path('v1/emails/', include('api.modules.v1.emails.urls')),
 ]
