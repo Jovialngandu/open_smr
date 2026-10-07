@@ -119,6 +119,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/audit/pages/audit-view-page/audit-view-page.component').then((module) => module.AuditViewPageComponent),
   },
   {
+    path: 'settings',
+    title: 'Paramètres | OpenSMR',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/settings/pages/settings-page/settings-page.component').then((module) => module.SettingsPageComponent),
+  },
+  {
     path: 'access-denied',
     title: 'Accès refusé | OpenSMR',
     canActivate: [authGuard],
