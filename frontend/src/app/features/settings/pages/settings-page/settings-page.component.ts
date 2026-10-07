@@ -53,8 +53,24 @@ export class SettingsPageComponent {
     });
   }
 
-  protected previewTheme(theme: AppTheme): void {
+  protected changeTheme(theme: AppTheme): void {
     this.service.applyTheme(theme);
+    localStorage.setItem('opensmr.theme', theme);
+    this.feedback.set('');
+    this.submitError.set('');
+    this.service.save({ theme }).subscribe({
+      next: () => {
+        this.form.controls.theme.markAsPristine();
+        this.feedback.set('Le thème a été enregistré.');
+      },
+      error: (error: Error) => {
+        const previousTheme = this.service.preferences()?.theme ?? 'LIGHT';
+        this.form.controls.theme.setValue(previousTheme);
+        localStorage.setItem('opensmr.theme', previousTheme);
+        this.service.applyTheme(previousTheme);
+        this.submitError.set(error.message);
+      },
+    });
   }
 
   protected submit(): void {

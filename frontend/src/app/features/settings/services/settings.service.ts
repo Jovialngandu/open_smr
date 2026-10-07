@@ -56,7 +56,7 @@ export class SettingsService {
     );
   }
 
-  save(changes: UserPreferencesUpdate): Observable<UserPreferences> {
+  save(changes: Partial<UserPreferencesUpdate>): Observable<UserPreferences> {
     this.savingState.set(true);
     this.errorState.set('');
     return this.http.patch<UserPreferences>(SETTINGS_ENDPOINT, changes).pipe(
