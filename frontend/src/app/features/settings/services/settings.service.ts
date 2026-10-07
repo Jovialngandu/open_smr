@@ -4,6 +4,8 @@ import { catchError, finalize, Observable, tap, throwError } from 'rxjs';
 
 import { API_CONFIG } from '../../../core/config/api.config';
 
+export const SETTINGS_ENDPOINT = `${API_CONFIG.baseUrl.replace(/\/v1\/?$/, '')}/settings/me/`;
+
 export type AppTheme = 'LIGHT' | 'DARK' | 'SYSTEM';
 
 export interface UserPreferences {
@@ -21,7 +23,6 @@ export type UserPreferencesUpdate = Pick<UserPreferences, 'language' | 'theme' |
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
   private readonly http = inject(HttpClient);
-  private readonly endpoint = `${API_CONFIG.baseUrl}/settings/me/`;
   private readonly preferencesState = signal<UserPreferences | null>(null);
   private readonly loadingState = signal(false);
   private readonly savingState = signal(false);
@@ -40,7 +41,7 @@ export class SettingsService {
   load(): Observable<UserPreferences> {
     this.loadingState.set(true);
     this.errorState.set('');
-    return this.http.get<UserPreferences>(this.endpoint).pipe(
+    return this.http.get<UserPreferences>(SETTINGS_ENDPOINT).pipe(
       tap((preferences) => {
         this.preferencesState.set(preferences);
         localStorage.setItem('opensmr.theme', preferences.theme);
@@ -58,7 +59,7 @@ export class SettingsService {
   save(changes: UserPreferencesUpdate): Observable<UserPreferences> {
     this.savingState.set(true);
     this.errorState.set('');
-    return this.http.patch<UserPreferences>(this.endpoint, changes).pipe(
+    return this.http.patch<UserPreferences>(SETTINGS_ENDPOINT, changes).pipe(
       tap((preferences) => {
         this.preferencesState.set(preferences);
         localStorage.setItem('opensmr.theme', preferences.theme);
