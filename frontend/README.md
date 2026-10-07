@@ -70,14 +70,15 @@ Le mode mock permet de tester :
 - les plans de traitement et leur suivi ;
 - le tableau Kanban des traitements avec glisser-déposer entre les statuts ;
 - le dépôt de preuves et la clôture des tâches ;
-- les 93 mesures de la SoA, leur édition et leur synchronisation simulée ;
+- les 93 mesures de la SoA, leur édition en ligne et le suivi de leur mise en œuvre ;
 - les exports PDF/CSV simulés ;
 - le portail auditeur en lecture seule ;
-- les comptes, rôles, statuts et habilitations par périmètre.
+- les comptes, rôles, statuts et habilitations par périmètre ;
+- les préférences personnelles : thème, langue, fuseau horaire et notifications email.
 
 ## Parcours métier
 
-L'inscription ne contient aucun champ lié à l'organisation : elle crée uniquement le compte avec un identifiant, un email et un mot de passe ; les prénom et nom restent facultatifs. Juste après, un onboarding distinct propose de créer une organisation et son premier périmètre. Cette configuration peut être ignorée : le compte ouvre alors un dashboard vide, depuis lequel l'utilisateur pourra reprendre la création avec « Créer une organisation ».
+L'inscription ne contient aucun champ lié à l'organisation : elle crée uniquement le compte avec un nom d'utilisateur, un email et un mot de passe ; les prénom et nom restent facultatifs. Juste après, un onboarding distinct propose de créer une organisation et son premier périmètre. Cette configuration peut être ignorée : le compte ouvre alors un dashboard vide, depuis lequel l'utilisateur pourra reprendre la création avec « Créer une organisation ».
 
 Le backend autorise bien un compte sans organisation et expose ensuite `POST /organizations/`, puis `POST /scopes/`. Le frontend enchaîne ces deux appels, régénère le contexte JWT et ouvre le nouveau périmètre. La jonction à une organisation existante demeure liée au contrat d'inscription actuel (`join_organization_code`) tant qu'un endpoint de rattachement après inscription n'est pas exposé.
 
@@ -144,7 +145,7 @@ POST /api/v1/treatments/evidences/
 GET /api/v1/treatments/tasks/{id}/evidences/
 ```
 
-Les endpoints Actifs, Risques, SoA, versions SoA et export restent simulés : leurs modèles Django existent, mais leurs routes DRF ne sont pas encore exposées. Le formulaire de connexion transmet uniquement la propriété `username`, conformément au contrat Django actuel.
+Les services Actifs, Risques, SoA, versions SoA et export sont adaptés aux routes DRF actuellement exposées. Les mocks conservent les mêmes contrats jusqu'au branchement définitif au serveur. Le formulaire de connexion transmet uniquement la propriété `username`.
 
 ## Organisation du projet
 
@@ -222,6 +223,7 @@ Le fichier TypeScript gère l'état et les actions. Le fichier HTML gère la str
 | `/users` | ADMIN, RSSI | Utilisateurs et habilitations |
 | `/my-tasks` | RISK_OWNER | Tâches assignées |
 | `/audit-view` | AUDITOR | Portail d'audit en lecture seule |
+| `/settings` | Authentifié | Préférences personnelles |
 | `/access-denied` | Authentifié | Erreur d'autorisation 403 |
 
 Les pages sont chargées à la demande avec `loadComponent` afin de limiter le JavaScript initial.
@@ -332,6 +334,7 @@ Fonctionnalités terminées :
 - métriques du dashboard issues de `/scopes/{scope_id}/dashboard/` ;
 - propriétaires d'actifs issus des membres actifs de l'organisation ;
 - lecture seule effective des risques et preuves pour l'auditeur.
+- page Paramètres connectée à `GET|PATCH /api/settings/me/`, avec thème persistant et mock équivalent.
 
 ## Contrats Django déjà pris en charge
 
@@ -347,6 +350,7 @@ Le frontend s'aligne sur les serializers actuellement exposés :
 - les actifs utilisent `scope_id` et `owner_id` à l'écriture ; leurs réponses imbriquées `scope` et `owner` sont adaptées au modèle d'affichage ;
 - les risques utilisent `asset_id` à la création ; leur `code` est généré par Django et leur objet `asset` imbriqué est adapté par le service Angular ;
 - les modifications d'actifs et de risques utilisent `PATCH` conformément aux vues Django.
+- les préférences personnelles utilisent exceptionnellement `/api/settings/me/` (sans segment `/v1`) conformément au routage Django.
 
 ### Rejoindre un espace de travail partagé
 

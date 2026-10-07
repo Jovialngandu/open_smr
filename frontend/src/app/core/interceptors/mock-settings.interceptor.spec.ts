@@ -10,6 +10,10 @@ describe('mockSettingsInterceptor', () => {
   beforeAll(() => Object.defineProperty(API_CONFIG, 'useMocks', { value: true, configurable: true }));
   afterAll(() => Object.defineProperty(API_CONFIG, 'useMocks', { value: false, configurable: true }));
 
+  it('utilise la route Django hors du préfixe v1', () => {
+    expect(SETTINGS_ENDPOINT).toBe('https://open-smr.onrender.com/api/settings/me/');
+  });
+
   it('renvoie les préférences personnelles', async () => {
     const response = await intercept<UserPreferences>(new HttpRequest('GET', SETTINGS_ENDPOINT));
     expect(response.body?.language).toBe('fr');
