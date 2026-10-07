@@ -42,7 +42,7 @@
             <div class="theme-options">
               @for (theme of themes; track theme.value) {
                 <label class="theme-option" [class.theme-option--selected]="form.controls.theme.value === theme.value">
-                  <input type="radio" formControlName="theme" [value]="theme.value" (change)="previewTheme(theme.value)">
+                  <input type="radio" formControlName="theme" [value]="theme.value" (change)="changeTheme(theme.value)">
                   <span class="theme-option__preview" [attr.data-theme-preview]="theme.value"></span>
                   <strong>{{ theme.label }}</strong>
                   <small>{{ theme.description }}</small>

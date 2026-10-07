@@ -107,6 +107,79 @@ button, input, select, textarea { font: inherit; }
 .settings-loading { display: grid; place-items: center; min-height: 260px; color: var(--muted); }
 @media (max-width: 760px) { .settings-layout { grid-template-columns: 1fr; }.settings-summary { position: static; }.theme-options { grid-template-columns: 1fr; }.settings-actions { align-items: stretch; flex-direction: column; }.settings-actions .button { width: 100%; } }
 
+/* Le thème sombre conserve la hiérarchie visuelle sans laisser de surfaces claires résiduelles. */
+:root[data-theme='dark'] {
+  --surface-raised: #1d2822;
+  --surface-muted: #151e19;
+  --surface-hover: #223029;
+  --line-soft: #2a3831;
+}
+:root[data-theme='dark'] .empty-workspace,
+:root[data-theme='dark'] .context-summary div,
+:root[data-theme='dark'] .message-card,
+:root[data-theme='dark'] .modal-card,
+:root[data-theme='dark'] .dashboard-metrics article,
+:root[data-theme='dark'] .heatmap-panel,
+:root[data-theme='dark'] .audit-section,
+:root[data-theme='dark'] .task-card,
+:root[data-theme='dark'] .kanban-card,
+:root[data-theme='dark'] .context-selection-card,
+:root[data-theme='dark'] .soa-versions,
+:root[data-theme='dark'] .profile-dropdown { color: var(--ink); border-color: var(--line); background: var(--surface-raised); box-shadow: 0 14px 38px rgba(0,0,0,.2); }
+:root[data-theme='dark'] .context-picker,
+:root[data-theme='dark'] .search-field,
+:root[data-theme='dark'] .score-fieldset,
+:root[data-theme='dark'] .risk-evaluation,
+:root[data-theme='dark'] .upload-zone,
+:root[data-theme='dark'] .view-switch,
+:root[data-theme='dark'] .scope-quick-create,
+:root[data-theme='dark'] .kanban-column { color: var(--ink); border-color: var(--line); background: var(--surface-muted); }
+:root[data-theme='dark'] .button--ghost,
+:root[data-theme='dark'] .scope-create-trigger,
+:root[data-theme='dark'] .icon-button,
+:root[data-theme='dark'] .status-select,
+:root[data-theme='dark'] .score-grid select,
+:root[data-theme='dark'] .view-switch button.active,
+:root[data-theme='dark'] .kanban-column header > span { color: var(--ink); border-color: var(--line); background: var(--surface-raised); }
+:root[data-theme='dark'] .field label,
+:root[data-theme='dark'] .score-fieldset legend,
+:root[data-theme='dark'] .score-grid label,
+:root[data-theme='dark'] .context-field select,
+:root[data-theme='dark'] td { color: var(--ink); }
+:root[data-theme='dark'] th,
+:root[data-theme='dark'] .context-steps span { color: var(--muted); background: var(--surface-muted); }
+:root[data-theme='dark'] td,
+:root[data-theme='dark'] .table-toolbar,
+:root[data-theme='dark'] .task-stack article,
+:root[data-theme='dark'] .task-card dl,
+:root[data-theme='dark'] .kanban-card__meta,
+:root[data-theme='dark'] .evidence-list article,
+:root[data-theme='dark'] .version-list article,
+:root[data-theme='dark'] .profile-dropdown p { border-color: var(--line-soft); }
+:root[data-theme='dark'] tbody tr:hover,
+:root[data-theme='dark'] .profile-menu__trigger:hover,
+:root[data-theme='dark'] .profile-dropdown a:hover,
+:root[data-theme='dark'] .profile-dropdown .profile-dropdown__action:hover,
+:root[data-theme='dark'] .icon-button:hover,
+:root[data-theme='dark'] .scope-create-trigger:hover { background: var(--surface-hover); }
+:root[data-theme='dark'] .module-nav__link--active { color: #9ce0c5 !important; background: var(--surface-raised) !important; box-shadow: none; }
+:root[data-theme='dark'] .avatar,
+:root[data-theme='dark'] .dashboard-metrics article > span,
+:root[data-theme='dark'] .empty-workspace > span,
+:root[data-theme='dark'] .demo-note__icon { color: #9ce0c5; background: #223c31; }
+:root[data-theme='dark'] .category-chip,
+:root[data-theme='dark'] .dic-badge,
+:root[data-theme='dark'] .kanban-card__labels span { color: #c9d6cf; border-color: var(--line); background: var(--surface-muted); }
+:root[data-theme='dark'] .inline-textarea:not([readonly]):hover,
+:root[data-theme='dark'] .inline-textarea:not([readonly]):focus { background: var(--surface-muted); }
+:root[data-theme='dark'] .context-selection-shell,
+:root[data-theme='dark'] .audit-page { background: var(--soft); }
+:root[data-theme='dark'] .demo-note { color: var(--muted); border-color: var(--line); background: var(--surface-muted); }
+:root[data-theme='dark'] .demo-note strong,
+:root[data-theme='dark'] .demo-note code { color: var(--ink); }
+:root[data-theme='dark'] .auth-panel { background: var(--soft); }
+:root[data-theme='dark'] .profile-dropdown .profile-dropdown__logout:hover { background: #3a201e; }
+
 button, a { -webkit-tap-highlight-color: transparent; }
 
 a { color: inherit; }
