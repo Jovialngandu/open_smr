@@ -3,23 +3,21 @@ import { firstValueFrom } from 'rxjs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { API_CONFIG } from '../config/api.config';
-import { UserPreferences } from '../../features/settings/services/settings.service';
+import { SETTINGS_ENDPOINT, UserPreferences } from '../../features/settings/services/settings.service';
 import { mockSettingsInterceptor } from './mock-settings.interceptor';
 
 describe('mockSettingsInterceptor', () => {
-  const endpoint = `${API_CONFIG.baseUrl}/settings/me/`;
-
   beforeAll(() => Object.defineProperty(API_CONFIG, 'useMocks', { value: true, configurable: true }));
   afterAll(() => Object.defineProperty(API_CONFIG, 'useMocks', { value: false, configurable: true }));
 
   it('renvoie les préférences personnelles', async () => {
-    const response = await intercept<UserPreferences>(new HttpRequest('GET', endpoint));
+    const response = await intercept<UserPreferences>(new HttpRequest('GET', SETTINGS_ENDPOINT));
     expect(response.body?.language).toBe('fr');
     expect(response.body?.email_notifications).toBe(true);
   });
 
   it('enregistre une mise à jour partielle', async () => {
-    const response = await intercept<UserPreferences>(new HttpRequest('PATCH', endpoint, {
+    const response = await intercept<UserPreferences>(new HttpRequest('PATCH', SETTINGS_ENDPOINT, {
       theme: 'DARK',
       timezone: 'Europe/Paris',
     }));

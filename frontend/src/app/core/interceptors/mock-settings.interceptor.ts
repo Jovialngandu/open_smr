@@ -2,9 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn, HttpResponse } from '@angular/com
 import { delay, of, throwError } from 'rxjs';
 
 import { API_CONFIG } from '../config/api.config';
-import { UserPreferences, UserPreferencesUpdate } from '../../features/settings/services/settings.service';
-
-const SETTINGS_ENDPOINT = `${API_CONFIG.baseUrl}/settings/me/`;
+import { SETTINGS_ENDPOINT, UserPreferences, UserPreferencesUpdate } from '../../features/settings/services/settings.service';
 const THEMES = ['LIGHT', 'DARK', 'SYSTEM'];
 
 let preferences: UserPreferences = {
