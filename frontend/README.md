@@ -86,6 +86,8 @@ Depuis le dashboard, tout utilisateur authentifié peut créer une organisation 
 
 En mode mock, les comptes créés restent disponibles pour une nouvelle connexion tant que l'application n'est pas rechargée. Ils apparaissent dans la liste des membres de leur organisation.
 
+Après une connexion, l'utilisateur arrive directement sur `/dashboard`. Chaque bascule de contexte réussie mémorise localement le dernier couple organisation/périmètre pour ce compte. À la connexion suivante, Angular vérifie que l'accès existe encore, demande de nouveaux JWT par `POST /auth/switch-context/` et ouvre le tableau de bord. Si l'accès a été retiré, le contexte sauvegardé est oublié et un contexte autorisé est utilisé. Un compte sans organisation ouvre son tableau de bord vide ; la page `/select-context` reste disponible pour choisir ou créer un espace.
+
 Les preuves d'une tâche se déposent depuis « Mes tâches » ou, pour les personnes autorisées, directement depuis les cartes et la liste des traitements. Le dépôt utilise un formulaire `multipart/form-data` (`task_id`, `file_path`, `description`). Dans le tableau Kanban, déplacer une carte change son statut ; le sélecteur de statut n'est disponible qu'en vue liste. Une preuve est demandée avant de terminer une tâche.
 
 La liste des utilisateurs est rechargée et vidée immédiatement lors d'un changement d'organisation ou de périmètre. Les réponses arrivées en retard pour l'ancien contexte sont ignorées.
