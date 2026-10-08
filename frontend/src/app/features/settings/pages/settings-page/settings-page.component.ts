@@ -1,8 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LucideBell, LucideCheck, LucideClock3, LucideGlobe2, LucidePalette, LucideUserRound } from '@lucide/angular';
 
 import { AuthService } from '../../../../core/services/auth.service';
+import { ContextService } from '../../../../core/services/context.service';
 import { TopbarComponent } from '../../../../shared/components/topbar/topbar.component';
 import { AppTheme, SettingsService } from '../../services/settings.service';
 
@@ -13,6 +14,7 @@ import { AppTheme, SettingsService } from '../../services/settings.service';
 })
 export class SettingsPageComponent {
   protected readonly auth = inject(AuthService);
+  protected readonly context = inject(ContextService);
   protected readonly service = inject(SettingsService);
   private readonly fb = inject(FormBuilder);
   protected readonly feedback = signal('');
@@ -37,6 +39,7 @@ export class SettingsPageComponent {
   });
 
   constructor() {
+    effect(() => this.service.loadEmailLogs(this.context.activeOrganizationId()));
     this.form.disable();
     this.service.load().subscribe({
       next: (preferences) => {

@@ -73,6 +73,13 @@
           </footer>
         </form>
       </div>
+      <section class="data-panel" aria-labelledby="email-log-title">
+        <div class="table-toolbar"><div><h2 id="email-log-title">Historique des e-mails</h2><p>Messages enregistrés pour votre compte{{ context.activeOrganizationId() ? ' dans l’organisation active' : '' }}.</p></div></div>
+        @if (service.emailLogsLoading()) { <div class="table-loading"><span class="spinner spinner--dark"></span> Chargement de l’historique…</div> }
+        @else if (service.emailLogsError()) { <div class="inline-error" role="alert">{{ service.emailLogsError() }}</div> }
+        @else if (!service.emailLogs().length) { <div class="empty-state empty-state--compact"><p>Aucun e-mail enregistré pour ce contexte.</p></div> }
+        @else { <div class="table-scroll"><table><thead><tr><th>Date</th><th>Objet</th><th>Destinataire</th><th>Envoi</th></tr></thead><tbody>@for (log of service.emailLogs(); track log.id) { <tr><td>{{ log.sent_at.slice(0, 16).replace('T', ' ') }}</td><td>{{ log.subject }}</td><td>{{ log.recipient }}</td><td><span class="status-chip" [attr.data-status]="log.status ? 'CLOSED' : 'OPEN'">{{ log.status ? 'Envoyé' : 'Échec' }}</span></td></tr> }</tbody></table></div> }
+      </section>
     }
   </div>
 </main>
