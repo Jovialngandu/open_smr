@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { LucidePlus, LucideShieldAlert, LucideCheck, LucideSearch } from '@lucide/angular';
+import { assessmentLevel, IMPACT_LEVELS, LIKELIHOOD_LEVELS } from '../../../../core/models/assessment-scale';
 
 import { RISK_STATUS_LABELS, Risk, RiskStatus } from '../../../../core/models/governance.models';
 import { ContextService } from '../../../../core/services/context.service';
@@ -25,6 +26,9 @@ export class RisksPageComponent {
   protected readonly actionError = signal('');
   protected readonly successMessage = signal('');
   protected readonly statusLabels = RISK_STATUS_LABELS;
+  protected readonly selectedLevel = assessmentLevel;
+  protected readonly likelihoodLevels = LIKELIHOOD_LEVELS;
+  protected readonly impactLevels = IMPACT_LEVELS;
   protected readonly statuses = Object.entries(RISK_STATUS_LABELS) as [RiskStatus, string][];
   protected readonly editable = computed(() => ['ADMIN', 'RSSI'].includes(this.context.activeRole() ?? ''));
 

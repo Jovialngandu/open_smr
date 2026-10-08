@@ -64,8 +64,8 @@
                     <td><strong class="risk-code">{{ risk.code }}</strong></td>
                     <td>{{ risk.asset_name }}</td>
                     <td class="threat-cell">{{ risk.threat_description }}</td>
-                    <td class="numeric-cell">{{ risk.likelihood }}</td>
-                    <td class="numeric-cell">{{ risk.impact }}</td>
+                    <td [attr.title]="selectedLevel(likelihoodLevels, risk.likelihood).description">{{ risk.likelihood }} · {{ selectedLevel(likelihoodLevels, risk.likelihood).label }}</td>
+                    <td [attr.title]="selectedLevel(impactLevels, risk.impact).description">{{ risk.impact }} · {{ selectedLevel(impactLevels, risk.impact).label }}</td>
                     <td><app-risk-score-badge [likelihood]="risk.likelihood" [impact]="risk.impact" /></td>
                     <td><span class="status-chip" [attr.data-status]="risk.status">{{ statusLabels[risk.status] }}</span></td>
                     @if (editable()) { <td class="row-actions">
