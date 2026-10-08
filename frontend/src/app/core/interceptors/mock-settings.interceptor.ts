@@ -2,8 +2,12 @@ import { HttpErrorResponse, HttpInterceptorFn, HttpResponse } from '@angular/com
 import { delay, of, throwError } from 'rxjs';
 
 import { API_CONFIG } from '../config/api.config';
-import { SETTINGS_ENDPOINT, UserPreferences, UserPreferencesUpdate } from '../../features/settings/services/settings.service';
+import { EMAIL_LOGS_ENDPOINT, EmailLog, SETTINGS_ENDPOINT, UserPreferences, UserPreferencesUpdate } from '../../features/settings/services/settings.service';
 const THEMES = ['LIGHT', 'DARK', 'SYSTEM'];
+const emailLogs: Array<EmailLog & { organization_id: string }> = [
+  { id: 'email-001', organization_id: '8f4b8400-e29b-41d4-a716-446655440001', email_type: 'OVERDUE_TASK_ALERT', recipient: 'demo@opensmr.fr', subject: 'Rappel : action de sécurité en retard', sent_at: '2026-09-11T08:00:00Z', status: true, error_message: null },
+  { id: 'email-002', organization_id: '8f4b8400-e29b-41d4-a716-446655440002', email_type: 'RISK_NOTIFICATION', recipient: 'demo@opensmr.fr', subject: 'Suivi des risques du périmètre', sent_at: '2026-09-10T08:00:00Z', status: true, error_message: null },
+];
 
 let preferences: UserPreferences = {
   id: 'preference-current-user',
@@ -16,7 +20,12 @@ let preferences: UserPreferences = {
 };
 
 export const mockSettingsInterceptor: HttpInterceptorFn = (request, next) => {
-  if (!API_CONFIG.useMocks || request.url !== SETTINGS_ENDPOINT) return next(request);
+  if (!API_CONFIG.useMocks) return next(request);
+  if (request.url === EMAIL_LOGS_ENDPOINT && request.method === 'GET') {
+    const organizationId = request.params.get('organization_id');
+    return ok(emailLogs.filter((log) => !organizationId || log.organization_id === organizationId).map(({ organization_id: _organizationId, ...log }) => log));
+  }
+  if (request.url !== SETTINGS_ENDPOINT) return next(request);
 
   if (request.method === 'GET') return ok(preferences);
 
