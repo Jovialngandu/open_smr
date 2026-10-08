@@ -84,9 +84,7 @@ export const mockGovernanceInterceptor: HttpInterceptorFn = (request, next) => {
     return mockOk(updated);
   }
   if (riskId && request.method === 'DELETE') {
-    if (!risks.some((item) => item.id === riskId)) return mockError(404, 'Risque introuvable.');
-    risks = risks.filter((item) => item.id !== riskId);
-    return mockOk(null, 204);
+    return mockError(405, 'La suppression des risques n’est pas disponible dans l’API actuelle.');
   }
 
   return next(request);

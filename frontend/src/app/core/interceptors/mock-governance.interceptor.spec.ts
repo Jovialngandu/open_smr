@@ -55,6 +55,10 @@ describe('mockGovernanceInterceptor', () => {
     expect(response.body?.score).toBe(20);
     expect(response.body?.scope_id).toBe(DIGITAL_SCOPE_ID);
   });
+
+  it('refuse la suppression des risques absente du backend', async () => {
+    await expect(intercept(new HttpRequest('DELETE', `${DOMAIN_ENDPOINTS.risks}risk-001/`))).rejects.toMatchObject({ status: 405 });
+  });
 });
 
 async function intercept<T>(request: HttpRequest<unknown>): Promise<HttpResponse<T>> {
