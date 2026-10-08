@@ -30,7 +30,6 @@
       <button class="scope-create-trigger" type="button" (click)="scopeModalOpen.set(true)" [disabled]="switching()" aria-label="Créer un périmètre" title="Créer un périmètre"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg></button>
     }
     @if (switching()) { <span class="context-loader" aria-label="Changement de contexte en cours"></span> }
-    <button class="button button--ghost topbar-workspace-action" type="button" (click)="openOrganizationModal()" [disabled]="switching()"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg> Nouvelle organisation</button>
   </div> } @else { <button class="button button--ghost topbar-workspace-action" type="button" (click)="openOrganizationModal()"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg> Créer une organisation</button> }
 
   <div class="profile-menu">
