@@ -81,11 +81,4 @@ export class RisksPageComponent {
     this.closeModal();
   }
 
-  protected deleteRisk(risk: Risk): void {
-    if (!confirm(`Supprimer le risque « ${risk.code} » ?`)) return;
-    this.actionError.set('');
-    this.risksService.deleteRisk(risk.id).subscribe({
-      error: (error: Error) => this.actionError.set(error.message),
-    });
-  }
 }

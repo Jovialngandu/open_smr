@@ -70,7 +70,6 @@
                     <td><span class="status-chip" [attr.data-status]="risk.status">{{ statusLabels[risk.status] }}</span></td>
                     @if (editable()) { <td class="row-actions">
                       <button type="button" (click)="openEdit(risk)" [attr.aria-label]="'Modifier ' + risk.code">Modifier</button>
-                      <button class="danger-link" type="button" (click)="deleteRisk(risk)" [attr.aria-label]="'Supprimer ' + risk.code">Supprimer</button>
                     </td> }
                   </tr>
                 }
