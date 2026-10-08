@@ -65,7 +65,7 @@ Le mode mock permet de tester :
 - la protection des routes ;
 - les autorisations par rôle.
 - l'inventaire des actifs, son filtrage par périmètre et son CRUD ;
-- le registre des risques, son filtrage par périmètre et son CRUD.
+- le registre des risques, son filtrage par périmètre, la création et la modification des scénarios (sans suppression tant que l’API ne l’expose pas).
 - le dashboard, ses indicateurs et la heatmap interactive 5 × 5 ;
 - les plans de traitement et leur suivi ;
 - le tableau Kanban des traitements avec glisser-déposer entre les statuts ;
@@ -325,7 +325,7 @@ Fonctionnalités terminées :
 - backend d'authentification mocké ;
 - inventaire des actifs avec badge DIC et formulaire de création/édition ;
 - registre des risques avec score coloré et rattachement aux actifs ;
-- mocks CRUD des actifs et des risques, filtrés par le périmètre actif.
+- mocks de création et de modification des risques, et CRUD des actifs, filtrés par le périmètre actif. La suppression d’un risque n’est pas proposée car Django n’expose pas encore cette opération.
 - dashboard avec indicateurs, tâches urgentes et heatmap filtrante ;
 - plans de traitement avec mesure ISO, responsable et échéance ;
 - espace Mes tâches avec dépôt de preuves PDF/image et clôture ;
@@ -337,6 +337,7 @@ Fonctionnalités terminées :
 - propriétaires d'actifs issus des membres actifs de l'organisation ;
 - lecture seule effective des risques et preuves pour l'auditeur.
 - page Paramètres connectée à `GET|PATCH /api/settings/me/`, avec thème persistant et mock équivalent.
+- historique des e-mails personnels dans les Paramètres via `GET /api/v1/emails/email-logs/`, filtré sur l’organisation active lorsque celle-ci est sélectionnée ; les tests d’envoi du backend ne sont pas exposés dans l’interface.
 
 ## Contrats Django déjà pris en charge
 
@@ -346,6 +347,9 @@ Le frontend s'aligne sur les serializers actuellement exposés :
 - `POST /api/v1/auth/switch-context/` régénère les deux jetons JWT avec l'organisation et le périmètre actifs ;
 - les membres proviennent de `/api/v1/organizations/{organization_id}/members/` ; l'affectation utilise `user_id` et `role` ;
 - les tâches utilisent les clés Django `risk`, `iso_control`, `assignee` et `iso_control_code` ; une couche d'adaptation les convertit vers le modèle d'affichage Angular ;
+- la liste des tâches est assemblée à partir des risques du périmètre et de `GET /api/v1/treatments/tasks/?risk_id=...` : le backend ne prend pas en charge `scope_id` sur cette route. Cette solution effectue une requête par risque en attendant un filtre ou un endpoint agrégé côté backend ;
+- les entrées et versions SoA sont adaptées depuis les champs Django `scope` et `approved_by` ; le mock renvoie désormais ces mêmes formes ;
+- la mise en œuvre SoA côté backend dépend du statut de toutes les tâches liées à la mesure, sans vérifier la présence de preuves. L’interface demande toujours une preuve avant de terminer une tâche pour guider l’utilisateur, mais cette règle n’est pas imposée par Django ;
 - les preuves sont envoyées en multipart avec `task_id`, `file_path` et `description` ;
 - la heatmap consomme l'enveloppe `{ scope_id, total_risks, matrix }`.
 - une organisation est créée avec `name` et `description` ; son `code` est généré par Django ;
