@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../../core/services/auth.service';
+import { ContextService } from '../../../../core/services/context.service';
 
 @Component({
   selector: 'app-login',
@@ -13,6 +14,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 })
 export class LoginComponent {
   protected readonly auth = inject(AuthService);
+  private readonly context = inject(ContextService);
   private readonly router = inject(Router);
   private readonly formBuilder = inject(FormBuilder);
   protected readonly passwordVisible = signal(false);
@@ -39,7 +41,7 @@ export class LoginComponent {
     else localStorage.removeItem('opensmr.saved_username');
 
     this.auth.login({ username: username.trim(), password }).subscribe({
-      next: (profile) => void this.router.navigateByUrl(profile.roles.length ? '/select-context' : '/dashboard'),
+      next: (profile) => void this.router.navigateByUrl(profile.roles.length && !this.context.hasValidActiveContext(profile) ? '/select-context' : '/dashboard'),
       error: (error: Error) => this.errorMessage.set(error.message),
     });
   }

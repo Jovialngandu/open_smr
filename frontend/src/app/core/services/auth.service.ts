@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, finalize, Observable, switchMap, tap, throwError } from 'rxjs';
+import { catchError, finalize, Observable, of, switchMap, tap, throwError } from 'rxjs';
 
 import { AUTH_ENDPOINTS } from '../config/api.config';
 import {
@@ -42,6 +42,7 @@ export class AuthService {
     return this.http.post<AuthResponse>(AUTH_ENDPOINTS.login, credentials).pipe(
       tap((response) => this.tokens.save(response)),
       switchMap(() => this.loadProfile()),
+      switchMap((profile) => this.restoreContext(profile)),
       finalize(() => this.busyState.set(false)),
       catchError((error) => throwError(() => this.toFriendlyError(error))),
     );
@@ -80,6 +81,32 @@ export class AuthService {
       this.context.syncClaims();
       this.statusState.set('authenticated');
     }));
+  }
+
+  private restoreContext(profile: UserProfile): Observable<UserProfile> {
+    const preferred = this.context.preferredContext(profile);
+    if (preferred) {
+      return this.context.switchContext(preferred).pipe(
+        switchMap(() => of(profile)),
+        catchError(() => {
+          this.context.clearPreferredContext(profile.id);
+          return this.useAvailableContext(profile);
+        }),
+      );
+    }
+    return this.useAvailableContext(profile);
+  }
+
+  private useAvailableContext(profile: UserProfile): Observable<UserProfile> {
+    if (!profile.roles.length || this.context.hasValidActiveContext(profile)) return of(profile);
+    const organization = profile.roles.find((role) => role.scopes.length) ?? profile.roles[0];
+    return this.context.switchContext({
+      organization_id: organization.organization_id,
+      scope_id: organization.scopes[0]?.id ?? null,
+    }).pipe(
+      switchMap(() => of(profile)),
+      catchError(() => of(profile)),
+    );
   }
 
   private endSession(redirect: boolean): void {
