@@ -17,14 +17,15 @@ describe('mockWorkspaceInterceptor', () => {
   });
 
   it('retourne les 93 mesures de la SoA', async () => {
-    const response = await intercept<SoaEntry[]>(new HttpRequest('GET', DOMAIN_ENDPOINTS.soaEntries, null, { params: scopeParams() }));
+    const response = await intercept<Array<SoaEntry & { scope: string }>>(new HttpRequest('GET', DOMAIN_ENDPOINTS.soaEntries, null, { params: scopeParams() }));
     expect(response.body).toHaveLength(93);
-    expect(response.body?.every((entry) => entry.scope_id === SCOPE_ID)).toBe(true);
+    expect(response.body?.every((entry) => entry.scope === SCOPE_ID)).toBe(true);
   });
 
-  it('filtre les tâches de traitement par périmètre', async () => {
-    const response = await intercept<Array<{ risk: string; iso_control: string }>>(new HttpRequest('GET', DOMAIN_ENDPOINTS.treatments, null, { params: scopeParams() }));
-    expect(response.body).toHaveLength(3);
+  it('filtre les tâches de traitement par risque, comme le backend', async () => {
+    const response = await intercept<Array<{ risk: string; iso_control: string }>>(new HttpRequest('GET', DOMAIN_ENDPOINTS.treatments, null, { params: new HttpParams().set('risk_id', 'risk-001') }));
+    expect(response.body).toHaveLength(1);
+    expect(response.body?.[0].risk).toBe('risk-001');
     expect(response.body?.every((task) => Boolean(task.risk && task.iso_control))).toBe(true);
   });
 

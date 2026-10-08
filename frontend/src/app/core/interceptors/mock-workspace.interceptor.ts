@@ -114,7 +114,10 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
     });
     return ok({ scope_id: scopeId ?? '', total_risks: cells.reduce((sum, cell) => sum + cell.risk_count, 0), matrix: cells.map((cell) => ({ likelihood: cell.likelihood, impact: cell.impact, score: cell.likelihood * cell.impact, count: cell.risk_count })) });
   }
-  if (request.url === DOMAIN_ENDPOINTS.treatments && request.method === 'GET') return ok(treatments.filter((item) => !scopeId || item.scope_id === scopeId).map(toBackendTask));
+  if (request.url === DOMAIN_ENDPOINTS.treatments && request.method === 'GET') {
+    const riskId = request.params.get('risk_id');
+    return ok(treatments.filter((item) => riskId ? item.risk_id === riskId : item.assignee_id === '1').map(toBackendTask));
+  }
   if (request.url === DOMAIN_ENDPOINTS.treatments && request.method === 'POST') {
     const payload = request.body as { risk: string; iso_control: string; assignee: string; title: string; description: string; due_date: string };
     const created = task(createMockId('task'), request.params.get('scope_id') ?? DIGITAL_SCOPE, payload.risk, request.params.get('risk_code') ?? 'RSK', Number(payload.iso_control.replace('control-', '')), payload.assignee, payload.title, payload.due_date, 'TODO', payload.description);
@@ -143,26 +146,27 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
     treatments = treatments.map((item) => item.id === taskId ? { ...item, evidences: [...item.evidences, evidence] } : item);
     return ok(toBackendEvidence(evidence), 201);
   }
-  if (request.url === DOMAIN_ENDPOINTS.soaVersions && request.method === 'GET') return ok(soaVersions.filter((item) => !scopeId || item.scope_id === scopeId));
+  if (request.url === DOMAIN_ENDPOINTS.soaVersions && request.method === 'GET') return ok(soaVersions.filter((item) => !scopeId || item.scope_id === scopeId).map(toBackendSoaVersion));
   if (request.url === DOMAIN_ENDPOINTS.soaVersions && request.method === 'POST') {
     const body = request.body as { scope_id: string; title: string };
     const created: SoaVersion = { id: createMockId('soa-version'), scope_id: body.scope_id, version_number: `v1.${soaVersions.filter((item) => item.scope_id === body.scope_id).length + 1}-2026`, title: body.title, status: 'DRAFT', created_at: new Date().toISOString(), approved_by_name: null };
     soaVersions = [created, ...soaVersions];
-    return ok(created, 201);
+    return ok(toBackendSoaVersion(created), 201);
   }
-  if (request.url === DOMAIN_ENDPOINTS.soaEntries && request.method === 'GET') return ok(soaEntries.filter((item) => !scopeId || item.scope_id === scopeId));
+  if (request.url === DOMAIN_ENDPOINTS.soaEntries && request.method === 'GET') return ok(soaEntries.filter((item) => !scopeId || item.scope_id === scopeId).map(toBackendSoaEntry));
   const soaId = collectionId(request.url, DOMAIN_ENDPOINTS.soaEntries);
   if (soaId && request.method === 'PATCH') {
     const current = soaEntries.find((entry) => entry.id === soaId);
     if (!current) return fail(404, 'Entrée SoA introuvable.');
     const updated = { ...current, ...(request.body as Partial<SoaEntry>), updated_at: new Date().toISOString(), updated_by_name: 'Nadia Bernard' };
     soaEntries = soaEntries.map((entry) => entry.id === soaId ? updated : entry);
-    return ok(updated);
+    return ok(toBackendSoaEntry(updated));
   }
-  if (/\/scopes\/[^/]+\/soa\/export\/$/.test(request.url.split('?')[0]) && request.method === 'GET') {
-    const format = request.params.get('format') ?? new URL(request.url).searchParams.get('format') ?? 'csv';
-    const content = format === 'pdf' ? 'OpenSMR - Déclaration d’applicabilité\nExport PDF simulé.' : 'controle;applicable;justification;implementation\nA.5.1;Oui;Mesure retenue;Mise en œuvre';
-    return ok(new Blob([content], { type: format === 'pdf' ? 'application/pdf' : 'text/csv;charset=utf-8' }));
+  if (/\/exporter\/scopes\/[^/]+\/export\/$/.test(request.url) && request.method === 'GET') {
+    const format = request.params.get('file_type') ?? 'pdf';
+    if (!['pdf', 'xlsx'].includes(format)) return fail(400, "Format d'export invalide.");
+    const content = format === 'pdf' ? 'OpenSMR - Déclaration d’applicabilité\nExport PDF simulé.' : 'Contrôle\tApplicable\tJustification\tImplémentation\nA.5.1\tOui\tMesure retenue\tMise en œuvre';
+    return ok(new Blob([content], { type: format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
   }
   if (request.url === DOMAIN_ENDPOINTS.users && request.method === 'GET') return ok(members);
   if (request.url === DOMAIN_ENDPOINTS.users && request.method === 'POST') {
@@ -188,8 +192,24 @@ function task(id: string, scopeId: string, riskId: string, riskCode: string, con
 }
 
 function synchronizeSoa(taskItem: TreatmentTask): void {
-  const implementation_status = taskItem.status === 'COMPLETED' && taskItem.evidences.length ? 'IMPLEMENTED' : 'IN_PROGRESS';
-  soaEntries = soaEntries.map((entry) => entry.scope_id === taskItem.scope_id && entry.iso_control.id === taskItem.iso_control_id ? { ...entry, implementation_status, updated_at: new Date().toISOString(), updated_by_name: 'Synchronisation automatique' } : entry);
+  const related = treatments.filter((item) => item.scope_id === taskItem.scope_id && item.iso_control_id === taskItem.iso_control_id);
+  if (!related.length) return;
+  const completed = related.every((item) => item.status === 'COMPLETED');
+  soaEntries = soaEntries.map((entry) => {
+    if (entry.scope_id !== taskItem.scope_id || entry.iso_control.id !== taskItem.iso_control_id) return entry;
+    if (!completed && entry.implementation_status !== 'IMPLEMENTED') return entry;
+    return { ...entry, implementation_status: completed ? 'IMPLEMENTED' : 'IN_PROGRESS', updated_at: new Date().toISOString(), updated_by_name: 'Synchronisation automatique' };
+  });
+}
+
+function toBackendSoaEntry(entry: SoaEntry) {
+  const { scope_id, updated_by_name: _updatedByName, ...rest } = entry;
+  return { ...rest, scope: scope_id };
+}
+
+function toBackendSoaVersion(version: SoaVersion) {
+  const { scope_id, approved_by_name, ...rest } = version;
+  return { ...rest, scope: scope_id, approved_by: approved_by_name ? { username: approved_by_name, email: '' } : null, snapshot_data: {} };
 }
 
 function toBackendTask(item: TreatmentTask) {

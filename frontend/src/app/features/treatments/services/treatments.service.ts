@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { finalize, map, Observable, tap } from 'rxjs';
+import { finalize, forkJoin, map, Observable, of, switchMap, tap } from 'rxjs';
 
 import { API_CONFIG, DOMAIN_ENDPOINTS } from '../../../core/config/api.config';
 import { Evidence, TreatmentPayload, TreatmentStatus, TreatmentTask } from '../../../core/models/governance.models';
@@ -21,7 +21,12 @@ export class TreatmentsService {
     const version = ++this.fetchVersion;
     this.itemsState.set([]);
     this.loadingState.set(true);
-    this.http.get<BackendTreatmentTask[]>(DOMAIN_ENDPOINTS.treatments, { params: new HttpParams().set('scope_id', scopeId) }).pipe(
+    // L'API des tâches ne filtre pas par scope_id : elle accepte risk_id.
+    this.http.get<Array<{ id: string }>>(DOMAIN_ENDPOINTS.risks, { params: new HttpParams().set('scope_id', scopeId) }).pipe(
+      switchMap((risks) => risks.length
+        ? forkJoin(risks.map((risk) => this.http.get<BackendTreatmentTask[]>(DOMAIN_ENDPOINTS.treatments, { params: new HttpParams().set('risk_id', risk.id) })))
+        : of([] as BackendTreatmentTask[][])),
+      map((groups) => groups.flat()),
       map((items) => items.map((item) => this.fromBackend(item, scopeId))),
       finalize(() => { if (version === this.fetchVersion) this.loadingState.set(false); }),
     ).subscribe({ next: (items) => { if (version === this.fetchVersion) this.itemsState.set(items); }, error: () => { if (version === this.fetchVersion) this.itemsState.set([]); } });
