@@ -2,6 +2,7 @@ from .base import TimeStampedUUIDModel
 from .iso27001 import Asset, Evidence, IsoControl, Risk, SoaEntry, SoaVersion, TreatmentTask
 from .organization import Organization, Scope, UserOrganizationRole, UserScopeAccess
 from .support import SystemSetting, UserPreference
+from .email import EmailLog
 
 __all__ = [
     'TimeStampedUUIDModel',
@@ -18,4 +19,5 @@ __all__ = [
     'SoaVersion',
     'UserPreference',
     'SystemSetting',
+    'EmailLog'
 ]
