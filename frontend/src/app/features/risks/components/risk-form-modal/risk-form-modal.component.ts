@@ -1,6 +1,7 @@
 import { Component, effect, HostListener, inject, input, output, signal } from '@angular/core';
 import { LucideX, LucideCircleAlert } from '@lucide/angular';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { assessmentLevel, IMPACT_LEVELS, LIKELIHOOD_LEVELS } from '../../../../core/models/assessment-scale';
 
 import { RISK_STATUS_LABELS, Risk, RiskPayload, RiskStatus } from '../../../../core/models/governance.models';
 import { AssetsService } from '../../../assets/services/assets.service';
@@ -20,7 +21,9 @@ export class RiskFormModalComponent {
   protected readonly assetsService = inject(AssetsService);
   private readonly formBuilder = inject(FormBuilder);
   protected readonly submitError = signal('');
-  protected readonly scores = [1, 2, 3, 4, 5] as const;
+  protected readonly likelihoodLevels = LIKELIHOOD_LEVELS;
+  protected readonly impactLevels = IMPACT_LEVELS;
+  protected readonly selectedLevel = assessmentLevel;
   protected readonly statuses = Object.entries(RISK_STATUS_LABELS) as [RiskStatus, string][];
 
   protected readonly form = this.formBuilder.nonNullable.group({

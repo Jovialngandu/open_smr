@@ -37,12 +37,14 @@
 
       <div class="risk-evaluation">
         <div class="score-grid">
-          <label>Vraisemblance
-            <select formControlName="likelihood">@for (score of scores; track score) { <option [value]="score">{{ score }}</option> }</select>
+          <label for="risk-likelihood">Vraisemblance
+            <select id="risk-likelihood" formControlName="likelihood" aria-describedby="likelihood-help" [attr.title]="selectedLevel(likelihoodLevels, form.controls.likelihood.value).description">@for (level of likelihoodLevels; track level.value) { <option [value]="level.value" [attr.title]="level.description">{{ level.value }} — {{ level.label }}</option> }</select>
+            <small id="likelihood-help" class="assessment-help">{{ selectedLevel(likelihoodLevels, form.controls.likelihood.value).description }}</small>
           </label>
           <span aria-hidden="true">×</span>
-          <label>Impact
-            <select formControlName="impact">@for (score of scores; track score) { <option [value]="score">{{ score }}</option> }</select>
+          <label for="risk-impact">Impact
+            <select id="risk-impact" formControlName="impact" aria-describedby="impact-help" [attr.title]="selectedLevel(impactLevels, form.controls.impact.value).description">@for (level of impactLevels; track level.value) { <option [value]="level.value" [attr.title]="level.description">{{ level.value }} — {{ level.label }}</option> }</select>
+            <small id="impact-help" class="assessment-help">{{ selectedLevel(impactLevels, form.controls.impact.value).description }}</small>
           </label>
           <strong class="score-preview" [attr.data-score]="currentScore()">{{ currentScore() }} / 25</strong>
         </div>
