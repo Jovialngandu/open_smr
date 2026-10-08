@@ -352,6 +352,7 @@ Le frontend s'aligne sur les serializers actuellement exposés :
 - les actifs utilisent `scope_id` et `owner_id` à l'écriture ; leurs réponses imbriquées `scope` et `owner` sont adaptées au modèle d'affichage ;
 - les risques utilisent `asset_id` à la création ; leur `code` est généré par Django et leur objet `asset` imbriqué est adapté par le service Angular ;
 - les modifications d'actifs et de risques utilisent `PATCH` conformément aux vues Django.
+- les sélecteurs d’évaluation affichent des libellés et explications issus de `core/models/assessment-scale.ts` : DIC sur 1–3, vraisemblance et impact sur 1–5. La proposition d’un niveau DIC 4 demanderait d’abord une évolution des validateurs et modèles Django ; elle n’est pas proposée par le formulaire actuel.
 - les préférences personnelles utilisent exceptionnellement `/api/settings/me/` (sans segment `/v1`) conformément au routage Django.
 
 ### Rejoindre un espace de travail partagé
