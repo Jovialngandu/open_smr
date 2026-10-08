@@ -55,8 +55,37 @@ export class ContextService {
       tap((response) => {
         this.tokens.save(response);
         this.syncClaims();
+        const userId = this.profileState()?.id;
+        if (userId) localStorage.setItem(this.lastContextKey(userId), JSON.stringify(context));
       }),
     );
+  }
+
+  preferredContext(profile: UserProfile): SwitchContextRequest | null {
+    const saved = localStorage.getItem(this.lastContextKey(profile.id));
+    if (!saved) return null;
+    try {
+      const context = JSON.parse(saved) as SwitchContextRequest;
+      const organization = profile.roles.find((role) => role.organization_id === context.organization_id);
+      if (organization && (!context.scope_id || organization.scopes.some((scope) => scope.id === context.scope_id))) {
+        return { organization_id: organization.organization_id, scope_id: context.scope_id ?? null };
+      }
+    } catch { /* Une ancienne préférence invalide ne doit pas bloquer la connexion. */ }
+    this.clearPreferredContext(profile.id);
+    return null;
+  }
+
+  clearPreferredContext(userId: string): void {
+    localStorage.removeItem(this.lastContextKey(userId));
+  }
+
+  hasValidActiveContext(profile: UserProfile): boolean {
+    const organization = profile.roles.find((role) => role.organization_id === this.activeOrganizationId());
+    return !!organization && (!this.activeScopeId() || organization.scopes.some((scope) => scope.id === this.activeScopeId()));
+  }
+
+  private lastContextKey(userId: string): string {
+    return `opensmr.last_context.${userId}`;
   }
 
   createScope(organizationId: string, name: string, description: string): Observable<{ id: string; organization_id: string; name: string; description: string }> {
