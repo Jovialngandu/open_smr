@@ -1,6 +1,7 @@
 import { Component, effect, HostListener, inject, input, output, signal } from '@angular/core';
 import { LucideX, LucideCircleAlert } from '@lucide/angular';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { assessmentLevel, DIC_LEVELS } from '../../../../core/models/assessment-scale';
 
 import {
   ASSET_CATEGORY_LABELS,
@@ -27,7 +28,8 @@ export class AssetFormModalComponent {
   private readonly formBuilder = inject(FormBuilder);
   protected readonly submitError = signal('');
   protected readonly categories = Object.entries(ASSET_CATEGORY_LABELS) as [AssetCategory, string][];
-  protected readonly scores = [1, 2, 3] as const;
+  protected readonly dicLevels = DIC_LEVELS;
+  protected readonly selectedLevel = assessmentLevel;
 
   protected readonly form = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(255)]],

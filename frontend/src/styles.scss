@@ -512,6 +512,9 @@ app-evidence-upload-modal {
 .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); align-items: end; gap: .7rem; }
 .score-grid label { display: grid; gap: .35rem; color: #586860; font-size: .7rem; font-weight: 700; }
 .score-grid select { min-height: 2.5rem; padding: .45rem; color: var(--ink); border: 1px solid #cfd8d3; border-radius: .55rem; background: white; }
+.score-grid label { min-width: 0; }
+.score-grid select { width: 100%; }
+.assessment-help { display: block; min-height: 2.8em; color: var(--muted); font-size: .68rem; font-weight: 500; line-height: 1.4; }
 .risk-evaluation .score-grid { grid-template-columns: 1fr auto 1fr 1fr; align-items: center; }
 .score-preview { justify-self: end; padding: .65rem .8rem; color: #174f3e; border-radius: .55rem; background: #dff0e7; font-size: .82rem; white-space: nowrap; }
 

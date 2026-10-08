@@ -42,16 +42,19 @@
 
       <fieldset class="score-fieldset">
         <legend>Évaluation DIC</legend>
-        <p>Attribuez une valeur de 1 (faible) à 3 (élevée) pour chaque critère.</p>
+        <p>Évaluez l’effet d’une perte de confidentialité, d’intégrité ou de disponibilité. La criticité de l’actif reprend le niveau le plus élevé.</p>
         <div class="score-grid">
-          <label>Confidentialité
-            <select formControlName="confidentiality">@for (score of scores; track score) { <option [value]="score">{{ score }}</option> }</select>
+          <label for="asset-confidentiality">Confidentialité
+            <select id="asset-confidentiality" formControlName="confidentiality" aria-describedby="confidentiality-help" [attr.title]="selectedLevel(dicLevels, form.controls.confidentiality.value).description">@for (level of dicLevels; track level.value) { <option [value]="level.value" [attr.title]="level.description">{{ level.value }} — {{ level.label }}</option> }</select>
+            <small id="confidentiality-help" class="assessment-help">{{ selectedLevel(dicLevels, form.controls.confidentiality.value).description }}</small>
           </label>
-          <label>Intégrité
-            <select formControlName="integrity">@for (score of scores; track score) { <option [value]="score">{{ score }}</option> }</select>
+          <label for="asset-integrity">Intégrité
+            <select id="asset-integrity" formControlName="integrity" aria-describedby="integrity-help" [attr.title]="selectedLevel(dicLevels, form.controls.integrity.value).description">@for (level of dicLevels; track level.value) { <option [value]="level.value" [attr.title]="level.description">{{ level.value }} — {{ level.label }}</option> }</select>
+            <small id="integrity-help" class="assessment-help">{{ selectedLevel(dicLevels, form.controls.integrity.value).description }}</small>
           </label>
-          <label>Disponibilité
-            <select formControlName="availability">@for (score of scores; track score) { <option [value]="score">{{ score }}</option> }</select>
+          <label for="asset-availability">Disponibilité
+            <select id="asset-availability" formControlName="availability" aria-describedby="availability-help" [attr.title]="selectedLevel(dicLevels, form.controls.availability.value).description">@for (level of dicLevels; track level.value) { <option [value]="level.value" [attr.title]="level.description">{{ level.value }} — {{ level.label }}</option> }</select>
+            <small id="availability-help" class="assessment-help">{{ selectedLevel(dicLevels, form.controls.availability.value).description }}</small>
           </label>
         </div>
       </fieldset>
