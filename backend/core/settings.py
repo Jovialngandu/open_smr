@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'drf_spectacular',
-    'api.apps.ApiConfig'
+    'api.apps.ApiConfig',
+    'pgvector',
 ]
 
 MIDDLEWARE = [
@@ -88,8 +89,9 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1'
 ]
-# --- DATABASE CONFIGURATION ---
+
 DATABASE_URL = os.getenv('DATABASE_URL')
+USE_SQLITE = os.getenv('USE_SQLITE', 'False').lower() in ('true', '1', 't')
 
 if DATABASE_URL:
     DATABASES = {
@@ -97,9 +99,19 @@ if DATABASE_URL:
             default=DATABASE_URL,
             conn_max_age=600,
             conn_health_checks=True,
-            # Activer SSL uniquement si l'URL contient sslmode=require (ex: Neon)
             ssl_require='sslmode=require' in DATABASE_URL
         )
+    }
+elif not USE_SQLITE:
+    DATABASES = {
+        'default': {
+            'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
+            'NAME': os.getenv('DB_NAME', 'open_smr_db'),
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'postgres'),
+            'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+            'PORT': os.getenv('DB_PORT', '5433'),
+        }
     }
 else:
     DATABASES = {
@@ -108,7 +120,6 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-
 
 
 
@@ -211,3 +222,7 @@ EMAIL_TIMEOUT = 15
 
 # 4. URL Frontend (pour les liens dans les mails)
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+# EMBEDDING_ENGINE = os.getenv("EMBEDDING_ENGINE", "huggingface")
+EMBEDDING_ENGINE = "local"
+SOA_SEARCH_ENGINE = "hybrid"  # vector | bm25 | hybrid
+HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY", "")
