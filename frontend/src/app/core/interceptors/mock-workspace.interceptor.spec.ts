@@ -1,13 +1,15 @@
 import { HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
-import { DOMAIN_ENDPOINTS } from '../config/api.config';
+import { API_CONFIG, DOMAIN_ENDPOINTS, organizationMembersEndpoint } from '../config/api.config';
 import { HeatmapApiResponse, SoaEntry } from '../models/governance.models';
 import { mockWorkspaceInterceptor } from './mock-workspace.interceptor';
 
 const SCOPE_ID = '8f4b8400-e29b-41d4-a716-446655440101';
 
 describe('mockWorkspaceInterceptor', () => {
+  beforeAll(() => Object.defineProperty(API_CONFIG, 'useMocks', { value: true, configurable: true }));
+  afterAll(() => Object.defineProperty(API_CONFIG, 'useMocks', { value: false, configurable: true }));
   it('retourne les 25 cases de la matrice du périmètre', async () => {
     const response = await intercept<HeatmapApiResponse>(new HttpRequest('GET', DOMAIN_ENDPOINTS.heatmap, null, { params: scopeParams() }));
     expect(response.body?.matrix).toHaveLength(25);
@@ -15,15 +17,23 @@ describe('mockWorkspaceInterceptor', () => {
   });
 
   it('retourne les 93 mesures de la SoA', async () => {
-    const response = await intercept<SoaEntry[]>(new HttpRequest('GET', DOMAIN_ENDPOINTS.soa, null, { params: scopeParams() }));
+    const response = await intercept<Array<SoaEntry & { scope: string }>>(new HttpRequest('GET', DOMAIN_ENDPOINTS.soaEntries, null, { params: scopeParams() }));
     expect(response.body).toHaveLength(93);
-    expect(response.body?.every((entry) => entry.scope_id === SCOPE_ID)).toBe(true);
+    expect(response.body?.every((entry) => entry.scope === SCOPE_ID)).toBe(true);
   });
 
-  it('filtre les tâches de traitement par périmètre', async () => {
-    const response = await intercept<Array<{ risk: string; iso_control: string }>>(new HttpRequest('GET', DOMAIN_ENDPOINTS.treatments, null, { params: scopeParams() }));
-    expect(response.body).toHaveLength(3);
+  it('filtre les tâches de traitement par risque, comme le backend', async () => {
+    const response = await intercept<Array<{ risk: string; iso_control: string }>>(new HttpRequest('GET', DOMAIN_ENDPOINTS.treatments, null, { params: new HttpParams().set('risk_id', 'risk-001') }));
+    expect(response.body).toHaveLength(1);
+    expect(response.body?.[0].risk).toBe('risk-001');
     expect(response.body?.every((task) => Boolean(task.risk && task.iso_control))).toBe(true);
+  });
+
+  it('isole les membres de chaque organisation', async () => {
+    const asteria = await intercept<Array<{ user: { id: number } }>>(new HttpRequest('GET', organizationMembersEndpoint('8f4b8400-e29b-41d4-a716-446655440001')));
+    const novacare = await intercept<Array<{ user: { id: number } }>>(new HttpRequest('GET', organizationMembersEndpoint('8f4b8400-e29b-41d4-a716-446655440002')));
+    expect(asteria.body?.map((member) => member.user.id)).toEqual([1, 2, 3]);
+    expect(novacare.body?.map((member) => member.user.id)).toEqual([4]);
   });
 });
 

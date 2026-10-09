@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { finalize, tap } from 'rxjs';
+import { finalize, map } from 'rxjs';
 
 import { DOMAIN_ENDPOINTS, soaExportEndpoint } from '../../../core/config/api.config';
 import { SoaEntry, SoaVersion } from '../../../core/models/governance.models';
@@ -23,49 +23,42 @@ export class SoaService {
 
   fetch(scopeId: string): void {
     this.loadingState.set(true);
-    this.http.get<SoaEntry[]>(DOMAIN_ENDPOINTS.soaEntries, { params: new HttpParams().set('scope_id', scopeId) }).pipe(finalize(() => this.loadingState.set(false))).subscribe((entries) => this.entriesState.set(entries));
-    this.http.get<SoaVersion[]>(DOMAIN_ENDPOINTS.soaVersions, { params: new HttpParams().set('scope_id', scopeId) }).subscribe((versions) => this.versionsState.set(versions));
+    this.http.get<BackendSoaEntry[]>(DOMAIN_ENDPOINTS.soaEntries, { params: new HttpParams().set('scope_id', scopeId) }).pipe(map((entries) => entries.map(toSoaEntry)), finalize(() => this.loadingState.set(false))).subscribe((entries) => this.entriesState.set(entries));
+    this.http.get<BackendSoaVersion[]>(DOMAIN_ENDPOINTS.soaVersions, { params: new HttpParams().set('scope_id', scopeId) }).pipe(map((versions) => versions.map(toSoaVersion))).subscribe((versions) => this.versionsState.set(versions));
   }
 
   createVersion(scopeId: string, title: string): void {
-    this.http.post<SoaVersion>(DOMAIN_ENDPOINTS.soaVersions, { scope_id: scopeId, title }).subscribe((version) => this.versionsState.update((versions) => [version, ...versions]));
+    this.http.post<BackendSoaVersion>(DOMAIN_ENDPOINTS.soaVersions, { scope_id: scopeId, title }).pipe(map(toSoaVersion)).subscribe((version) => this.versionsState.update((versions) => [version, ...versions]));
   }
 
   update(id: string, changes: Pick<SoaEntry, 'is_applicable' | 'justification'>): void {
     this.savingIdsState.update((ids) => new Set(ids).add(id));
-    this.http.patch<SoaEntry>(`${DOMAIN_ENDPOINTS.soa}${id}/`, changes).pipe(finalize(() => this.savingIdsState.update((ids) => { const next = new Set(ids); next.delete(id); return next; }))).subscribe((updated) => this.entriesState.update((entries) => entries.map((entry) => entry.id === id ? updated : entry)));
+    this.http.patch<BackendSoaEntry>(`${DOMAIN_ENDPOINTS.soaEntries}${id}/`, changes).pipe(map(toSoaEntry), finalize(() => this.savingIdsState.update((ids) => { const next = new Set(ids); next.delete(id); return next; }))).subscribe((updated) => this.entriesState.update((entries) => entries.map((entry) => entry.id === id ? updated : entry)));
   }
 
-//   export(scopeId: string, format: 'pdf' | 'csv'): void {
-//     const params = new HttpParams().set('format', format);
-//     this.http.get(soaExportEndpoint(scopeId, format), { params, responseType: 'blob' }).subscribe((blob) => {
-//       const url = URL.createObjectURL(blob);
-//       const anchor = document.createElement('a');
-//       anchor.href = url;
-//       anchor.download = `soa-${scopeId}.${format}`;
-//       anchor.click();
-//       URL.revokeObjectURL(url);
-//     });
-//   }
-export(scopeId: string, format: 'pdf' | 'xlsx' = 'pdf'): void {
-  // Utilisez un nom de paramètre distinct pour éviter le conflit avec le 'format' interne de DRF
-  const params = new HttpParams().set('file_type', format);
-
-  this.http.get(soaExportEndpoint(scopeId), { 
-    params, 
-    responseType: 'blob' 
-  }).subscribe({
-    next: (blob: Blob) => {
-      const url = window.URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download = `soa-${scopeId}.${format}`;
-      anchor.click();
-      window.URL.revokeObjectURL(url);
-    },
-    error: (err) => {
-      console.error("Erreur lors de l'export SoA :", err);
-    }
-  });
+  export(scopeId: string, format: 'pdf' | 'xlsx' = 'pdf'): void {
+    const params = new HttpParams().set('file_type', format);
+    this.http.get(soaExportEndpoint(scopeId), { params, responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `soa-${scopeId}.${format}`;
+        anchor.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => undefined,
+    });
+  }
 }
+
+type BackendSoaEntry = SoaEntry & { scope?: string; scope_id?: string; updated_by_name?: string };
+type BackendSoaVersion = SoaVersion & { scope?: string; scope_id?: string; approved_by?: { username: string; email: string } | null; approved_by_name?: string | null };
+
+function toSoaEntry(entry: BackendSoaEntry): SoaEntry {
+  return { ...entry, scope_id: entry.scope_id ?? entry.scope ?? '', updated_by_name: entry.updated_by_name ?? 'Non renseigné' };
+}
+
+function toSoaVersion(version: BackendSoaVersion): SoaVersion {
+  return { ...version, scope_id: version.scope_id ?? version.scope ?? '', approved_by_name: version.approved_by_name ?? version.approved_by?.username ?? null };
 }

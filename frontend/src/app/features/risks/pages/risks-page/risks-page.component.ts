@@ -1,4 +1,6 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { LucidePlus, LucideShieldAlert, LucideCheck, LucideSearch } from '@lucide/angular';
+import { assessmentLevel, IMPACT_LEVELS, LIKELIHOOD_LEVELS } from '../../../../core/models/assessment-scale';
 
 import { RISK_STATUS_LABELS, Risk, RiskStatus } from '../../../../core/models/governance.models';
 import { ContextService } from '../../../../core/services/context.service';
@@ -10,7 +12,7 @@ import { RisksService } from '../../services/risks.service';
 
 @Component({
   selector: 'app-risks-page',
-  imports: [TopbarComponent, RiskScoreBadgeComponent, RiskFormModalComponent],
+  imports: [TopbarComponent, RiskScoreBadgeComponent, RiskFormModalComponent, LucidePlus, LucideShieldAlert, LucideCheck, LucideSearch],
   templateUrl: './risks-page.component.html',
 })
 export class RisksPageComponent {
@@ -24,6 +26,9 @@ export class RisksPageComponent {
   protected readonly actionError = signal('');
   protected readonly successMessage = signal('');
   protected readonly statusLabels = RISK_STATUS_LABELS;
+  protected readonly selectedLevel = assessmentLevel;
+  protected readonly likelihoodLevels = LIKELIHOOD_LEVELS;
+  protected readonly impactLevels = IMPACT_LEVELS;
   protected readonly statuses = Object.entries(RISK_STATUS_LABELS) as [RiskStatus, string][];
   protected readonly editable = computed(() => ['ADMIN', 'RSSI'].includes(this.context.activeRole() ?? ''));
 
@@ -76,11 +81,4 @@ export class RisksPageComponent {
     this.closeModal();
   }
 
-  protected deleteRisk(risk: Risk): void {
-    if (!confirm(`Supprimer le risque « ${risk.code} » ?`)) return;
-    this.actionError.set('');
-    this.risksService.deleteRisk(risk.id).subscribe({
-      error: (error: Error) => this.actionError.set(error.message),
-    });
-  }
 }

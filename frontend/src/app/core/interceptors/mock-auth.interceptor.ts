@@ -3,16 +3,18 @@ import { delay, of, throwError } from 'rxjs';
 
 import { API_CONFIG, AUTH_ENDPOINTS, DOMAIN_ENDPOINTS } from '../config/api.config';
 import { createMockId } from '../utils/mock-id';
+import { registerMockMember } from './mock-workspace.interceptor';
 import {
   AuthResponse,
   JwtClaims,
+  OrganizationRole,
   RegisterRequest,
   SwitchContextRequest,
   UserProfile,
   UserRole,
 } from '../models/auth.models';
 
-const ORGANIZATIONS = [
+const ORGANIZATIONS: OrganizationRole[] = [
   {
     organization_id: '8f4b8400-e29b-41d4-a716-446655440001',
     organization_name: 'Asteria Finance',
@@ -57,17 +59,37 @@ const OWNER_PROFILE: UserProfile = {
 let currentProfile = DEMO_PROFILE;
 let activeOrganizationId = ORGANIZATIONS[0].organization_id;
 let activeScopeId = ORGANIZATIONS[0].scopes[0].id;
+let nextMockUserId = 5;
+const registeredAccounts = new Map<string, { profile: UserProfile; password: string }>();
 
 export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
   if (!API_CONFIG.useMocks) {
     return next(request);
   }
 
+  if (request.url === DOMAIN_ENDPOINTS.organizations && request.method === 'POST') {
+    const body = request.body as { name: string; description?: string };
+    const name = body.name?.trim();
+    if (!name) return mockError(400, 'Le nom de l’organisation est obligatoire.');
+    const prefix = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/gi, '').slice(0, 6).toUpperCase() || 'ORG';
+    let code = `${prefix}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+    while (ORGANIZATION_CODES[code]) code = `${prefix}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+    const id = createMockId('organization');
+    ORGANIZATION_CODES[code] = id;
+    ORGANIZATIONS.push({ organization_id: id, organization_name: name, role: 'ADMIN', scopes: [] });
+    currentProfile.roles = [...currentProfile.roles, { organization_id: id, organization_name: name, role: 'ADMIN', scopes: [] }];
+    registerMockMember(currentProfile, id, 'ADMIN');
+    return mockOk({ id, name, code, description: body.description?.trim() ?? '' }, 201);
+  }
+
   if (request.url === DOMAIN_ENDPOINTS.scopes && request.method === 'POST') {
     const body = request.body as { organization_id: string; name: string; description?: string };
     const role = currentProfile.roles.find((item) => item.organization_id === body.organization_id);
     if (!role || !['ADMIN', 'RSSI'].includes(role.role)) return mockError(403, 'Vous ne pouvez pas créer de périmètre dans cette organisation.');
-    const scope = { id: createMockId('scope'), organization_id: body.organization_id, name: body.name, description: body.description ?? '' };
+    const name = body.name?.trim();
+    if (!name) return mockError(400, 'Le nom du périmètre est obligatoire.');
+    if (role.scopes.some((scope) => scope.name.toLocaleLowerCase('fr') === name.toLocaleLowerCase('fr'))) return mockError(400, 'Un périmètre avec ce nom existe déjà dans cette organisation.');
+    const scope = { id: createMockId('scope'), organization_id: body.organization_id, name, description: body.description?.trim() ?? '' };
     role.scopes = [...role.scopes, scope];
     return mockOk(scope, 201);
   }
@@ -83,33 +105,40 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
 
   if (request.url === AUTH_ENDPOINTS.login && request.method === 'POST') {
     const body = request.body as { username?: string; password?: string };
-    const validIdentity = ['demo.rssi', 'demo.owner'].includes(body.username ?? '');
-    if (!validIdentity || body.password !== 'Demo1234!') {
-      return mockError(401, 'Identifiant ou mot de passe incorrect.');
+    const account = registeredAccounts.get(body.username ?? '');
+    const demo = ['demo.rssi', 'demo.owner'].includes(body.username ?? '');
+    if ((!demo || body.password !== 'Demo1234!') && (!account || account.password !== body.password)) {
+      return mockError(401, 'Nom d’utilisateur ou mot de passe incorrect.');
     }
-    currentProfile = body.username === 'demo.owner' ? OWNER_PROFILE : DEMO_PROFILE;
-    activeOrganizationId = currentProfile.roles[0].organization_id;
-    activeScopeId = currentProfile.roles[0].scopes?.[0]?.id ?? '';
+    currentProfile = account?.profile ?? (body.username === 'demo.owner' ? OWNER_PROFILE : DEMO_PROFILE);
+    activeOrganizationId = currentProfile.roles[0]?.organization_id ?? '';
+    activeScopeId = currentProfile.roles[0]?.scopes?.[0]?.id ?? '';
     return mockOk(tokensFor(currentProfile));
   }
 
   if (request.url === AUTH_ENDPOINTS.register && request.method === 'POST') {
     const body = request.body as RegisterRequest;
-    if (body.email === DEMO_PROFILE.email || body.username === DEMO_PROFILE.username) {
-      return mockError(400, 'Un compte utilise déjà cet email ou cet identifiant.');
+    if ([DEMO_PROFILE, OWNER_PROFILE, ...Array.from(registeredAccounts.values(), (account) => account.profile)].some((profile) => profile.email === body.email || profile.username === body.username)) {
+      return mockError(400, 'Un compte utilise déjà cet email ou ce nom d’utilisateur.');
     }
     const joinCode = body.join_organization_code?.trim().toUpperCase();
     const joinedOrganization = joinCode
       ? ORGANIZATIONS.find((organization) => organization.organization_id === ORGANIZATION_CODES[joinCode])
       : undefined;
     if (joinCode && !joinedOrganization) return mockError(400, 'Aucune organisation ne correspond à ce code.');
-    const organizationId = joinedOrganization?.organization_id ?? '8f4b8400-e29b-41d4-a716-446655440099';
+    const organizationId = joinedOrganization?.organization_id ?? (body.organization_name ? createMockId('organization') : '');
+    if (body.organization_name) {
+      const code = body.organization_code?.trim().toUpperCase() || `ORG${nextMockUserId}`;
+      if (ORGANIZATION_CODES[code]) return mockError(400, 'Ce code d’organisation est déjà utilisé.');
+      ORGANIZATION_CODES[code] = organizationId;
+      ORGANIZATIONS.push({ organization_id: organizationId, organization_name: body.organization_name, role: 'ADMIN', scopes: [] });
+    }
     currentProfile = {
-      id: '8f4b8400-e29b-41d4-a716-446655440098',
+      id: String(nextMockUserId++),
       username: body.username,
       email: body.email,
-      first_name: body.first_name,
-      last_name: body.last_name,
+      first_name: body.first_name ?? '',
+      last_name: body.last_name ?? '',
       is_active: true,
       roles: joinedOrganization
         ? [{ ...joinedOrganization, role: 'RISK_OWNER', scopes: [] }]
@@ -122,6 +151,9 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
           }]
         : [],
     };
+    registeredAccounts.set(body.username, { profile: currentProfile, password: body.password });
+    if (joinedOrganization) registerMockMember(currentProfile, joinedOrganization.organization_id, 'RISK_OWNER');
+    else if (body.organization_name) registerMockMember(currentProfile, organizationId, 'ADMIN');
     activeOrganizationId = body.organization_name || joinedOrganization ? organizationId : '';
     activeScopeId = '';
     return mockOk({ ...tokensFor(currentProfile), user: currentProfile }, 201);

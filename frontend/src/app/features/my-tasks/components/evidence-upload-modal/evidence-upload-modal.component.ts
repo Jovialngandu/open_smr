@@ -1,10 +1,11 @@
 import { Component, inject, input, output, signal } from '@angular/core';
+import { LucideX, LucideUpload } from '@lucide/angular';
 import { FormsModule } from '@angular/forms';
 
 import { TreatmentTask } from '../../../../core/models/governance.models';
 import { TreatmentsService } from '../../../treatments/services/treatments.service';
 
-@Component({ selector: 'app-evidence-upload-modal', imports: [FormsModule], templateUrl: './evidence-upload-modal.component.html' })
+@Component({ selector: 'app-evidence-upload-modal', imports: [FormsModule, LucideX, LucideUpload], templateUrl: './evidence-upload-modal.component.html' })
 export class EvidenceUploadModalComponent {
   readonly task = input.required<TreatmentTask>();
   readonly closed = output<void>();

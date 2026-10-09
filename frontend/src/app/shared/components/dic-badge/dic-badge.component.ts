@@ -1,4 +1,5 @@
 import { Component, computed, input } from '@angular/core';
+import { assessmentLevel, DIC_LEVELS } from '../../../core/models/assessment-scale';
 
 @Component({
   selector: 'app-dic-badge',
@@ -14,6 +15,11 @@ export class DicBadgeComponent {
     Math.max(this.confidentiality(), this.integrity(), this.availability()),
   );
   protected readonly levelLabel = computed(() =>
-    ({ 1: 'Faible', 2: 'Modérée', 3: 'Élevée' })[this.criticality()] ?? 'Inconnue',
+    assessmentLevel(DIC_LEVELS, this.criticality()).label,
+  );
+  protected readonly description = computed(() =>
+    `Confidentialité : ${assessmentLevel(DIC_LEVELS, this.confidentiality()).label}. ` +
+    `Intégrité : ${assessmentLevel(DIC_LEVELS, this.integrity()).label}. ` +
+    `Disponibilité : ${assessmentLevel(DIC_LEVELS, this.availability()).label}.`,
   );
 }

@@ -2,58 +2,59 @@
   <section class="auth-story" aria-labelledby="story-title">
     <a class="brand brand--light" routerLink="/login" aria-label="OpenSMR, accueil">
       <span class="brand__mark" aria-hidden="true">
-        <svg viewBox="0 0 32 32"><path d="M16 3 27 8v7c0 7.1-4.6 11.7-11 14-6.4-2.3-11-6.9-11-14V8l11-5Z"/><path d="m11.5 16 3 3 6.5-7"/></svg>
+        <svg lucideShieldCheck class="ui-icon" aria-hidden="true"></svg>
       </span>
       <span>OpenSMR</span>
     </a>
 
     <div class="auth-story__content">
-      <p class="eyebrow eyebrow--light">Sécurité de l'information maîtrisée</p>
-      <h1 id="story-title">Pilotez vos risques.<br />Démontrez votre conformité.</h1>
-      <p>Un espace unique pour transformer ISO 27001 en actions claires, suivies et auditables.</p>
+      <p class="eyebrow eyebrow--light">Management de la sécurité de l’information</p>
+      <h1 id="story-title">Gérez vos risques.<br />Suivez votre conformité.</h1>
+      <p>Centralisez les actifs, les risques, les plans de traitement et la déclaration d’applicabilité.</p>
       <ul class="value-list" aria-label="Fonctionnalités principales">
-        <li><span>✓</span> Vue consolidée de vos risques et de vos actifs</li>
-        <li><span>✓</span> Suivi des actions et des preuves en temps réel</li>
-        <li><span>✓</span> Données isolées par organisation et par périmètre</li>
+        <li><span aria-hidden="true"><svg lucideCheck class="ui-icon"></svg></span> Vue consolidée de vos risques et de vos actifs</li>
+        <li><span aria-hidden="true"><svg lucideCheck class="ui-icon"></svg></span> Suivi des actions et des preuves en temps réel</li>
+        <li><span aria-hidden="true"><svg lucideCheck class="ui-icon"></svg></span> Données isolées par organisation et par périmètre</li>
       </ul>
     </div>
 
-    <p class="auth-story__foot">Conçu pour les équipes RSSI exigeantes.</p>
+    <p class="auth-story__foot">OpenSMR · ISO/IEC 27001:2022</p>
   </section>
 
   <section class="auth-panel" aria-labelledby="login-title">
     <div class="auth-card">
       <div class="mobile-brand">
         <span class="brand__mark" aria-hidden="true">
-          <svg viewBox="0 0 32 32"><path d="M16 3 27 8v7c0 7.1-4.6 11.7-11 14-6.4-2.3-11-6.9-11-14V8l11-5Z"/><path d="m11.5 16 3 3 6.5-7"/></svg>
+          <svg lucideShieldCheck class="ui-icon" aria-hidden="true"></svg>
         </span>
         OpenSMR
       </div>
-      <p class="eyebrow">Ravi de vous revoir</p>
-      <h2 id="login-title">Connectez-vous à votre espace</h2>
-      <p class="auth-intro">Retrouvez le pilotage de votre SMSI en toute sécurité.</p>
+      <p class="eyebrow">Connexion</p>
+      <h2 id="login-title">Accédez à OpenSMR</h2>
+      <p class="auth-intro">Saisissez votre nom d’utilisateur et votre mot de passe.</p>
 
       @if (errorMessage()) {
         <div class="alert alert--error" role="alert">
-          <span aria-hidden="true">!</span>
+          <span aria-hidden="true"><svg lucideCircleAlert class="ui-icon"></svg></span>
           <p>{{ errorMessage() }}</p>
         </div>
       }
 
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <div class="field">
-          <label for="identity">Identifiant</label>
+          <label for="username">Nom d’utilisateur</label>
           <input
-            id="identity"
+            id="username"
+            name="username"
             type="text"
-            formControlName="identity"
+            formControlName="username"
             autocomplete="username"
             placeholder="camille.durand"
-            [attr.aria-invalid]="showError('identity')"
-            aria-describedby="identity-hint"
+            [attr.aria-invalid]="showError('username')"
+            aria-describedby="username-hint"
           />
-          @if (showError('identity')) {
-            <small id="identity-hint" class="field__error">Saisissez votre identifiant OpenSMR.</small>
+          @if (showError('username')) {
+            <small id="username-hint" class="field__error">Saisissez votre nom d’utilisateur.</small>
           }
         </div>
 
@@ -65,6 +66,7 @@
           <div class="password-input">
             <input
               id="password"
+              name="password"
               [type]="passwordVisible() ? 'text' : 'password'"
               formControlName="password"
               autocomplete="current-password"
@@ -82,23 +84,19 @@
 
         <label class="checkbox">
           <input type="checkbox" formControlName="remember" />
-          <span>Se souvenir de mon identifiant</span>
+          <span>Se souvenir de mon nom d’utilisateur</span>
         </label>
 
         <button class="button button--primary button--full" type="submit" [disabled]="auth.busy()">
           @if (auth.busy()) { <span class="spinner" aria-hidden="true"></span> Connexion en cours… }
-          @else { Se connecter <span aria-hidden="true">→</span> }
+          @else { Se connecter <svg lucideArrowRight class="ui-icon" aria-hidden="true"></svg> }
         </button>
       </form>
 
-    <div class="demo-note">
-		<span class="demo-note__icon" aria-hidden="true">✦</span>
-		<div>
-			<strong>Mode démonstration</strong><br />
-			<small>RSSI :</small> <code>chucknorris</code> · <code>Chuck123456789</code><br />
-			<small>Auditeur :</small> <code>brucelee</code> · <code>Brucelee12345</code>
-		</div>
-	</div>
+      <div class="demo-note">
+        <span class="demo-note__icon" aria-hidden="true"><svg lucideSparkles class="ui-icon"></svg></span>
+        <div><strong>Comptes de démonstration</strong><br /><small>RSSI :</small> <code>chucknorris</code> · <code>Chuck123456789</code><br /><small>Auditeur :</small> <code>brucelee</code> · <code>Brucelee12345</code></div>
+      </div>
 
       <p class="auth-switch">Première visite&nbsp;? <a routerLink="/register">Créer un compte</a></p>
     </div>

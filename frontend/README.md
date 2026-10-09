@@ -16,6 +16,10 @@ node --version
 npm --version
 ```
 
+## Icônes
+
+L'interface utilise les icônes officielles Lucide via `@lucide/angular`. Chaque composant Angular autonome importe uniquement les icônes dont son template a besoin. Les SVG héritent de la couleur du texte (`currentColor`) et la classe `.ui-icon`, définie dans `src/styles.scss`, conserve les dimensions prévues par les styles existants. Aucune police d'icônes ni requête externe n'est nécessaire à l'exécution.
+
 ## Installation
 
 Depuis la racine du dépôt :
@@ -41,7 +45,7 @@ Le serveur recharge automatiquement l'application après une modification du cod
 
 ## Mode de démonstration
 
-Le frontend fonctionne actuellement sans le backend grâce aux mocks couvrant l'ensemble du parcours MVP, activés dans `src/app/core/config/api.config.ts`.
+Le frontend peut fonctionner sans le backend grâce aux mocks couvrant l'ensemble du parcours MVP. Ils sont contrôlés par `useMocks` dans `src/app/core/config/api.config.ts`. La configuration actuelle utilise l’API déployée ; activez explicitement les mocks pour travailler hors connexion.
 
 Compte disponible :
 
@@ -61,24 +65,41 @@ Le mode mock permet de tester :
 - la protection des routes ;
 - les autorisations par rôle.
 - l'inventaire des actifs, son filtrage par périmètre et son CRUD ;
-- le registre des risques, son filtrage par périmètre et son CRUD.
+- le registre des risques, son filtrage par périmètre, la création et la modification des scénarios (sans suppression tant que l’API ne l’expose pas).
 - le dashboard, ses indicateurs et la heatmap interactive 5 × 5 ;
 - les plans de traitement et leur suivi ;
 - le tableau Kanban des traitements avec glisser-déposer entre les statuts ;
 - le dépôt de preuves et la clôture des tâches ;
-- les 93 mesures de la SoA, leur édition et leur synchronisation simulée ;
+- les 93 mesures de la SoA, leur édition en ligne et le suivi de leur mise en œuvre ;
 - les exports PDF/CSV simulés ;
 - le portail auditeur en lecture seule ;
-- les comptes, rôles, statuts et habilitations par périmètre.
+- les comptes, rôles, statuts et habilitations par périmètre ;
+- les préférences personnelles : thème, langue, fuseau horaire et notifications email.
 
 ## Parcours métier
+
+L'inscription ne contient aucun champ lié à l'organisation : elle crée uniquement le compte avec un nom d'utilisateur, un email et un mot de passe ; les prénom et nom restent facultatifs. Juste après, un onboarding distinct propose de créer une organisation et son premier périmètre. Cette configuration peut être ignorée : le compte ouvre alors un dashboard vide, depuis lequel l'utilisateur pourra reprendre la création avec « Créer une organisation ».
+
+Le backend autorise bien un compte sans organisation et expose ensuite `POST /organizations/`, puis `POST /scopes/`. Le frontend enchaîne ces deux appels, régénère le contexte JWT et ouvre le nouveau périmètre. La jonction à une organisation existante demeure liée au contrat d'inscription actuel (`join_organization_code`) tant qu'un endpoint de rattachement après inscription n'est pas exposé.
+
+Depuis le dashboard, tout utilisateur authentifié peut créer une organisation supplémentaire avec son premier périmètre. Le formulaire ne demande aucun code : Django le génère et le renvoie. Le nouvel espace est ajouté au sélecteur global puis activé immédiatement.
+
+En mode mock, les comptes créés restent disponibles pour une nouvelle connexion tant que l'application n'est pas rechargée. Ils apparaissent dans la liste des membres de leur organisation.
+
+Après une connexion, l'utilisateur arrive directement sur `/dashboard`. Chaque bascule de contexte réussie mémorise localement le dernier couple organisation/périmètre pour ce compte. À la connexion suivante, Angular vérifie que l'accès existe encore, demande de nouveaux JWT par `POST /auth/switch-context/` et ouvre le tableau de bord. Si l'accès a été retiré, le contexte sauvegardé est oublié et un contexte autorisé est utilisé. Un compte sans organisation ouvre son tableau de bord vide ; la page `/select-context` reste disponible pour choisir ou créer un espace.
+
+Les preuves d'une tâche se déposent depuis « Mes tâches » ou, pour les personnes autorisées, directement depuis les cartes et la liste des traitements. Le dépôt utilise un formulaire `multipart/form-data` (`task_id`, `file_path`, `description`). Dans le tableau Kanban, déplacer une carte change son statut ; le sélecteur de statut n'est disponible qu'en vue liste. Une preuve est demandée avant de terminer une tâche.
+
+La liste des utilisateurs est rechargée et vidée immédiatement lors d'un changement d'organisation ou de périmètre. Les réponses arrivées en retard pour l'ancien contexte sont ignorées.
+
+Un ADMIN ou un RSSI peut créer d'autres périmètres à tout moment avec le bouton « + » situé à côté du sélecteur de périmètre, dans la barre supérieure. Le formulaire utilise `POST /scopes/` avec l'organisation active ; après création, l'application bascule vers le nouveau périmètre. Le backend accorde automatiquement l'accès au créateur et initialise les entrées SoA.
 
 ```text
 Compte → Organisation → Périmètre → Actif → Risque
        → Mesure ISO → Tâche assignée → Preuve → SoA versionnée
 ```
 
-Après la connexion ou l'inscription, l'utilisateur passe par `/select-context`. Il doit choisir une organisation et un périmètre avant d'ouvrir son dashboard. Un Admin ou un RSSI peut créer le premier périmètre d'une nouvelle organisation directement depuis cet écran.
+Après la connexion ou l'inscription, l'utilisateur passe par `/select-context`. Il peut choisir un contexte existant, créer une organisation et son premier périmètre, ou continuer vers un dashboard vide. Les pages métier nécessitent toujours une organisation, un périmètre et un rôle autorisé.
 
 Le dashboard dépend du rôle : l'Admin et le RSSI pilotent le périmètre, le responsable de risque retrouve ses propres tâches et preuves, et l'auditeur consulte les informations sans action d'édition.
 
@@ -126,7 +147,7 @@ POST /api/v1/treatments/evidences/
 GET /api/v1/treatments/tasks/{id}/evidences/
 ```
 
-Les endpoints Actifs, Risques, SoA, versions SoA et export restent simulés : leurs modèles Django existent, mais leurs routes DRF ne sont pas encore exposées. Le formulaire de connexion transmet uniquement la propriété `username`, conformément au contrat Django actuel.
+Les services Actifs, Risques, SoA, versions SoA et export sont adaptés aux routes DRF actuellement exposées. Les mocks conservent les mêmes contrats jusqu'au branchement définitif au serveur. Le formulaire de connexion transmet uniquement la propriété `username`.
 
 ## Organisation du projet
 
@@ -204,6 +225,7 @@ Le fichier TypeScript gère l'état et les actions. Le fichier HTML gère la str
 | `/users` | ADMIN, RSSI | Utilisateurs et habilitations |
 | `/my-tasks` | RISK_OWNER | Tâches assignées |
 | `/audit-view` | AUDITOR | Portail d'audit en lecture seule |
+| `/settings` | Authentifié | Préférences personnelles |
 | `/access-denied` | Authentifié | Erreur d'autorisation 403 |
 
 Les pages sont chargées à la demande avec `loadComponent` afin de limiter le JavaScript initial.
@@ -303,7 +325,7 @@ Fonctionnalités terminées :
 - backend d'authentification mocké ;
 - inventaire des actifs avec badge DIC et formulaire de création/édition ;
 - registre des risques avec score coloré et rattachement aux actifs ;
-- mocks CRUD des actifs et des risques, filtrés par le périmètre actif.
+- mocks de création et de modification des risques, et CRUD des actifs, filtrés par le périmètre actif. La suppression d’un risque n’est pas proposée car Django n’expose pas encore cette opération.
 - dashboard avec indicateurs, tâches urgentes et heatmap filtrante ;
 - plans de traitement avec mesure ISO, responsable et échéance ;
 - espace Mes tâches avec dépôt de preuves PDF/image et clôture ;
@@ -314,6 +336,8 @@ Fonctionnalités terminées :
 - métriques du dashboard issues de `/scopes/{scope_id}/dashboard/` ;
 - propriétaires d'actifs issus des membres actifs de l'organisation ;
 - lecture seule effective des risques et preuves pour l'auditeur.
+- page Paramètres connectée à `GET|PATCH /api/settings/me/`, avec thème persistant et mock équivalent.
+- historique des e-mails personnels dans les Paramètres via `GET /api/v1/emails/email-logs/`, filtré sur l’organisation active lorsque celle-ci est sélectionnée ; les tests d’envoi du backend ne sont pas exposés dans l’interface.
 
 ## Contrats Django déjà pris en charge
 
@@ -323,8 +347,17 @@ Le frontend s'aligne sur les serializers actuellement exposés :
 - `POST /api/v1/auth/switch-context/` régénère les deux jetons JWT avec l'organisation et le périmètre actifs ;
 - les membres proviennent de `/api/v1/organizations/{organization_id}/members/` ; l'affectation utilise `user_id` et `role` ;
 - les tâches utilisent les clés Django `risk`, `iso_control`, `assignee` et `iso_control_code` ; une couche d'adaptation les convertit vers le modèle d'affichage Angular ;
+- la liste des tâches est assemblée à partir des risques du périmètre et de `GET /api/v1/treatments/tasks/?risk_id=...` : le backend ne prend pas en charge `scope_id` sur cette route. Cette solution effectue une requête par risque en attendant un filtre ou un endpoint agrégé côté backend ;
+- les entrées et versions SoA sont adaptées depuis les champs Django `scope` et `approved_by` ; le mock renvoie désormais ces mêmes formes ;
+- la mise en œuvre SoA côté backend dépend du statut de toutes les tâches liées à la mesure, sans vérifier la présence de preuves. L’interface demande toujours une preuve avant de terminer une tâche pour guider l’utilisateur, mais cette règle n’est pas imposée par Django ;
 - les preuves sont envoyées en multipart avec `task_id`, `file_path` et `description` ;
 - la heatmap consomme l'enveloppe `{ scope_id, total_risks, matrix }`.
+- une organisation est créée avec `name` et `description` ; son `code` est généré par Django ;
+- les actifs utilisent `scope_id` et `owner_id` à l'écriture ; leurs réponses imbriquées `scope` et `owner` sont adaptées au modèle d'affichage ;
+- les risques utilisent `asset_id` à la création ; leur `code` est généré par Django et leur objet `asset` imbriqué est adapté par le service Angular ;
+- les modifications d'actifs et de risques utilisent `PATCH` conformément aux vues Django.
+- les sélecteurs d’évaluation affichent des libellés et explications issus de `core/models/assessment-scale.ts` : DIC sur 1–3, vraisemblance et impact sur 1–5. La proposition d’un niveau DIC 4 demanderait d’abord une évolution des validateurs et modèles Django ; elle n’est pas proposée par le formulaire actuel.
+- les préférences personnelles utilisent exceptionnellement `/api/settings/me/` (sans segment `/v1`) conformément au routage Django.
 
 ### Rejoindre un espace de travail partagé
 
@@ -334,15 +367,13 @@ Un Admin gère ensuite l'espace commun depuis `/users` : il peut changer le rôl
 
 Les mocks renvoient volontairement ces mêmes formes Django. Ils testent ainsi les adaptateurs utilisés lors du futur passage au serveur réel.
 
-## Travail restant : endpoints métier non exposés
+## Travail restant : connexion réelle et validation d'intégration
 
 Le frontend du MVP est fonctionnel en mode mock. Pour le raccorder à Django :
 
-1. implémenter côté backend les endpoints encore absents : actifs, risques, SoA, versions SoA et exports ;
-2. valider leurs serializers puis, si nécessaire, ajuster uniquement les adaptateurs des services Angular ;
-3. garantir l'isolation par `organization_id` et `scope_id` côté serveur ;
-4. implémenter côté Django les snapshots `SoaVersion` et la notification quotidienne des tâches en retard ;
-5. remplacer `useMocks: true` par `useMocks: false` lorsque ces routes seront disponibles ;
-6. exécuter les tests d'intégration avec le backend et vérifier les téléchargements réels.
+1. remplacer `useMocks: true` par `useMocks: false` quand l'équipe décide de brancher Django ;
+2. exécuter les tests d'intégration avec le backend et vérifier les permissions de chaque rôle ;
+3. vérifier les téléchargements réels de preuves et d'exports ;
+4. confirmer l'isolation des données lors de chaque changement d'organisation et de périmètre.
 
 Les guards et filtres frontend améliorent l'expérience utilisateur, mais les permissions RBAC doivent toujours être appliquées par Django.

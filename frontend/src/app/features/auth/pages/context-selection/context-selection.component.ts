@@ -1,11 +1,13 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { LucideShieldCheck, LucideInfo, LucideCircleAlert } from '@lucide/angular';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { finalize, switchMap } from 'rxjs';
 
 import { AuthService } from '../../../../core/services/auth.service';
 import { ContextService } from '../../../../core/services/context.service';
 
-@Component({ selector: 'app-context-selection', imports: [ReactiveFormsModule], host: { class: 'context-page' }, templateUrl: './context-selection.component.html' })
+@Component({ selector: 'app-context-selection', imports: [ReactiveFormsModule, LucideShieldCheck, LucideInfo, LucideCircleAlert], host: { class: 'context-page' }, templateUrl: './context-selection.component.html' })
 export class ContextSelectionComponent {
   protected readonly context = inject(ContextService);
   protected readonly auth = inject(AuthService);
@@ -18,6 +20,29 @@ export class ContextSelectionComponent {
   protected readonly error = signal('');
   protected readonly canCreateScope = computed(() => ['ADMIN', 'RSSI'].includes(this.selectedOrganization()?.role ?? ''));
   protected readonly scopeForm = this.fb.nonNullable.group({ name: ['', [Validators.required, Validators.maxLength(255)]], description: [''] });
+  protected readonly organizationForm = this.fb.nonNullable.group({
+    name: ['', [Validators.required, Validators.maxLength(255)]],
+    description: [''],
+    scopeName: ['', [Validators.required, Validators.maxLength(255)]],
+    scopeDescription: [''],
+  });
+
+  protected createWorkspace(): void {
+    if (this.organizationForm.invalid) { this.organizationForm.markAllAsTouched(); return; }
+    const { name, description, scopeName, scopeDescription } = this.organizationForm.getRawValue();
+    this.busy.set(true); this.error.set('');
+    this.context.createOrganization(name.trim(), description.trim()).pipe(
+      switchMap((organization) => this.context.switchContext({ organization_id: organization.id, scope_id: null })),
+      switchMap((response) => this.context.createScope(response.active_organization_id, scopeName.trim(), scopeDescription.trim())),
+      switchMap((scope) => this.context.switchContext({ organization_id: scope.organization_id, scope_id: scope.id })),
+      finalize(() => this.busy.set(false)),
+    ).subscribe({
+      next: () => void this.router.navigateByUrl('/dashboard'),
+      error: () => this.error.set('La création de l’espace a échoué. Vérifiez le nom de l’organisation et le périmètre.'),
+    });
+  }
+
+  protected skip(): void { void this.router.navigateByUrl('/dashboard'); }
 
   protected changeOrganization(event: Event): void {
     const id = (event.target as HTMLSelectElement).value;

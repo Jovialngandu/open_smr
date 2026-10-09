@@ -1,11 +1,13 @@
-import { HttpRequest, HttpResponse } from '@angular/common/http';
+import { HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
-import { AUTH_ENDPOINTS } from '../config/api.config';
+import { API_CONFIG, AUTH_ENDPOINTS, DOMAIN_ENDPOINTS } from '../config/api.config';
 import { AuthResponse } from '../models/auth.models';
 import { mockAuthInterceptor } from './mock-auth.interceptor';
 
 describe('mockAuthInterceptor', () => {
+  beforeAll(() => Object.defineProperty(API_CONFIG, 'useMocks', { value: true, configurable: true }));
+  afterAll(() => Object.defineProperty(API_CONFIG, 'useMocks', { value: false, configurable: true }));
   it('retourne une session JWT au compte de demonstration', async () => {
     const request = new HttpRequest('POST', AUTH_ENDPOINTS.login, {
       username: 'demo.rssi',
@@ -44,5 +46,63 @@ describe('mockAuthInterceptor', () => {
     expect(response.status).toBe(201);
     expect(response.body?.user?.roles[0].role).toBe('RISK_OWNER');
     expect(response.body?.user?.roles[0].scopes).toEqual([]);
+  });
+
+  it('autorise la création d’un compte sans organisation', async () => {
+    const request = new HttpRequest('POST', AUTH_ENDPOINTS.register, {
+      username: 'sans.org', email: 'sans.org@example.com', password: 'MotDePasse123!',
+    });
+    const response = await firstValueFrom(mockAuthInterceptor(request, () => {
+      throw new Error('Le mock aurait dû intercepter la requête.');
+    })) as HttpResponse<AuthResponse>;
+    expect(response.status).toBe(201);
+    expect(response.body?.user?.roles).toEqual([]);
+  });
+
+  it('permet de créer une organisation après l’inscription', async () => {
+    const created = await firstValueFrom(mockAuthInterceptor(new HttpRequest('POST', DOMAIN_ENDPOINTS.organizations, {
+      name: 'Entreprise après inscription', code: 'APRESINSCRIPTION',
+    }), () => { throw new Error('Requête non interceptée.'); })) as HttpResponse<{ id: string }>;
+    expect(created.status).toBe(201);
+    const switched = await firstValueFrom(mockAuthInterceptor(new HttpRequest('POST', AUTH_ENDPOINTS.switchContext, {
+      organization_id: created.body?.id, scope_id: null,
+    }), () => { throw new Error('Requête non interceptée.'); })) as HttpResponse<{ active_organization_id: string }>;
+    expect(switched.body?.active_organization_id).toBe(created.body?.id);
+  });
+
+  it('permet à un compte créé en mode démonstration de se reconnecter', async () => {
+    const response = await firstValueFrom(mockAuthInterceptor(new HttpRequest('POST', AUTH_ENDPOINTS.login, {
+      username: 'sans.org', password: 'MotDePasse123!',
+    }), () => { throw new Error('Requête non interceptée.'); })) as HttpResponse<AuthResponse>;
+    expect(response.status).toBe(200);
+    expect(response.body?.access.split('.')).toHaveLength(3);
+  });
+
+  it('attribue une organisation distincte à chaque nouveau compte administrateur', async () => {
+    const signup = async (username: string) => firstValueFrom(mockAuthInterceptor(new HttpRequest('POST', AUTH_ENDPOINTS.register, {
+      username, email: `${username}@example.com`, password: 'MotDePasse123!', organization_name: username,
+    }), () => { throw new Error('Requête non interceptée.'); })) as Promise<HttpResponse<AuthResponse>>;
+    const first = await signup('org.premiere');
+    const second = await signup('org.seconde');
+    expect(first.body?.user?.roles[0].organization_id).not.toBe(second.body?.user?.roles[0].organization_id);
+  });
+
+  it('permet de créer un autre périmètre dans une organisation existante', async () => {
+    const intercept = <T>(request: HttpRequest<unknown>) => firstValueFrom(mockAuthInterceptor(request, () => {
+      throw new Error('Requête non interceptée.');
+    })) as Promise<HttpResponse<T>>;
+    await intercept(new HttpRequest('POST', AUTH_ENDPOINTS.login, { username: 'demo.rssi', password: 'Demo1234!' }));
+    const organizationId = '8f4b8400-e29b-41d4-a716-446655440001';
+    const created = await intercept<{ id: string }>(new HttpRequest('POST', DOMAIN_ENDPOINTS.scopes, {
+      organization_id: organizationId, name: 'Nouveau périmètre', description: 'Équipe de test',
+    }));
+    expect(created.status).toBe(201);
+    const scopes = await intercept<Array<{ id: string }>>(new HttpRequest('GET', DOMAIN_ENDPOINTS.scopes, null, {
+      params: new HttpParams().set('organization_id', organizationId),
+    }));
+    expect(scopes.body?.some((scope) => scope.id === created.body?.id)).toBe(true);
+    await expect(intercept(new HttpRequest('POST', DOMAIN_ENDPOINTS.scopes, {
+      organization_id: organizationId, name: 'Nouveau périmètre',
+    }))).rejects.toMatchObject({ status: 400 });
   });
 });

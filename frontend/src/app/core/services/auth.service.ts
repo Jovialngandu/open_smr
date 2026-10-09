@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, finalize, Observable, switchMap, tap, throwError } from 'rxjs';
+import { catchError, finalize, Observable, of, switchMap, tap, throwError } from 'rxjs';
 
 import { AUTH_ENDPOINTS } from '../config/api.config';
 import {
@@ -42,6 +42,7 @@ export class AuthService {
     return this.http.post<AuthResponse>(AUTH_ENDPOINTS.login, credentials).pipe(
       tap((response) => this.tokens.save(response)),
       switchMap(() => this.loadProfile()),
+      switchMap((profile) => this.restoreContext(profile)),
       finalize(() => this.busyState.set(false)),
       catchError((error) => throwError(() => this.toFriendlyError(error))),
     );
@@ -82,6 +83,32 @@ export class AuthService {
     }));
   }
 
+  private restoreContext(profile: UserProfile): Observable<UserProfile> {
+    const preferred = this.context.preferredContext(profile);
+    if (preferred) {
+      return this.context.switchContext(preferred).pipe(
+        switchMap(() => of(profile)),
+        catchError(() => {
+          this.context.clearPreferredContext(profile.id);
+          return this.useAvailableContext(profile);
+        }),
+      );
+    }
+    return this.useAvailableContext(profile);
+  }
+
+  private useAvailableContext(profile: UserProfile): Observable<UserProfile> {
+    if (!profile.roles.length || this.context.hasValidActiveContext(profile)) return of(profile);
+    const organization = profile.roles.find((role) => role.scopes.length) ?? profile.roles[0];
+    return this.context.switchContext({
+      organization_id: organization.organization_id,
+      scope_id: organization.scopes[0]?.id ?? null,
+    }).pipe(
+      switchMap(() => of(profile)),
+      catchError(() => of(profile)),
+    );
+  }
+
   private endSession(redirect: boolean): void {
     this.tokens.clear();
     this.context.reset();
@@ -95,7 +122,7 @@ export class AuthService {
       if (typeof apiMessage === 'string') return new Error(apiMessage);
       if (Array.isArray(apiMessage) && apiMessage[0]) return new Error(String(apiMessage[0]));
       if (error.status === 0) return new Error("Le service est indisponible. Réessayez dans un instant.");
-      if (error.status === 401) return new Error('Identifiant ou mot de passe incorrect.');
+      if (error.status === 401) return new Error('Nom d’utilisateur ou mot de passe incorrect.');
     }
     return error instanceof Error ? error : new Error('Une erreur inattendue est survenue.');
   }

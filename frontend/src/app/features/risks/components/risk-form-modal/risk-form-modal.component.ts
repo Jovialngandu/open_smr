@@ -1,5 +1,7 @@
 import { Component, effect, HostListener, inject, input, output, signal } from '@angular/core';
+import { LucideX, LucideCircleAlert } from '@lucide/angular';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { assessmentLevel, IMPACT_LEVELS, LIKELIHOOD_LEVELS } from '../../../../core/models/assessment-scale';
 
 import { RISK_STATUS_LABELS, Risk, RiskPayload, RiskStatus } from '../../../../core/models/governance.models';
 import { AssetsService } from '../../../assets/services/assets.service';
@@ -7,7 +9,7 @@ import { RisksService } from '../../services/risks.service';
 
 @Component({
   selector: 'app-risk-form-modal',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, LucideX, LucideCircleAlert],
   templateUrl: './risk-form-modal.component.html',
 })
 export class RiskFormModalComponent {
@@ -19,11 +21,12 @@ export class RiskFormModalComponent {
   protected readonly assetsService = inject(AssetsService);
   private readonly formBuilder = inject(FormBuilder);
   protected readonly submitError = signal('');
-  protected readonly scores = [1, 2, 3, 4, 5] as const;
+  protected readonly likelihoodLevels = LIKELIHOOD_LEVELS;
+  protected readonly impactLevels = IMPACT_LEVELS;
+  protected readonly selectedLevel = assessmentLevel;
   protected readonly statuses = Object.entries(RISK_STATUS_LABELS) as [RiskStatus, string][];
 
   protected readonly form = this.formBuilder.nonNullable.group({
-    code: ['', [Validators.required, Validators.maxLength(50)]],
     assetId: ['', Validators.required],
     threatDescription: ['', [Validators.required, Validators.maxLength(1500)]],
     likelihood: [1 as 1 | 2 | 3 | 4 | 5, [Validators.required, Validators.min(1), Validators.max(5)]],
@@ -35,7 +38,6 @@ export class RiskFormModalComponent {
     effect(() => {
       const risk = this.risk();
       this.form.reset({
-        code: risk?.code ?? '',
         assetId: risk?.asset_id ?? '',
         threatDescription: risk?.threat_description ?? '',
         likelihood: risk?.likelihood ?? 1,
@@ -68,14 +70,12 @@ export class RiskFormModalComponent {
     }
     this.submitError.set('');
     const value = this.form.getRawValue();
-    if (!value.code.trim() || !value.threatDescription.trim()) {
-      if (!value.code.trim()) this.form.controls.code.setErrors({ required: true });
+    if (!value.threatDescription.trim()) {
       if (!value.threatDescription.trim()) this.form.controls.threatDescription.setErrors({ required: true });
       this.form.markAllAsTouched();
       return;
     }
     const payload: RiskPayload = {
-      code: value.code.trim().toUpperCase(),
       asset_id: value.assetId,
       threat_description: value.threatDescription.trim(),
       likelihood: Number(value.likelihood) as 1 | 2 | 3 | 4 | 5,

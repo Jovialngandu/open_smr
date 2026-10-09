@@ -1,10 +1,11 @@
 import { Component, effect, inject, input, output, signal } from '@angular/core';
+import { LucideX } from '@lucide/angular';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { IsoControl, ManagedUser, Risk, TreatmentTask } from '../../../../core/models/governance.models';
 import { TreatmentsService } from '../../services/treatments.service';
 
-@Component({ selector: 'app-treatment-form-modal', imports: [ReactiveFormsModule], templateUrl: './treatment-form-modal.component.html' })
+@Component({ selector: 'app-treatment-form-modal', imports: [ReactiveFormsModule, LucideX], templateUrl: './treatment-form-modal.component.html' })
 export class TreatmentFormModalComponent {
   readonly scopeId = input.required<string>();
   readonly risks = input.required<Risk[]>();

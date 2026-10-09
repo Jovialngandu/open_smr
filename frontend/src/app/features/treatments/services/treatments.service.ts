@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { finalize, map, Observable, tap } from 'rxjs';
+import { finalize, forkJoin, map, Observable, of, switchMap, tap } from 'rxjs';
 
 import { API_CONFIG, DOMAIN_ENDPOINTS } from '../../../core/config/api.config';
 import { Evidence, TreatmentPayload, TreatmentStatus, TreatmentTask } from '../../../core/models/governance.models';
@@ -11,17 +11,25 @@ export class TreatmentsService {
   private readonly itemsState = signal<TreatmentTask[]>([]);
   private readonly loadingState = signal(false);
   private readonly savingState = signal(false);
+  private fetchVersion = 0;
   readonly items = this.itemsState.asReadonly();
   readonly loading = this.loadingState.asReadonly();
   readonly saving = this.savingState.asReadonly();
   readonly overdueCount = computed(() => this.itemsState().filter((item) => item.status !== 'COMPLETED' && new Date(item.due_date) < new Date()).length);
 
   fetch(scopeId: string): void {
+    const version = ++this.fetchVersion;
+    this.itemsState.set([]);
     this.loadingState.set(true);
-    this.http.get<BackendTreatmentTask[]>(DOMAIN_ENDPOINTS.treatments, { params: new HttpParams().set('scope_id', scopeId) }).pipe(
+    // L'API des tâches ne filtre pas par scope_id : elle accepte risk_id.
+    this.http.get<Array<{ id: string }>>(DOMAIN_ENDPOINTS.risks, { params: new HttpParams().set('scope_id', scopeId) }).pipe(
+      switchMap((risks) => risks.length
+        ? forkJoin(risks.map((risk) => this.http.get<BackendTreatmentTask[]>(DOMAIN_ENDPOINTS.treatments, { params: new HttpParams().set('risk_id', risk.id) })))
+        : of([] as BackendTreatmentTask[][])),
+      map((groups) => groups.flat()),
       map((items) => items.map((item) => this.fromBackend(item, scopeId))),
-      finalize(() => this.loadingState.set(false)),
-    ).subscribe((items) => this.itemsState.set(items));
+      finalize(() => { if (version === this.fetchVersion) this.loadingState.set(false); }),
+    ).subscribe({ next: (items) => { if (version === this.fetchVersion) this.itemsState.set(items); }, error: () => { if (version === this.fetchVersion) this.itemsState.set([]); } });
   }
 
   create(scopeId: string, riskCode: string, payload: TreatmentPayload): Observable<TreatmentTask> {
@@ -74,7 +82,7 @@ export class TreatmentsService {
       risk_code: task.risk_code,
       iso_control_id: task.iso_control_id ?? task.iso_control,
       control_code: task.control_code ?? task.iso_control_code,
-      assignee_id: task.assignee_id ?? task.assignee ?? '',
+      assignee_id: String(task.assignee_id ?? task.assignee ?? ''),
       assignee_name: task.assignee_name ?? task.assignee_email ?? 'Non attribué',
       title: task.title,
       description: task.description ?? '',
@@ -87,7 +95,7 @@ export class TreatmentsService {
 
   private evidenceFromBackend(evidence: BackendEvidence): Evidence {
     const filePath = evidence.file_path ?? evidence.download_url ?? '';
-    const downloadUrl = filePath && !/^https?:/i.test(filePath) ? new URL(filePath, API_CONFIG.baseUrl).toString() : filePath;
+    const downloadUrl = filePath && !/^(https?:|blob:)/i.test(filePath) ? new URL(filePath, API_CONFIG.baseUrl).toString() : filePath;
     return {
       id: evidence.id,
       task_id: evidence.task_id ?? evidence.task,
@@ -126,8 +134,8 @@ interface BackendTreatmentTask {
   iso_control_id?: string;
   iso_control_code: string;
   control_code?: string;
-  assignee: string | null;
-  assignee_id?: string;
+  assignee: string | number | null;
+  assignee_id?: string | number;
   assignee_name?: string;
   assignee_email?: string;
   title: string;

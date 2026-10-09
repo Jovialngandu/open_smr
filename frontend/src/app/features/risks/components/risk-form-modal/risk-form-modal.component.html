@@ -5,28 +5,27 @@
         <p class="eyebrow">Registre des risques</p>
         <h2 id="risk-modal-title">{{ risk() ? 'Modifier le risque' : 'Ajouter un scénario de risque' }}</h2>
       </div>
-      <button class="icon-button" type="button" (click)="close()" aria-label="Fermer la fenêtre">×</button>
+      <button class="icon-button" type="button" (click)="close()" aria-label="Fermer la fenêtre"><svg lucideX class="ui-icon" aria-hidden="true"></svg></button>
     </header>
 
     @if (submitError()) {
-      <div class="alert alert--error" role="alert"><span aria-hidden="true">!</span><p>{{ submitError() }}</p></div>
+      <div class="alert alert--error" role="alert"><span aria-hidden="true"><svg lucideCircleAlert class="ui-icon"></svg></span><p>{{ submitError() }}</p></div>
     }
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <div class="form-grid">
         <div class="field">
-          <label for="risk-code">Code</label>
-          <input id="risk-code" formControlName="code" placeholder="RSK-PAY-001" autofocus [attr.aria-invalid]="invalid('code')" />
-          @if (invalid('code')) { <small class="field__error">Le code est obligatoire.</small> }
-        </div>
-        <div class="field">
           <label for="risk-asset">Actif concerné</label>
-          <select id="risk-asset" formControlName="assetId" [attr.aria-invalid]="invalid('assetId')">
+          <select id="risk-asset" formControlName="assetId" autofocus [attr.aria-invalid]="invalid('assetId')">
             @if (assetsService.loading()) { <option value="">Chargement des actifs…</option> }
             @else if (!assetsService.assets().length) { <option value="">Aucun actif disponible</option> }
             @for (asset of assetsService.assets(); track asset.id) { <option [value]="asset.id">{{ asset.name }}</option> }
           </select>
           @if (invalid('assetId')) { <small class="field__error">Sélectionnez un actif.</small> }
+        </div>
+        <div class="field">
+          <label>Code du risque</label>
+          <p class="field__hint">Le code sera attribué lors de l’enregistrement.</p>
         </div>
       </div>
 
@@ -38,12 +37,14 @@
 
       <div class="risk-evaluation">
         <div class="score-grid">
-          <label>Vraisemblance
-            <select formControlName="likelihood">@for (score of scores; track score) { <option [value]="score">{{ score }}</option> }</select>
+          <label for="risk-likelihood">Vraisemblance
+            <select id="risk-likelihood" formControlName="likelihood" aria-describedby="likelihood-help" [attr.title]="selectedLevel(likelihoodLevels, form.controls.likelihood.value).description">@for (level of likelihoodLevels; track level.value) { <option [value]="level.value" [attr.title]="level.description">{{ level.value }} — {{ level.label }}</option> }</select>
+            <small id="likelihood-help" class="assessment-help">{{ selectedLevel(likelihoodLevels, form.controls.likelihood.value).description }}</small>
           </label>
           <span aria-hidden="true">×</span>
-          <label>Impact
-            <select formControlName="impact">@for (score of scores; track score) { <option [value]="score">{{ score }}</option> }</select>
+          <label for="risk-impact">Impact
+            <select id="risk-impact" formControlName="impact" aria-describedby="impact-help" [attr.title]="selectedLevel(impactLevels, form.controls.impact.value).description">@for (level of impactLevels; track level.value) { <option [value]="level.value" [attr.title]="level.description">{{ level.value }} — {{ level.label }}</option> }</select>
+            <small id="impact-help" class="assessment-help">{{ selectedLevel(impactLevels, form.controls.impact.value).description }}</small>
           </label>
           <strong class="score-preview" [attr.data-score]="currentScore()">{{ currentScore() }} / 25</strong>
         </div>

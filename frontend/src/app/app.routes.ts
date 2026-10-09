@@ -29,8 +29,7 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     title: 'Tableau de bord | OpenSMR',
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['ADMIN', 'RSSI', 'RISK_OWNER', 'AUDITOR'] },
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/auth/pages/authenticated-home.component').then(
         (module) => module.AuthenticatedHomeComponent,
@@ -118,6 +117,12 @@ export const routes: Routes = [
       featureDescription: 'Consultation en lecture seule des risques, de la SoA et des preuves.',
     },
     loadComponent: () => import('./features/audit/pages/audit-view-page/audit-view-page.component').then((module) => module.AuditViewPageComponent),
+  },
+  {
+    path: 'settings',
+    title: 'Paramètres | OpenSMR',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/settings/pages/settings-page/settings-page.component').then((module) => module.SettingsPageComponent),
   },
   {
     path: 'access-denied',

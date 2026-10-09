@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { catchError, finalize, Observable, tap, throwError } from 'rxjs';
+import { catchError, finalize, map, Observable, tap, throwError } from 'rxjs';
 
 import { DOMAIN_ENDPOINTS } from '../../../core/config/api.config';
 import { Risk, RiskPayload } from '../../../core/models/governance.models';
@@ -24,7 +24,8 @@ export class RisksService {
     this.loadingState.set(true);
     this.errorState.set('');
     const params = new HttpParams().set('scope_id', scopeId);
-    this.http.get<Risk[]>(DOMAIN_ENDPOINTS.risks, { params }).pipe(
+    this.http.get<RiskApiResponse[]>(DOMAIN_ENDPOINTS.risks, { params }).pipe(
+      map((risks) => risks.map(toRisk)),
       finalize(() => this.loadingState.set(false)),
     ).subscribe({
       next: (risks) => this.risksState.set(risks),
@@ -34,7 +35,8 @@ export class RisksService {
 
   createRisk(payload: RiskPayload): Observable<Risk> {
     this.savingState.set(true);
-    return this.http.post<Risk>(DOMAIN_ENDPOINTS.risks, payload).pipe(
+    return this.http.post<RiskApiResponse>(DOMAIN_ENDPOINTS.risks, payload).pipe(
+      map(toRisk),
       tap((risk) => this.risksState.update((items) => [risk, ...items])),
       finalize(() => this.savingState.set(false)),
       catchError((error) => throwError(() => this.friendlyError(error))),
@@ -43,18 +45,13 @@ export class RisksService {
 
   updateRisk(id: string, payload: RiskPayload): Observable<Risk> {
     this.savingState.set(true);
-    return this.http.put<Risk>(`${DOMAIN_ENDPOINTS.risks}${id}/`, payload).pipe(
+    const { asset_id: _assetId, ...updateBody } = payload;
+    return this.http.patch<RiskApiResponse>(`${DOMAIN_ENDPOINTS.risks}${id}/`, updateBody).pipe(
+      map(toRisk),
       tap((risk) =>
         this.risksState.update((items) => items.map((item) => item.id === id ? risk : item)),
       ),
       finalize(() => this.savingState.set(false)),
-      catchError((error) => throwError(() => this.friendlyError(error))),
-    );
-  }
-
-  deleteRisk(id: string): Observable<void> {
-    return this.http.delete<void>(`${DOMAIN_ENDPOINTS.risks}${id}/`).pipe(
-      tap(() => this.risksState.update((items) => items.filter((item) => item.id !== id))),
       catchError((error) => throwError(() => this.friendlyError(error))),
     );
   }
@@ -65,4 +62,27 @@ export class RisksService {
     }
     return new Error("L'opération sur le risque a échoué.");
   }
+}
+
+interface RiskApiResponse {
+  id: string;
+  asset: { id: string; name: string; category: string; scope_id: string };
+  code: string;
+  threat_description: string;
+  likelihood: Risk['likelihood'];
+  impact: Risk['impact'];
+  score: number;
+  status: Risk['status'];
+  created_at: string;
+  updated_at: string;
+}
+
+function toRisk(risk: RiskApiResponse | Risk): Risk {
+  if ('asset_id' in risk) return risk;
+  return {
+    ...risk,
+    asset_id: risk.asset.id,
+    asset_name: risk.asset.name,
+    scope_id: risk.asset.scope_id,
+  };
 }
