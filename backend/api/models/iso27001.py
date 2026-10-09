@@ -3,7 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from api.models.base import TimeStampedUUIDModel
 from api.models.organization import Scope
-
+from pgvector.django import VectorField
 
 class Asset(TimeStampedUUIDModel):
     CATEGORY_CHOICES = [
@@ -72,7 +72,11 @@ class IsoControl(TimeStampedUUIDModel):
     title = models.CharField(max_length=255)
     theme = models.CharField(max_length=50, choices=THEME_CHOICES)
     description = models.TextField()
-
+    #à prevoir la dimensions var de maniere dynamique en fonction de l'engine d'embedding utilisé (HuggingFace, OpenAI, etc.)
+    
+    embedding = VectorField(dimensions=384, null=True, blank=True) 
+    keywords=models.TextField(blank=True, null=True, help_text="Mots-clés ou synonymes associés au contrôle pour enrichir la recherche vectorielle.")
+    
     def __str__(self):
         return f"{self.code} - {self.title}"
 

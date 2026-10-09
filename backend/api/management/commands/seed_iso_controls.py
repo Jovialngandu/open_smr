@@ -28,6 +28,7 @@ class Command(BaseCommand):
                     'title': item['title'],
                     'theme': item['theme'],
                     'description': item['description'],
+                    'keywords': item.get('keywords', ''),
                 }
             )
             if created:
