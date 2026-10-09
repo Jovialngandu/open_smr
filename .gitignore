@@ -105,3 +105,6 @@ Thumbs.db
 *.pdf
 
 .pytest_cache/
+
+.onnx
+backend/services/search/embeddings/models/
