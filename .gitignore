@@ -103,3 +103,5 @@ Thumbs.db
 # ==========================================
 # Décommente la ligne suivante si tu ne veux PAS synchroniser le PDF final sur Git :
 *.pdf
+
+.pytest_cache/
