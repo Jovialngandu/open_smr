@@ -3,7 +3,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { API_CONFIG, DOMAIN_ENDPOINTS, organizationMembersEndpoint } from '../config/api.config';
 import { riskControlSuggestionsEndpoint } from '../../features/treatments/services/control-suggestions.service';
-import { HeatmapApiResponse, SoaEntry } from '../models/governance.models';
+import { HeatmapApiResponse, SoaEntry, SoaVersion } from '../models/governance.models';
 import { mockWorkspaceInterceptor } from './mock-workspace.interceptor';
 
 const SCOPE_ID = '8f4b8400-e29b-41d4-a716-446655440101';
@@ -27,6 +27,17 @@ describe('mockWorkspaceInterceptor', () => {
     const response = await intercept<Array<SoaEntry & { scope: string }>>(new HttpRequest('GET', DOMAIN_ENDPOINTS.soaEntries, null, { params: scopeParams() }));
     expect(response.body).toHaveLength(93);
     expect(response.body?.every((entry) => entry.scope === SCOPE_ID)).toBe(true);
+  });
+
+  it('conserve le contenu figé d’une version après une modification de la SoA courante', async () => {
+    const created = await intercept<SoaVersion>(new HttpRequest('POST', DOMAIN_ENDPOINTS.soaVersions, { scope_id: SCOPE_ID, title: 'Instantané de test' }));
+    const version = created.body!;
+    expect(version.snapshot_data).toHaveLength(93);
+    const first = version.snapshot_data[0];
+    await intercept(new HttpRequest('PATCH', `${DOMAIN_ENDPOINTS.soaEntries}${first.entry_id}/`, { is_applicable: !first.is_applicable, justification: 'Justification modifiée après l’instantané' }));
+    const versions = await intercept<SoaVersion[]>(new HttpRequest('GET', DOMAIN_ENDPOINTS.soaVersions, null, { params: scopeParams() }));
+    const saved = versions.body?.find((item) => item.id === version.id);
+    expect(saved?.snapshot_data[0]).toEqual(first);
   });
 
   it('filtre les tâches de traitement par risque, comme le backend', async () => {

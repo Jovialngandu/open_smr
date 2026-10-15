@@ -4,7 +4,7 @@ import { delay, of, throwError } from 'rxjs';
 import { API_CONFIG, DOMAIN_ENDPOINTS } from '../config/api.config';
 import { createMockId } from '../utils/mock-id';
 import { UserProfile, UserRole } from '../models/auth.models';
-import { Evidence, IsoControl, ManagedUser, SoaEntry, SoaVersion, TreatmentTask } from '../models/governance.models';
+import { Evidence, IsoControl, ManagedUser, SoaEntry, SoaSnapshotEntry, SoaVersion, TreatmentTask } from '../models/governance.models';
 
 const DIGITAL_SCOPE = '8f4b8400-e29b-41d4-a716-446655440101';
 const DATACENTER_SCOPE = '8f4b8400-e29b-41d4-a716-446655440102';
@@ -57,9 +57,21 @@ let soaEntries: SoaEntry[] = [DIGITAL_SCOPE, DATACENTER_SCOPE].flatMap((scopeId)
   updated_at: '2026-09-10T09:00:00Z', updated_by_name: 'Nadia Bernard',
 }))) as SoaEntry[];
 
+function snapshotFor(scopeId: string): SoaSnapshotEntry[] {
+  return soaEntries.filter((entry) => entry.scope_id === scopeId).map((entry) => ({
+    entry_id: entry.id,
+    control_code: entry.iso_control.code,
+    control_title: entry.iso_control.title,
+    control_theme: entry.iso_control.theme,
+    is_applicable: entry.is_applicable,
+    justification: entry.justification,
+    implementation_status: entry.implementation_status,
+  }));
+}
+
 let soaVersions: SoaVersion[] = [
-  { id: 'version-001', scope_id: DIGITAL_SCOPE, version_number: 'v1.0-2026', title: 'État initial du SMSI', status: 'APPROVED', created_at: '2026-08-20T10:00:00Z', approved_by_name: 'Nadia Bernard' },
-  { id: 'version-002', scope_id: DIGITAL_SCOPE, version_number: 'v1.1-2026', title: 'Revue de septembre', status: 'DRAFT', created_at: '2026-09-10T09:00:00Z', approved_by_name: null },
+  { id: 'version-001', scope_id: DIGITAL_SCOPE, version_number: 'v1.0-2026', title: 'État initial du SMSI', status: 'APPROVED', created_at: '2026-08-20T10:00:00Z', approved_by_name: 'Nadia Bernard', snapshot_data: snapshotFor(DIGITAL_SCOPE).map((entry) => ({ ...entry, implementation_status: 'NOT_IMPLEMENTED' })) },
+  { id: 'version-002', scope_id: DIGITAL_SCOPE, version_number: 'v1.1-2026', title: 'Revue de septembre', status: 'DRAFT', created_at: '2026-09-10T09:00:00Z', approved_by_name: null, snapshot_data: snapshotFor(DIGITAL_SCOPE) },
 ];
 
 export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
@@ -163,7 +175,7 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
   if (request.url === DOMAIN_ENDPOINTS.soaVersions && request.method === 'GET') return ok(soaVersions.filter((item) => !scopeId || item.scope_id === scopeId).map(toBackendSoaVersion));
   if (request.url === DOMAIN_ENDPOINTS.soaVersions && request.method === 'POST') {
     const body = request.body as { scope_id: string; title: string };
-    const created: SoaVersion = { id: createMockId('soa-version'), scope_id: body.scope_id, version_number: `v1.${soaVersions.filter((item) => item.scope_id === body.scope_id).length + 1}-2026`, title: body.title, status: 'DRAFT', created_at: new Date().toISOString(), approved_by_name: null };
+    const created: SoaVersion = { id: createMockId('soa-version'), scope_id: body.scope_id, version_number: `v1.${soaVersions.filter((item) => item.scope_id === body.scope_id).length + 1}-2026`, title: body.title, status: 'DRAFT', created_at: new Date().toISOString(), approved_by_name: null, snapshot_data: snapshotFor(body.scope_id) };
     soaVersions = [created, ...soaVersions];
     return ok(toBackendSoaVersion(created), 201);
   }
@@ -223,7 +235,7 @@ function toBackendSoaEntry(entry: SoaEntry) {
 
 function toBackendSoaVersion(version: SoaVersion) {
   const { scope_id, approved_by_name, ...rest } = version;
-  return { ...rest, scope: scope_id, approved_by: approved_by_name ? { username: approved_by_name, email: '' } : null, snapshot_data: {} };
+  return { ...rest, scope: scope_id, approved_by: approved_by_name ? { username: approved_by_name, email: '' } : null };
 }
 
 function toBackendTask(item: TreatmentTask) {

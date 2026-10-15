@@ -107,6 +107,17 @@ export interface SoaVersion {
   status: 'DRAFT' | 'APPROVED';
   created_at: string;
   approved_by_name: string | null;
+  snapshot_data: SoaSnapshotEntry[];
+}
+
+export interface SoaSnapshotEntry {
+  entry_id: string;
+  control_code: string;
+  control_title: string;
+  control_theme: ControlTheme;
+  is_applicable: boolean;
+  justification: string;
+  implementation_status: ImplementationStatus;
 }
 
 export interface DashboardSummary {
