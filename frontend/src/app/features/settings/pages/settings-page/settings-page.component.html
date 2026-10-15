@@ -5,7 +5,7 @@
       <div>
         <p class="eyebrow">Compte personnel</p>
         <h1>Paramètres</h1>
-        <p>Adaptez l’affichage, le fuseau horaire et les notifications à votre usage.</p>
+        <p>Choisissez l’apparence de l’application et vos préférences de notification.</p>
       </div>
     </header>
 
@@ -38,7 +38,7 @@
 
         <form class="settings-form" [formGroup]="form" (ngSubmit)="submit()">
           <section class="settings-section">
-            <header><span aria-hidden="true"><svg lucidePalette class="ui-icon"></svg></span><div><h2>Apparence</h2><p>Choisissez le thème utilisé dans l’application.</p></div></header>
+            <header><span aria-hidden="true"><svg lucidePalette class="ui-icon"></svg></span><div><h2>Apparence</h2><p>Le thème s’applique dès que vous le choisissez.</p></div></header>
             <div class="theme-options">
               @for (theme of themes; track theme.value) {
                 <label class="theme-option" [class.theme-option--selected]="form.controls.theme.value === theme.value">
@@ -52,9 +52,9 @@
           </section>
 
           <section class="settings-section">
-            <header><span aria-hidden="true"><svg lucideGlobe2 class="ui-icon"></svg></span><div><h2>Langue et région</h2><p>Ces réglages déterminent la langue et l’heure affichées.</p></div></header>
+            <header><span aria-hidden="true"><svg lucideGlobe2 class="ui-icon"></svg></span><div><h2>Langue et région</h2><p>Réglez la langue et le fuseau horaire de votre compte.</p></div></header>
             <div class="form-grid">
-              <div class="field"><label for="settings-language">Langue</label><select id="settings-language" formControlName="language"><option value="fr">Français</option></select><small class="field__hint">D’autres langues pourront être ajoutées ultérieurement.</small></div>
+              <div class="field"><label for="settings-language">Langue</label><select id="settings-language" formControlName="language"><option value="fr">Français</option></select></div>
               <div class="field"><label for="settings-timezone"><svg lucideClock3 class="ui-icon" aria-hidden="true"></svg> Fuseau horaire</label><select id="settings-timezone" formControlName="timezone">@for (timezone of timezones; track timezone.value) { <option [value]="timezone.value">{{ timezone.label }}</option> }</select></div>
             </div>
           </section>

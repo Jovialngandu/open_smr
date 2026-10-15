@@ -33,6 +33,7 @@ export interface EmailLog {
 
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
+  private readonly systemTheme = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-color-scheme: dark)') : null;
   private readonly http = inject(HttpClient);
   private readonly preferencesState = signal<UserPreferences | null>(null);
   private readonly loadingState = signal(false);
@@ -66,7 +67,10 @@ export class SettingsService {
 
   constructor() {
     const savedTheme = localStorage.getItem('opensmr.theme') as AppTheme | null;
-    if (savedTheme && ['LIGHT', 'DARK', 'SYSTEM'].includes(savedTheme)) this.applyTheme(savedTheme);
+    this.applyTheme(savedTheme && ['LIGHT', 'DARK', 'SYSTEM'].includes(savedTheme) ? savedTheme : 'SYSTEM');
+    this.systemTheme?.addEventListener('change', () => {
+      if ((localStorage.getItem('opensmr.theme') ?? 'SYSTEM') === 'SYSTEM') this.applyTheme('SYSTEM');
+    });
   }
 
   load(): Observable<UserPreferences> {
@@ -107,7 +111,7 @@ export class SettingsService {
 
   applyTheme(theme: AppTheme): void {
     const resolved = theme === 'SYSTEM'
-      ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+      ? (this.systemTheme?.matches ? 'dark' : 'light')
       : theme.toLowerCase();
     document.documentElement.dataset['theme'] = resolved;
     document.documentElement.style.colorScheme = resolved;
