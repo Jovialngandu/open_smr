@@ -2,6 +2,7 @@ import { HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
 import { API_CONFIG, DOMAIN_ENDPOINTS, organizationMembersEndpoint } from '../config/api.config';
+import { riskControlSuggestionsEndpoint } from '../../features/treatments/services/control-suggestions.service';
 import { HeatmapApiResponse, SoaEntry } from '../models/governance.models';
 import { mockWorkspaceInterceptor } from './mock-workspace.interceptor';
 
@@ -14,6 +15,12 @@ describe('mockWorkspaceInterceptor', () => {
     const response = await intercept<HeatmapApiResponse>(new HttpRequest('GET', DOMAIN_ENDPOINTS.heatmap, null, { params: scopeParams() }));
     expect(response.body?.matrix).toHaveLength(25);
     expect(response.body?.total_risks).toBe(4);
+  });
+
+  it('classe les mesures suggérées selon le risque et l’action saisie', async () => {
+    const response = await intercept<Array<{ id: string; code: string }>>(new HttpRequest('GET', riskControlSuggestionsEndpoint('risk-001'), null, { params: new HttpParams().set('context', 'Installer des sauvegardes') }));
+    expect(response.body?.[0].code).toBe('A.8.13');
+    expect(response.body?.[0].id).toBeTruthy();
   });
 
   it('retourne les 93 mesures de la SoA', async () => {

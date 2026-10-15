@@ -37,7 +37,9 @@ const controls: IsoControl[] = Array.from({ length: 93 }, (_, index) => {
   const prefix = theme === 'ORGANIZATIONAL' ? 5 : theme === 'PEOPLE' ? 6 : theme === 'PHYSICAL' ? 7 : 8;
   const offset = theme === 'ORGANIZATIONAL' ? position : theme === 'PEOPLE' ? position - 37 : theme === 'PHYSICAL' ? position - 45 : position - 59;
   const titles: Record<number, string> = { 1: 'Politiques de sécurité de l’information', 2: 'Rôles et responsabilités liés à la sécurité', 6: 'Contacts avec les autorités', 23: 'Sécurité de l’information dans le cloud', 53: 'Protection des enregistrements', 68: 'Gestion des vulnérabilités techniques', 73: 'Sauvegarde des informations', 84: 'Développement sécurisé' };
-  return { id: `control-${position.toString().padStart(3, '0')}`, code: `A.${prefix}.${offset}`, title: titles[position] ?? `Mesure de sécurité ${position}`, theme };
+  const code = `A.${prefix}.${offset}`;
+  const suggestionTitles: Record<string, string> = { 'A.8.22': 'Segmentation des réseaux', 'A.8.13': 'Sauvegarde des informations', 'A.5.26': 'Réponse aux incidents de sécurité de l’information', 'A.8.20': 'Sécurité des réseaux' };
+  return { id: `control-${position.toString().padStart(3, '0')}`, code, title: suggestionTitles[code] ?? titles[position] ?? `Mesure de sécurité ${position}`, theme };
 });
 
 let treatments: TreatmentTask[] = [
@@ -62,6 +64,18 @@ let soaVersions: SoaVersion[] = [
 
 export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
   if (!API_CONFIG.useMocks) return next(request);
+  const suggestionMatch = request.url.match(/\/risks\/([^/]+)\/iso-control-suggestions\/$/);
+  if (suggestionMatch && request.method === 'GET') {
+    const riskId = suggestionMatch[1];
+    const context = (request.params.get('context') ?? '').toLocaleLowerCase('fr');
+    const codes = context.includes('sauvegarde') ? ['A.8.13', 'A.8.20', 'A.5.26']
+      : riskId === 'risk-001' || context.includes('réseau') ? ['A.8.22', 'A.8.20', 'A.5.26']
+      : ['A.5.26', 'A.8.13', 'A.8.22'];
+    return ok(codes.flatMap((code) => {
+      const control = controls.find((item) => item.code === code);
+      return control ? [{ id: control.id, code: control.code, title: control.title, theme: control.theme, description: `Mesure ${control.code} proposée pour réduire le risque identifié.` }] : [];
+    }));
+  }
   const scopeId = request.params.get('scope_id');
   const dashboardMatch = request.url.match(/\/scopes\/([^/]+)\/dashboard\/$/);
   if (dashboardMatch && request.method === 'GET') {
