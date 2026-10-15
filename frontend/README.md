@@ -337,6 +337,8 @@ Fonctionnalités terminées :
 - propriétaires d'actifs issus des membres actifs de l'organisation ;
 - lecture seule effective des risques et preuves pour l'auditeur.
 - page Paramètres connectée à `GET|PATCH /api/settings/me/`, avec thème persistant et mock équivalent.
+- page `/iso-controls` en lecture seule : catalogue des 93 mesures avec leur description complète, recherche et filtre par thème. Le fichier `public/data/iso-controls.json` est une copie des champs utiles de `backend/api/fixtures/iso_27001_controls.json` ; le mettre à jour si le référentiel du seeder change.
+- suggestions de mesures dans le formulaire de traitement : `GET /api/v1/risks/{id}/iso-control-suggestions/` avec le paramètre facultatif `context` alimenté par « Action à réaliser ». Les résultats sont rapprochés par code des mesures du périmètre ; la première est présélectionnée, les autres restent disponibles et le formulaire fonctionne si la suggestion échoue.
 - historique des e-mails personnels dans les Paramètres via `GET /api/v1/emails/email-logs/`, filtré sur l’organisation active lorsque celle-ci est sélectionnée ; les tests d’envoi du backend ne sont pas exposés dans l’interface.
 
 ## Contrats Django déjà pris en charge
