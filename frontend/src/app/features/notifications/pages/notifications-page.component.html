@@ -3,15 +3,15 @@
   <div class="workspace-content notifications-page">
     <header class="page-heading">
       <div>
-        <p class="eyebrow">Compte personnel</p>
+        <p class="eyebrow">Votre activité</p>
         <h1>Notifications</h1>
-        <p>Retrouvez les e-mails enregistrés pour votre compte dans l’organisation active.</p>
+        <p>Consultez les rappels liés à votre compte dans l’organisation sélectionnée.</p>
       </div>
       <button class="button button--ghost" type="button" (click)="center.refresh()" [disabled]="center.loading()">Actualiser</button>
     </header>
 
     <section class="notifications-note" aria-label="À propos des notifications">
-      <p>Cette vue présente les e-mails suivis par le serveur. Le marquage « lu » est conservé uniquement sur cet appareil ; il ne modifie ni l’envoi ni les données du serveur. <a routerLink="/settings">Gérer les préférences d’e-mail</a></p>
+      <p>Les messages lus sont mémorisés sur cet appareil. Vous pouvez <a routerLink="/settings">modifier vos préférences d’e-mail</a> dans les paramètres.</p>
     </section>
 
     <section class="data-panel" aria-label="Liste des notifications">
@@ -30,7 +30,7 @@
       } @else if (!visible().length) {
         <div class="empty-state empty-state--compact">
           <h2>{{ filter() === 'UNREAD' ? 'Aucune notification non lue' : 'Aucune notification pour le moment' }}</h2>
-          <p>{{ filter() === 'UNREAD' ? 'Vous avez parcouru tous les messages enregistrés.' : 'Les e-mails suivis par le serveur apparaîtront ici.' }}</p>
+          <p>{{ filter() === 'UNREAD' ? 'Vous êtes à jour.' : 'Vos rappels apparaîtront ici.' }}</p>
         </div>
       } @else {
         <div class="notifications-list" aria-live="polite">
