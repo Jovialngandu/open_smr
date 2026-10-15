@@ -86,6 +86,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/soa/pages/soa-page/soa-page.component').then((module) => module.SoaPageComponent),
   },
   {
+    path: 'iso-controls',
+    title: 'Référentiel des mesures ISO | OpenSMR',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/controls/pages/controls-catalog-page.component').then((module) => module.ControlsCatalogPageComponent),
+  },
+  {
     path: 'users',
     title: 'Utilisateurs et auditeurs | OpenSMR',
     canActivate: [authGuard, roleGuard],

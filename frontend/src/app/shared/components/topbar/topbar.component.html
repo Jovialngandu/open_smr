@@ -64,6 +64,7 @@
     <a routerLink="/treatments" routerLinkActive="module-nav__link--active">Traitements</a>
   }
   @if (context.activeRole()) { <a routerLink="/soa" routerLinkActive="module-nav__link--active">SoA</a> }
+  <a routerLink="/iso-controls" routerLinkActive="module-nav__link--active">Mesures ISO</a>
   @if (context.activeRole() === 'RISK_OWNER') {
     <a routerLink="/my-tasks" routerLinkActive="module-nav__link--active">Mes tâches</a>
   }
