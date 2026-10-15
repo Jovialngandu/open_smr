@@ -71,6 +71,7 @@ Le mode mock permet de tester :
 - le tableau Kanban des traitements avec glisser-déposer entre les statuts ;
 - le dépôt de preuves et la clôture des tâches ;
 - les 93 mesures de la SoA, leur édition en ligne et le suivi de leur mise en œuvre ;
+- les versions de la SoA consultables dans la plateforme : chaque bouton « Consulter » ouvre l'instantané figé en lecture seule, avec recherche parmi les mesures ;
 - les exports PDF/CSV simulés ;
 - le portail auditeur en lecture seule ;
 - les comptes, rôles, statuts et habilitations par périmètre ;

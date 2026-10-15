@@ -60,5 +60,5 @@ function toSoaEntry(entry: BackendSoaEntry): SoaEntry {
 }
 
 function toSoaVersion(version: BackendSoaVersion): SoaVersion {
-  return { ...version, scope_id: version.scope_id ?? version.scope ?? '', approved_by_name: version.approved_by_name ?? version.approved_by?.username ?? null };
+  return { ...version, scope_id: version.scope_id ?? version.scope ?? '', approved_by_name: version.approved_by_name ?? version.approved_by?.username ?? null, snapshot_data: Array.isArray(version.snapshot_data) ? version.snapshot_data : [] };
 }
