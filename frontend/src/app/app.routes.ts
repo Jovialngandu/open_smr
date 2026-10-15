@@ -131,6 +131,18 @@ export const routes: Routes = [
     loadComponent: () => import('./features/settings/pages/settings-page/settings-page.component').then((module) => module.SettingsPageComponent),
   },
   {
+    path: 'help',
+    title: 'Aide | OpenSMR',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/help/pages/help-page.component').then((module) => module.HelpPageComponent),
+  },
+  {
+    path: 'notifications',
+    title: 'Notifications | OpenSMR',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/notifications/pages/notifications-page.component').then((module) => module.NotificationsPageComponent),
+  },
+  {
     path: 'access-denied',
     title: 'Accès refusé | OpenSMR',
     canActivate: [authGuard],
