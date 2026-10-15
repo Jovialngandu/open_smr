@@ -1,4 +1,4 @@
-import { HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
+import { HttpHeaders, HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -36,6 +36,15 @@ describe('mockSettingsInterceptor', () => {
     const response = await intercept<EmailLog[]>(request);
     expect(response.body).toHaveLength(1);
     expect(response.body?.[0].email_type).toBe('OVERDUE_TASK_ALERT');
+  });
+
+  it('ne présente pas les e-mails de démonstration à un autre compte', async () => {
+    const token = `header.${btoa(JSON.stringify({ user_id: 'another-user' }))}.signature`;
+    const request = new HttpRequest('GET', EMAIL_LOGS_ENDPOINT, null, {
+      headers: new HttpHeaders({ Authorization: `Bearer ${token}` }),
+    });
+    const response = await intercept<EmailLog[]>(request);
+    expect(response.body).toEqual([]);
   });
 });
 
