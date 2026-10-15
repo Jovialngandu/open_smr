@@ -384,7 +384,10 @@ form { display: grid; gap: 1.15rem; }
 .context-field select:focus-visible { border-radius: .2rem; outline: 2px solid var(--focus); outline-offset: 2px; }
 .context-separator { color: #b2bdb7; }
 .context-loader { width: .85rem; height: .85rem; border: 2px solid #bdd2c8; border-top-color: var(--brand); border-radius: 50%; animation: spin .7s linear infinite; }
-.profile-menu { position: relative; justify-self: end; }
+.profile-menu { position: relative; display: flex; align-items: center; gap: .4rem; justify-self: end; }
+.notification-trigger { position: relative; display: grid; place-items: center; width: 2.35rem; height: 2.35rem; color: var(--ink); border-radius: .7rem; text-decoration: none; }
+.notification-trigger:hover,.notification-trigger:focus-visible { color: var(--brand); background: var(--soft); }
+.notification-trigger__badge { position: absolute; top: -.2rem; right: -.2rem; display: grid; place-items: center; min-width: 1.1rem; height: 1.1rem; padding: 0 .2rem; color: white; border-radius: 1rem; background: var(--danger); font-size: .65rem; font-weight: 800; }
 .profile-menu__trigger { display: flex; align-items: center; gap: .65rem; padding: .35rem; color: var(--ink); border: 0; border-radius: .7rem; background: transparent; text-align: left; }
 .profile-menu__trigger:hover { background: #f4f7f5; }
 .avatar { display: grid; place-items: center; width: 2.35rem; height: 2.35rem; color: #164c3c; border-radius: .7rem; background: #dff0e7; font-size: .75rem; font-weight: 850; }

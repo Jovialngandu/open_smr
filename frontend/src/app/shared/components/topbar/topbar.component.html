@@ -33,6 +33,10 @@
   </div> } @else { <button class="button button--ghost topbar-workspace-action" type="button" (click)="openOrganizationModal()"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg> Créer une organisation</button> }
 
   <div class="profile-menu">
+    <a class="notification-trigger" routerLink="/notifications" [attr.aria-label]="'Notifications, ' + notifications.unreadCount() + ' non lues'" title="Notifications">
+      <svg lucideBell class="ui-icon" aria-hidden="true"></svg>
+      @if (notifications.unreadCount()) { <span class="notification-trigger__badge" aria-hidden="true">{{ notifications.unreadCount() > 9 ? '9+' : notifications.unreadCount() }}</span> }
+    </a>
     <button class="profile-menu__trigger" type="button" (click)="menuOpen.set(!menuOpen())" [attr.aria-expanded]="menuOpen()" aria-controls="profile-dropdown">
       <span class="avatar" aria-hidden="true">{{ initials() }}</span>
       <span class="profile-menu__identity">
@@ -44,6 +48,8 @@
     @if (menuOpen()) {
       <div class="profile-dropdown" id="profile-dropdown">
         <p>{{ auth.user()?.email }}</p>
+        <a routerLink="/help" (click)="menuOpen.set(false)"><svg lucideBookOpen class="ui-icon" aria-hidden="true"></svg> Aide</a>
+        <a routerLink="/notifications" (click)="menuOpen.set(false)"><svg lucideBell class="ui-icon" aria-hidden="true"></svg> Notifications</a>
         <a routerLink="/settings" (click)="menuOpen.set(false)"><svg lucideSettings class="ui-icon" aria-hidden="true"></svg> Paramètres</a>
         <button class="profile-dropdown__action" type="button" (click)="openOrganizationModal()"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg> Créer une organisation</button>
         <button class="profile-dropdown__logout" type="button" (click)="logout()">Se déconnecter</button>

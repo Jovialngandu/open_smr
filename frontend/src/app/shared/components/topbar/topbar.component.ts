@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX } from '@lucide/angular';
+import { LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX, LucideBell, LucideBookOpen } from '@lucide/angular';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink, RouterLinkActive } from '@angular/router';
@@ -7,15 +7,17 @@ import { finalize, switchMap } from 'rxjs';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { ContextService } from '../../../core/services/context.service';
+import { NotificationCenterService } from '../../../features/notifications/services/notification-center.service';
 
 @Component({
   selector: 'app-topbar',
-  imports: [RouterLink, RouterLinkActive, ReactiveFormsModule, LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX],
+  imports: [RouterLink, RouterLinkActive, ReactiveFormsModule, LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX, LucideBell, LucideBookOpen],
   templateUrl: './topbar.component.html',
 })
 export class TopbarComponent {
   protected readonly auth = inject(AuthService);
   protected readonly context = inject(ContextService);
+  protected readonly notifications = inject(NotificationCenterService);
   private readonly fb = inject(FormBuilder);
   protected readonly switching = signal(false);
   protected readonly creatingScope = signal(false);
