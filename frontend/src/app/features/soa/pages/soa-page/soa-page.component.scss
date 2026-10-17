@@ -1,0 +1,17 @@
+.snapshot-dialog {
+  width: min(1100px, calc(100vw - 2rem));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.snapshot-dialog .modal-card__header { flex: none; }
+.snapshot-search { flex: none; margin-bottom: 1rem; }
+.snapshot-table { overflow: auto; }
+.snapshot-table table { min-width: 760px; }
+.snapshot-table td:nth-child(4) { min-width: 260px; white-space: normal; }
+
+@media (max-width: 720px) {
+  .snapshot-dialog { max-height: calc(100dvh - 2rem); }
+  .snapshot-dialog .modal-card__header { flex-direction: column; }
+}

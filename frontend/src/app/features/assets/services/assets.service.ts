@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { catchError, finalize, Observable, tap, throwError } from 'rxjs';
+import { catchError, finalize, map, Observable, tap, throwError } from 'rxjs';
 
 import { DOMAIN_ENDPOINTS } from '../../../core/config/api.config';
 import { Asset, AssetPayload } from '../../../core/models/governance.models';
@@ -23,7 +23,8 @@ export class AssetsService {
     this.loadingState.set(true);
     this.errorState.set('');
     const params = new HttpParams().set('scope_id', scopeId);
-    this.http.get<Asset[]>(DOMAIN_ENDPOINTS.assets, { params }).pipe(
+    this.http.get<AssetApiResponse[]>(DOMAIN_ENDPOINTS.assets, { params }).pipe(
+      map((assets) => assets.map(toAsset)),
       finalize(() => this.loadingState.set(false)),
     ).subscribe({
       next: (assets) => this.assetsState.set(assets),
@@ -33,7 +34,8 @@ export class AssetsService {
 
   createAsset(payload: AssetPayload): Observable<Asset> {
     this.savingState.set(true);
-    return this.http.post<Asset>(DOMAIN_ENDPOINTS.assets, payload).pipe(
+    return this.http.post<AssetApiResponse>(DOMAIN_ENDPOINTS.assets, toCreateBody(payload)).pipe(
+      map(toAsset),
       tap((asset) => this.assetsState.update((items) => [asset, ...items])),
       finalize(() => this.savingState.set(false)),
       catchError((error) => throwError(() => this.friendlyError(error))),
@@ -42,7 +44,8 @@ export class AssetsService {
 
   updateAsset(id: string, payload: AssetPayload): Observable<Asset> {
     this.savingState.set(true);
-    return this.http.put<Asset>(`${DOMAIN_ENDPOINTS.assets}${id}/`, payload).pipe(
+    return this.http.patch<AssetApiResponse>(`${DOMAIN_ENDPOINTS.assets}${id}/`, toUpdateBody(payload)).pipe(
+      map(toAsset),
       tap((asset) =>
         this.assetsState.update((items) => items.map((item) => item.id === id ? asset : item)),
       ),
@@ -64,4 +67,47 @@ export class AssetsService {
     }
     return new Error("L'opération sur l'actif a échoué.");
   }
+}
+
+interface AssetApiResponse {
+  id: string;
+  scope: string;
+  owner: { id: number; username: string; email: string } | null;
+  name: string;
+  category: Asset['category'];
+  description: string | null;
+  confidentiality: Asset['confidentiality'];
+  integrity: Asset['integrity'];
+  availability: Asset['availability'];
+  criticality: number;
+  created_at: string;
+  updated_at: string;
+}
+
+function toAsset(asset: AssetApiResponse | Asset): Asset {
+  if ('scope_id' in asset) return asset;
+  return {
+    ...asset,
+    scope_id: asset.scope,
+    owner_id: asset.owner ? String(asset.owner.id) : null,
+    owner_name: asset.owner?.username || asset.owner?.email || 'Non attribué',
+    description: asset.description ?? '',
+  };
+}
+
+function toCreateBody(payload: AssetPayload) {
+  return { ...toUpdateBody(payload), scope_id: payload.scope_id };
+}
+
+function toUpdateBody(payload: AssetPayload) {
+  const ownerId = payload.owner_id ? Number(payload.owner_id) : null;
+  return {
+    owner_id: Number.isFinite(ownerId) ? ownerId : null,
+    name: payload.name,
+    category: payload.category,
+    description: payload.description,
+    confidentiality: payload.confidentiality,
+    integrity: payload.integrity,
+    availability: payload.availability,
+  };
 }

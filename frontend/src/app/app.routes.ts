@@ -29,8 +29,7 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     title: 'Tableau de bord | OpenSMR',
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['ADMIN', 'RSSI', 'RISK_OWNER', 'AUDITOR'] },
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/auth/pages/authenticated-home.component').then(
         (module) => module.AuthenticatedHomeComponent,
@@ -87,6 +86,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/soa/pages/soa-page/soa-page.component').then((module) => module.SoaPageComponent),
   },
   {
+    path: 'iso-controls',
+    title: 'Référentiel des mesures ISO | OpenSMR',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/controls/pages/controls-catalog-page.component').then((module) => module.ControlsCatalogPageComponent),
+  },
+  {
     path: 'users',
     title: 'Utilisateurs et auditeurs | OpenSMR',
     canActivate: [authGuard, roleGuard],
@@ -118,6 +123,24 @@ export const routes: Routes = [
       featureDescription: 'Consultation en lecture seule des risques, de la SoA et des preuves.',
     },
     loadComponent: () => import('./features/audit/pages/audit-view-page/audit-view-page.component').then((module) => module.AuditViewPageComponent),
+  },
+  {
+    path: 'settings',
+    title: 'Paramètres | OpenSMR',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/settings/pages/settings-page/settings-page.component').then((module) => module.SettingsPageComponent),
+  },
+  {
+    path: 'help',
+    title: 'Aide | OpenSMR',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/help/pages/help-page.component').then((module) => module.HelpPageComponent),
+  },
+  {
+    path: 'notifications',
+    title: 'Notifications | OpenSMR',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/notifications/pages/notifications-page.component').then((module) => module.NotificationsPageComponent),
   },
   {
     path: 'access-denied',

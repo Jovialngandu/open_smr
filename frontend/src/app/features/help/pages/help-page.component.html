@@ -1,0 +1,56 @@
+<main class="workspace-page">
+  <app-topbar />
+  <div class="workspace-content help-page">
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">Aide</p>
+        <h1>Comment utiliser OpenSMR ?</h1>
+        <p>Retrouvez ici les étapes utiles pour démarrer et suivre vos risques.</p>
+      </div>
+    </header>
+
+    <section class="help-intro" aria-labelledby="help-cycle-title">
+      <h2 id="help-cycle-title">Du périmètre à la SoA</h2>
+      <p>Organisation → Périmètre → Actifs → Risques → Mesures ISO → Tâches et preuves → Déclaration d’applicabilité (SoA).</p>
+      <p>Les données changent selon le périmètre choisi. Avant de créer ou modifier un élément, vérifiez le périmètre affiché en haut de la page.</p>
+    </section>
+
+    <section class="help-section" aria-labelledby="help-steps-title">
+      <h2 id="help-steps-title">Par où commencer ?</h2>
+      <ol class="help-steps">
+        <li><strong>Choisir une organisation et un périmètre.</strong> Le périmètre peut couvrir toute l’organisation, un département ou une équipe. <a routerLink="/dashboard">Ouvrir le tableau de bord</a></li>
+        <li><strong>Recenser les actifs.</strong> Le RSSI ou l’Admin inscrit les systèmes, données et services du périmètre, puis évalue leur confidentialité, intégrité et disponibilité.</li>
+        <li><strong>Évaluer les risques.</strong> Chaque scénario est lié à un actif. Sa vraisemblance et son impact déterminent son score et sa position sur la matrice.</li>
+        <li><strong>Planifier le traitement.</strong> Choisissez une mesure du référentiel ISO, attribuez une action à un membre et fixez une échéance. <a routerLink="/iso-controls">Comprendre les mesures ISO</a></li>
+        <li><strong>Apporter une preuve.</strong> La personne assignée dépose un document ou une image montrant l’action réalisée, puis termine la tâche.</li>
+        <li><strong>Tenir la SoA à jour.</strong> Le RSSI ou l’Admin indique quelles mesures s’appliquent au périmètre et justifie les choix. Les anciennes versions restent consultables depuis la page SoA.</li>
+      </ol>
+    </section>
+
+    <section class="help-section" aria-labelledby="help-roles-title">
+      <h2 id="help-roles-title">Qui peut faire quoi ?</h2>
+      <div class="help-roles">
+        <article><h3>Admin</h3><p>Gère les organisations, les périmètres et les accès ; pilote aussi les données de sécurité.</p></article>
+        <article><h3>RSSI</h3><p>Recense les actifs et les risques, organise les traitements et maintient la SoA.</p></article>
+        <article><h3>Responsable de risque</h3><p>Consulte les tâches qui lui sont assignées et dépose les preuves de réalisation.</p></article>
+        <article><h3>Auditeur</h3><p>Consulte les risques, la SoA et les preuves autorisées, sans pouvoir modifier les données.</p></article>
+      </div>
+    </section>
+
+    <section class="help-section" aria-labelledby="help-questions-title">
+      <h2 id="help-questions-title">Questions fréquentes</h2>
+      <div class="help-questions">
+        <details><summary>Pourquoi certaines pages sont-elles vides ?</summary><p>Vérifiez l’organisation et le périmètre actifs. Un nouveau périmètre n’a pas encore d’actifs ni de risques ; vos droits peuvent aussi limiter les informations visibles.</p></details>
+        <details><summary>Quelle différence entre le catalogue ISO et la SoA ?</summary><p>Le catalogue explique les 93 mesures communes. La SoA précise, pour votre périmètre, si chaque mesure est applicable, sa justification et son état de mise en œuvre.</p></details>
+        <details><summary>Pourquoi une preuve est-elle demandée avant de terminer une tâche ?</summary><p>Elle permet de montrer que l’action a été réalisée et de la retrouver lors d’un audit. Ajoutez un PDF ou une image depuis « Mes tâches » ou les traitements.</p></details>
+        <details><summary>Où retrouver les rappels envoyés par e-mail ?</summary><p>Ouvrez « Notifications » pour consulter les e-mails liés à votre compte et à l’organisation active. Si un message manque, vérifiez aussi vos préférences d’e-mail.</p></details>
+      </div>
+    </section>
+
+    <nav class="help-links" aria-label="Accès utiles">
+      <a class="button button--ghost" routerLink="/iso-controls">Référentiel des mesures</a>
+      <a class="button button--ghost" routerLink="/notifications">Notifications</a>
+      <a class="button button--ghost" routerLink="/settings">Paramètres</a>
+    </nav>
+  </div>
+</main>

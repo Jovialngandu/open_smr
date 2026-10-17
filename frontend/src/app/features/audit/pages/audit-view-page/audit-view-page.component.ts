@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject } from '@angular/core';
+import { LucideFileText, LucideEye } from '@lucide/angular';
 
 import { CONTROL_THEME_LABELS, IMPLEMENTATION_STATUS_LABELS, Evidence } from '../../../../core/models/governance.models';
 import { ContextService } from '../../../../core/services/context.service';
@@ -9,7 +10,7 @@ import { SoaService } from '../../../soa/services/soa.service';
 import { TreatmentsService } from '../../../treatments/services/treatments.service';
 import { API_CONFIG } from '../../../../core/config/api.config';
 
-@Component({ selector: 'app-audit-view-page', imports: [TopbarComponent, RiskScoreBadgeComponent], templateUrl: './audit-view-page.component.html' })
+@Component({ selector: 'app-audit-view-page', imports: [TopbarComponent, RiskScoreBadgeComponent, LucideFileText, LucideEye], templateUrl: './audit-view-page.component.html' })
 export class AuditViewPageComponent {
   protected readonly context = inject(ContextService);
   protected readonly risks = inject(RisksService);

@@ -1,0 +1,52 @@
+<main class="workspace-page">
+  <app-topbar />
+  <div class="workspace-content controls-catalog">
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">Référentiel ISO/IEC 27001:2022 · Annexe A</p>
+        <h1>Mesures ISO 27001</h1>
+        <p>Consultez les 93 mesures de l’Annexe A et retrouvez rapidement celle dont vous avez besoin.</p>
+      </div>
+    </header>
+
+    <section class="catalog-intro" aria-label="À propos du référentiel">
+      <p>Ce catalogue décrit les mesures. Pour voir celles retenues dans votre périmètre et leur justification, ouvrez la SoA.</p>
+    </section>
+
+    <section class="data-panel" aria-label="Catalogue des mesures ISO">
+      <div class="table-toolbar">
+        <label class="search-field">
+          <svg lucideSearch class="ui-icon" aria-hidden="true"></svg>
+          <span class="sr-only">Rechercher une mesure par code, titre ou description</span>
+          <input type="search" placeholder="Code, titre ou mot-clé…" [value]="search()" (input)="search.set($any($event.target).value)" />
+        </label>
+        <label class="filter-field">
+          <span>Thème</span>
+          <select [value]="theme()" (change)="theme.set($any($event.target).value)">
+            <option value="ALL">Tous les thèmes</option>
+            @for (item of themes; track item[0]) { <option [value]="item[0]">{{ item[1] }}</option> }
+          </select>
+        </label>
+        <span class="result-count" aria-live="polite">{{ visible().length }} mesure(s)</span>
+      </div>
+
+      @if (loading()) {
+        <div class="table-loading" role="status"><span class="spinner spinner--dark" aria-hidden="true"></span> Chargement du référentiel…</div>
+      } @else if (error()) {
+        <div class="catalog-error" role="alert"><p>{{ error() }}</p><button class="button button--ghost" type="button" (click)="load()">Réessayer</button></div>
+      } @else if (!visible().length) {
+        <div class="empty-state empty-state--compact"><h2>Aucune mesure trouvée</h2><p>Essayez un autre terme ou sélectionnez tous les thèmes.</p></div>
+      } @else {
+        <div class="catalog-grid">
+          @for (control of visible(); track control.code) {
+            <article class="catalog-card" [attr.aria-labelledby]="'control-' + control.code">
+              <div class="catalog-card__meta"><strong class="risk-code">{{ control.code }}</strong><span class="category-chip">{{ themeLabels[control.theme] }}</span></div>
+              <h2 [id]="'control-' + control.code">{{ control.title }}</h2>
+              <p>{{ control.description }}</p>
+            </article>
+          }
+        </div>
+      }
+    </section>
+  </div>
+</main>

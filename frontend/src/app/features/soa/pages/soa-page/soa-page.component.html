@@ -1,117 +1,19 @@
-<main class="workspace-page">
-  <app-topbar />
-  <div class="workspace-content">
-    <header class="page-heading">
-      <div>
-        <p class="eyebrow">ISO 27001:2022</p>
-        <h1>Déclaration d’applicabilité</h1>
-        <p>Justifiez l’applicabilité des 93 mesures et suivez leur niveau de mise en œuvre.</p>
+<main class="workspace-page"><app-topbar /><div class="workspace-content"><header class="page-heading"><div><p class="eyebrow">ISO 27001:2022</p><h1>Déclaration d’applicabilité</h1><p>Justifiez l’applicabilité des 93 mesures et suivez leur niveau de mise en œuvre.</p></div><div class="button-group"><button class="button button--ghost" type="button" (click)="export('xlsx')">Exporter en Excel</button><button class="button button--primary" type="button" (click)="export('pdf')">Exporter en PDF</button></div></header>
+  <section class="metric-strip"><div><small>Mesures</small><strong>{{ service.entries().length }}</strong></div><div><small>Conformité</small><strong>{{ service.compliance() }} %</strong></div><div><small>Mode</small><strong class="metric-strip__text">{{ editable() ? 'Édition autorisée' : 'Lecture seule' }}</strong></div></section>
+  <section class="soa-versions"><div class="section-heading"><div><p class="eyebrow">Traçabilité</p><h2>Versions de la SoA</h2></div>@if (editable()) { <div class="version-create"><input [value]="versionTitle()" (input)="versionTitle.set($any($event.target).value)" aria-label="Titre de la nouvelle version"><button class="button button--ghost" type="button" (click)="createVersion()">Créer un instantané</button></div> }</div><div class="version-list">@for (version of service.versions(); track version.id) { <article><strong>{{ version.version_number }}</strong><div><b>{{ version.title }}</b><small>{{ version.created_at.slice(0, 10) }} · {{ version.approved_by_name || 'En attente d’approbation' }}</small></div><span class="status-chip" [attr.data-status]="version.status === 'APPROVED' ? 'CLOSED' : 'IN_MITIGATION'">{{ version.status === 'APPROVED' ? 'Approuvée' : 'Brouillon' }}</span><button class="button button--ghost" type="button" (click)="openVersion(version)" [attr.aria-label]="'Consulter la version ' + version.version_number">Consulter</button></article> } @empty { <p class="muted-copy">Aucune version enregistrée pour ce périmètre.</p> }</div></section>
+  <section class="data-panel"><div class="table-toolbar"><label class="search-field"><svg lucideSearch class="ui-icon" aria-hidden="true"></svg><input type="search" placeholder="Rechercher une mesure…" [value]="search()" (input)="search.set($any($event.target).value)"></label><label class="filter-field">Thème <select [value]="theme()" (change)="theme.set($any($event.target).value)"><option value="ALL">Tous</option>@for (item of [['ORGANIZATIONAL','Organisationnel'],['PEOPLE','Personnel'],['PHYSICAL','Physique'],['TECHNOLOGICAL','Technologique']]; track item[0]) { <option [value]="item[0]">{{ item[1] }}</option> }</select></label><span class="result-count">{{ visible().length }} mesure(s)</span></div>
+    <div class="table-scroll"><table class="soa-table"><thead><tr><th>Mesure</th><th>Thème</th><th>Applicable</th><th>Justification</th><th>Mise en œuvre</th><th>Dernière modification</th></tr></thead><tbody>@for (entry of visible(); track entry.id) { <tr [class.row-saving]="service.savingIds().has(entry.id)"><td><strong class="risk-code">{{ entry.iso_control.code }}</strong><small>{{ entry.iso_control.title }}</small></td><td><span class="category-chip">{{ themeLabels[entry.iso_control.theme] }}</span></td><td><label class="switch"><input type="checkbox" [checked]="entry.is_applicable" [disabled]="!editable()" (change)="toggle(entry, $event)"><span></span><b>{{ entry.is_applicable ? 'Oui' : 'Non' }}</b></label></td><td><textarea class="inline-textarea" rows="2" [value]="entry.justification" [readOnly]="!editable()" (blur)="saveJustification(entry, $event)" [attr.aria-label]="'Justification de ' + entry.iso_control.code"></textarea></td><td><span class="implementation-chip" [attr.data-status]="entry.implementation_status">{{ implementationLabels[entry.implementation_status] }}</span></td><td><small>{{ entry.updated_by_name }}<br>{{ entry.updated_at.slice(0, 10) }}</small></td></tr> }</tbody></table></div>
+  </section>
+</div></main>
+@if (selectedVersion(); as version) {
+  <div class="modal-backdrop" (click)="closeVersion()" (keydown.escape)="closeVersion()">
+    <section class="modal-card snapshot-dialog" role="dialog" aria-modal="true" aria-labelledby="snapshot-title" (click)="$event.stopPropagation()" (keydown.escape)="closeVersion()">
+      <div class="modal-card__header">
+        <div><p class="eyebrow">Instantané en lecture seule · {{ version.version_number }}</p><h2 id="snapshot-title">{{ version.title }}</h2><p class="muted-copy">Enregistré le {{ version.created_at.slice(0, 10) }} · {{ version.snapshot_data.length }} mesure(s) · {{ version.status === 'APPROVED' ? 'Approuvée' : 'Brouillon' }}</p></div>
+        <button class="button button--ghost" type="button" (click)="closeVersion()" aria-label="Fermer la version">Fermer</button>
       </div>
-      <div class="button-group">
-        <!-- Remplacement de 'csv' par 'xlsx' -->
-        <button class="button button--ghost" type="button" (click)="export('xlsx')">Exporter en Excel</button>
-        <button class="button button--primary" type="button" (click)="export('pdf')">Exporter en PDF</button>
-      </div>
-    </header>
-
-    <section class="metric-strip">
-      <div><small>Mesures</small><strong>{{ service.entries().length }}</strong></div>
-      <div><small>Conformité</small><strong>{{ service.compliance() }} %</strong></div>
-      <div><small>Mode</small><strong class="metric-strip__text">{{ editable() ? 'Édition autorisée' : 'Lecture seule' }}</strong></div>
-    </section>
-
-    <section class="soa-versions">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Traçabilité</p>
-          <h2>Versions de la SoA</h2>
-        </div>
-        @if (editable()) {
-          <div class="version-create">
-            <input [value]="versionTitle()" (input)="versionTitle.set($any($event.target).value)" aria-label="Titre de la nouvelle version">
-            <button class="button button--ghost" type="button" (click)="createVersion()">Créer un instantané</button>
-          </div>
-        }
-      </div>
-      <div class="version-list">
-        @for (version of service.versions(); track version.id) {
-          <article>
-            <strong>{{ version.version_number }}</strong>
-            <div>
-              <b>{{ version.title }}</b>
-              <small>{{ version.created_at.slice(0, 10) }} · {{ version.approved_by_name || 'En attente d’approbation' }}</small>
-            </div>
-            <span class="status-chip" [attr.data-status]="version.status === 'APPROVED' ? 'CLOSED' : 'IN_MITIGATION'">
-              {{ version.status === 'APPROVED' ? 'Approuvée' : 'Brouillon' }}
-            </span>
-          </article>
-        } @empty {
-          <p class="muted-copy">Aucune version enregistrée pour ce périmètre.</p>
-        }
-      </div>
-    </section>
-
-    <section class="data-panel">
-      <div class="table-toolbar">
-        <label class="search-field">
-          <span aria-hidden="true">⌕</span>
-          <input type="search" placeholder="Rechercher une mesure…" [value]="search()" (input)="search.set($any($event.target).value)">
-        </label>
-        <label class="filter-field">
-          Thème 
-          <select [value]="theme()" (change)="theme.set($any($event.target).value)">
-            <option value="ALL">Tous</option>
-            @for (item of [['ORGANIZATIONAL','Organisationnel'],['PEOPLE','Personnel'],['PHYSICAL','Physique'],['TECHNOLOGICAL','Technologique']]; track item[0]) {
-              <option [value]="item[0]">{{ item[1] }}</option>
-            }
-          </select>
-        </label>
-        <span class="result-count">{{ visible().length }} mesure(s)</span>
-      </div>
-
-      <div class="table-scroll">
-        <table class="soa-table">
-          <thead>
-            <tr>
-              <th>Mesure</th>
-              <th>Thème</th>
-              <th>Applicable</th>
-              <th>Justification</th>
-              <th>Mise en œuvre</th>
-              <th>Dernière modification</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (entry of visible(); track entry.id) {
-              <tr [class.row-saving]="service.savingIds().has(entry.id)">
-                <td>
-                  <strong class="risk-code">{{ entry.iso_control.code }}</strong>
-                  <small>{{ entry.iso_control.title }}</small>
-                </td>
-                <td><span class="category-chip">{{ themeLabels[entry.iso_control.theme] }}</span></td>
-                <td>
-                  <label class="switch">
-                    <input type="checkbox" [checked]="entry.is_applicable" [disabled]="!editable()" (change)="toggle(entry, $event)">
-                    <span></span>
-                    <b>{{ entry.is_applicable ? 'Oui' : 'Non' }}</b>
-                  </label>
-                </td>
-                <td>
-                  <textarea class="inline-textarea" rows="2" [value]="entry.justification" [readOnly]="!editable()" (blur)="saveJustification(entry, $event)" [attr.aria-label]="'Justification de ' + entry.iso_control.code"></textarea>
-                </td>
-                <td>
-                  <span class="implementation-chip" [attr.data-status]="entry.implementation_status">
-                    {{ implementationLabels[entry.implementation_status] }}
-                  </span>
-                </td>
-                <td>
-                  <small>{{ entry.updated_by_name }}<br>{{ entry.updated_at.slice(0, 10) }}</small>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      <label class="search-field snapshot-search"><svg lucideSearch class="ui-icon" aria-hidden="true"></svg><input type="search" placeholder="Rechercher dans cet instantané…" [value]="snapshotSearch()" (input)="snapshotSearch.set($any($event.target).value)" aria-label="Rechercher dans cet instantané"></label>
+      <div class="table-scroll snapshot-table"><table class="soa-table"><thead><tr><th>Mesure</th><th>Thème</th><th>Applicable</th><th>Justification</th><th>Mise en œuvre</th></tr></thead><tbody>@for (entry of snapshotEntries(); track entry.entry_id) { <tr><td><strong class="risk-code">{{ entry.control_code }}</strong><small>{{ entry.control_title }}</small></td><td><span class="category-chip">{{ themeLabels[entry.control_theme] }}</span></td><td>{{ entry.is_applicable ? 'Oui' : 'Non' }}</td><td>{{ entry.justification || 'Aucune justification' }}</td><td><span class="implementation-chip" [attr.data-status]="entry.implementation_status">{{ implementationLabels[entry.implementation_status] }}</span></td></tr> } @empty { <tr><td colspan="5" class="muted-copy">Aucune mesure enregistrée dans cet instantané ou correspondant à la recherche.</td></tr> }</tbody></table></div>
     </section>
   </div>
-</main>
+}

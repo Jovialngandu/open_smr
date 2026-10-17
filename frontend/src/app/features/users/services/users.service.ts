@@ -13,14 +13,20 @@ export class UsersService {
   private readonly context = inject(ContextService);
   private readonly usersState = signal<ManagedUser[]>([]);
   readonly users = this.usersState.asReadonly();
+  private fetchVersion = 0;
   fetch(): void {
+    const version = ++this.fetchVersion;
+    this.usersState.set([]);
     const organizationId = this.context.activeOrganizationId();
     if (!organizationId) return;
     const scopeId = this.context.activeScopeId();
     forkJoin({
       members: this.http.get<BackendMemberRole[]>(organizationMembersEndpoint(organizationId)),
       accesses: scopeId ? this.http.get<BackendScopeAccess[]>(scopeAccessEndpoint(scopeId)) : of([]),
-    }).pipe(map(({ members, accesses }) => members.map((member) => toManagedUser(member, accesses, scopeId)))).subscribe((users) => this.usersState.set(users));
+    }).pipe(map(({ members, accesses }) => members.map((member) => toManagedUser(member, accesses, scopeId)))).subscribe({
+      next: (users) => { if (version === this.fetchVersion && organizationId === this.context.activeOrganizationId() && scopeId === this.context.activeScopeId()) this.usersState.set(users); },
+      error: () => { if (version === this.fetchVersion) this.usersState.set([]); },
+    });
   }
   assign(userId: number, role: Exclude<UserRole, 'ADMIN'>): Observable<ManagedUser> {
     const organizationId = this.context.activeOrganizationId();
