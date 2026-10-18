@@ -1,7 +1,10 @@
+from unittest.mock import Mock, patch
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
+
 from api.models import (
 	Asset,
 	Organization,
@@ -19,25 +22,21 @@ class RiskAPITests(TestCase):
 		self.client = APIClient()
 		current_year = timezone.now().year
 
-		# Création de l'utilisateur de test
 		self.user = User.objects.create_user(
 			username="risktester",
 			password="Test123456",
 		)
 
-		# Création de l'organisation
 		self.organization = Organization.objects.create(
 			name="Risk Test Organization",
 			code="RISK-ORG",
 		)
 
-		# Création du scope
 		self.scope = Scope.objects.create(
 			organization=self.organization,
 			name="Risk Test Scope",
 		)
 
-		# Attribution du rôle ADMIN
 		self.role = UserOrganizationRole.objects.create(
 			user=self.user,
 			organization=self.organization,
@@ -45,14 +44,12 @@ class RiskAPITests(TestCase):
 			is_active=True,
 		)
 
-		# Autorisation d'accès au scope
 		UserScopeAccess.objects.create(
 			user_organization_role=self.role,
 			scope=self.scope,
 			granted_by=self.user,
 		)
 
-		# Création d'un actif
 		self.asset = Asset.objects.create(
 			scope=self.scope,
 			owner=self.user,
@@ -64,7 +61,6 @@ class RiskAPITests(TestCase):
 			availability=3,
 		)
 
-		# Création d'un risque initial (RSK-2026-001)
 		self.initial_code = f"RSK-{current_year}-001"
 		self.risk = Risk.objects.create(
 			asset=self.asset,
@@ -75,42 +71,29 @@ class RiskAPITests(TestCase):
 			status="OPEN",
 		)
 
-		# Authentification de l'utilisateur
 		self.client.force_authenticate(user=self.user)
 
 	def test_list_risks_by_scope(self):
 		response = self.client.get(
 			"/api/v1/risks/",
-			{
-				"scope_id": str(self.scope.id),
-			},
+			{"scope_id": str(self.scope.id)},
 		)
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(len(response.data), 1)
-		self.assertEqual(
-			response.data[0]["code"],
-			self.initial_code,
-		)
+		self.assertEqual(response.data[0]["code"], self.initial_code)
 
 	def test_list_risks_by_asset(self):
 		response = self.client.get(
 			"/api/v1/risks/",
-			{
-				"asset_id": str(self.asset.id),
-			},
+			{"asset_id": str(self.asset.id)},
 		)
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(len(response.data), 1)
-		self.assertEqual(
-			response.data[0]["code"],
-			self.initial_code,
-		)
+		self.assertEqual(response.data[0]["code"], self.initial_code)
 
 	def test_create_risk(self):
 		current_year = timezone.now().year
 		expected_code = f"RSK-{current_year}-002"
-
-		# Le 'code' n'est plus fourni dans les données du client
 		data = {
 			"asset_id": str(self.asset.id),
 			"threat_description": "Panne du serveur",
@@ -124,37 +107,21 @@ class RiskAPITests(TestCase):
 			format="json",
 		)
 		self.assertEqual(response.status_code, 201)
-		# Vérification du code généré automatiquement
-		self.assertEqual(
-			response.data["code"],
-			expected_code,
-		)
-		# 3 × 4 = 12
-		self.assertEqual(
-			response.data["score"],
-			12,
-		)
-		self.assertTrue(
-			Risk.objects.filter(code=expected_code).exists()
-		)
+		self.assertEqual(response.data["code"], expected_code)
+		self.assertEqual(response.data["score"], 12)
+		self.assertTrue(Risk.objects.filter(code=expected_code).exists())
 
 	def test_update_risk_status(self):
 		response = self.client.patch(
 			f"/api/v1/risks/{self.risk.id}/",
-			{
-				"status": "IN_MITIGATION",
-			},
+			{"status": "IN_MITIGATION"},
 			format="json",
 		)
 		self.assertEqual(response.status_code, 200)
 		self.risk.refresh_from_db()
-		self.assertEqual(
-			self.risk.status,
-			"IN_MITIGATION",
-		)
+		self.assertEqual(self.risk.status, "IN_MITIGATION")
 
 	def test_invalid_likelihood(self):
-		# 'code' retiré du payload
 		data = {
 			"asset_id": str(self.asset.id),
 			"threat_description": "Test invalid likelihood",
@@ -182,51 +149,62 @@ class RiskAPITests(TestCase):
 		)
 		self.assertEqual(response.status_code, 200)
 		self.risk.refresh_from_db()
-		self.assertEqual(
-			self.risk.threat_description,
-			"Menace mise à jour",
-		)
+		self.assertEqual(self.risk.threat_description, "Menace mise à jour")
 		self.assertEqual(self.risk.likelihood, 2)
 		self.assertEqual(self.risk.impact, 3)
-		self.assertEqual(
-			self.risk.status,
-			"IN_MITIGATION",
-		)
-		# 2 × 3 = 6
+		self.assertEqual(self.risk.status, "IN_MITIGATION")
 		self.assertEqual(response.data["score"], 6)
 
 	def test_partial_update_risk(self):
 		response = self.client.patch(
 			f"/api/v1/risks/{self.risk.id}/",
-			{
-				"likelihood": 2,
-			},
+			{"likelihood": 2},
 			format="json",
 		)
 		self.assertEqual(response.status_code, 200)
 		self.risk.refresh_from_db()
 		self.assertEqual(self.risk.likelihood, 2)
-		# L'impact n'a pas été envoyé : il doit rester à 5
 		self.assertEqual(self.risk.impact, 5)
-		# 2 × 5 = 10
 		self.assertEqual(response.data["score"], 10)
 
 	def test_unauthenticated_user_cannot_access_risks(self):
 		self.client.force_authenticate(user=None)
 		response = self.client.get(
 			"/api/v1/risks/",
-			{
-				"scope_id": str(self.scope.id),
-			},
+			{"scope_id": str(self.scope.id)},
 		)
-		self.assertIn(
-			response.status_code,
-			[401, 403],
-		)
-		
+		self.assertIn(response.status_code, [401, 403])
+
 	def test_if_i_can_get_iso_control_suggestions(self):
 		response = self.client.get(
 			f"/api/v1/risks/{self.risk.id}/iso-control-suggestions/"
 		)
+
+		print(response.data)
 		self.assertEqual(response.status_code, 200)
-		self.assertIsInstance(response.data, list)	
+		self.assertIsInstance(response.data, list)
+
+	@patch("api.modules.v1.risks.views.assess_risk")
+	def test_ai_assessment_endpoint(self, mock_assess_risk):
+		mock_assess_risk.return_value = {
+			"likelihood": 4,
+			"impact": 3,
+			"justification": "Le risque est modéré.",
+			"provider": "mock-llm",
+		}
+
+		response = self.client.post(
+			"/api/v1/risks/assess-risk/",
+			{
+				"asset_id": str(self.asset.id),
+				"threat_description": "Tentative de phishing ciblée",
+			},
+			format="json",
+		)
+  
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response.data["likelihood"], 4)
+		self.assertEqual(response.data["impact"], 3)
+		self.assertEqual(response.data["provider"], "mock-llm")
+		mock_assess_risk.assert_called_once()
