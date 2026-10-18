@@ -1,8 +1,11 @@
 from rest_framework import serializers
-from api.models import Risk
+from api.models import Risk,IsoControl
 
 
 class RiskCreateSerializer(serializers.Serializer):
+	asset_id = serializers.UUIDField()
+	# Le champ 'code' a été retiré car il est généré automatiquement côté backend
+	threat_description = serializers.CharField()
 	asset_id = serializers.UUIDField()
 	# Le champ 'code' a été retiré car il est généré automatiquement côté backend
 	threat_description = serializers.CharField()
@@ -11,7 +14,15 @@ class RiskCreateSerializer(serializers.Serializer):
 		min_value=1,
 		max_value=5,
 	)
+	likelihood = serializers.IntegerField(
+		min_value=1,
+		max_value=5,
+	)
 
+	impact = serializers.IntegerField(
+		min_value=1,
+		max_value=5,
+	)
 	impact = serializers.IntegerField(
 		min_value=1,
 		max_value=5,
@@ -26,9 +37,19 @@ class RiskCreateSerializer(serializers.Serializer):
 		],
 		default="OPEN",
 	)
+	status = serializers.ChoiceField(
+		choices=[
+			"OPEN",
+			"IN_MITIGATION",
+			"ACCEPTED",
+			"CLOSED",
+		],
+		default="OPEN",
+	)
 
 
 class RiskUpdateSerializer(serializers.Serializer):
+	threat_description = serializers.CharField(required=False)
 	threat_description = serializers.CharField(required=False)
 
 	likelihood = serializers.IntegerField(
@@ -36,7 +57,17 @@ class RiskUpdateSerializer(serializers.Serializer):
 		max_value=5,
 		required=False,
 	)
+	likelihood = serializers.IntegerField(
+		min_value=1,
+		max_value=5,
+		required=False,
+	)
 
+	impact = serializers.IntegerField(
+		min_value=1,
+		max_value=5,
+		required=False,
+	)
 	impact = serializers.IntegerField(
 		min_value=1,
 		max_value=5,
@@ -52,12 +83,37 @@ class RiskUpdateSerializer(serializers.Serializer):
 		],
 		required=False,
 	)
+	status = serializers.ChoiceField(
+		choices=[
+			"OPEN",
+			"IN_MITIGATION",
+			"ACCEPTED",
+			"CLOSED",
+		],
+		required=False,
+	)
 
 
 class RiskOutputSerializer(serializers.ModelSerializer):
 	score = serializers.IntegerField(read_only=True)
 	asset = serializers.SerializerMethodField()
+	score = serializers.IntegerField(read_only=True)
+	asset = serializers.SerializerMethodField()
 
+	class Meta:
+		model = Risk
+		fields = [
+			"id",
+			"asset",
+			"code",  # Présent en sortie (lecture seule)
+			"threat_description",
+			"likelihood",
+			"impact",
+			"score",
+			"status",
+			"created_at",
+			"updated_at",
+		]
 	class Meta:
 		model = Risk
 		fields = [

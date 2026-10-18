@@ -1,0 +1,36 @@
+.notifications-page {
+  .notifications-note {
+    margin-bottom: 1.2rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: .85rem;
+    background: var(--surface);
+    color: var(--muted);
+    line-height: 1.6;
+
+    p { margin: 0; }
+    a { color: var(--brand); font-weight: 700; }
+  }
+
+  .notifications-toolbar { justify-content: space-between; }
+  .notifications-filters { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .notifications-filters button {
+    padding: .5rem .8rem;
+    border: 1px solid var(--line);
+    border-radius: .6rem;
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+
+    &.is-active { color: var(--brand); border-color: var(--brand); font-weight: 700; }
+  }
+  .notifications-list { display: grid; gap: .85rem; padding: 1.2rem; }
+  .notification-item { padding: 1rem 1.2rem; border: 1px solid var(--line); border-radius: .85rem; background: var(--surface); }
+  .notification-item--unread { border-left: .25rem solid var(--brand); }
+  .notification-item__header, .notification-item__footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .65rem; }
+  .notification-item__type { color: var(--brand); font-size: .74rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+  .notification-item time, .notification-item p { color: var(--muted); font-size: .85rem; }
+  .notification-item h2 { margin: .6rem 0 .4rem; font-size: 1rem; }
+  .notification-item p { margin: 0 0 .85rem; }
+  .notifications-feedback { padding: 1.25rem; }
+}

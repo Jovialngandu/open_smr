@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { LucideClipboardList, LucideClock3, LucideCheck, LucidePackage, LucideTriangleAlert, LucideHourglass } from '@lucide/angular';
 import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
@@ -15,7 +16,7 @@ import { TreatmentsService } from '../../treatments/services/treatments.service'
 
 @Component({
   selector: 'app-authenticated-home',
-  imports: [TopbarComponent, HeatmapComponent, RiskScoreBadgeComponent, RouterLink],
+  imports: [TopbarComponent, HeatmapComponent, RiskScoreBadgeComponent, RouterLink, LucideClipboardList, LucideClock3, LucideCheck, LucidePackage, LucideTriangleAlert, LucideHourglass],
   templateUrl: './authenticated-home.component.html',
 })
 export class AuthenticatedHomeComponent {
