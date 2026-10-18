@@ -18,7 +18,7 @@ from .serializers import (
     RiskOutputSerializer,
     RiskUpdateSerializer,
 )
-from .services import create_risk, update_risk
+from .services import create_risk, update_risk, delete_risk
 
 
 class RiskListCreateAPI(APIView):
@@ -114,6 +114,16 @@ class RiskDetailAPI(APIView):
 
         output = RiskOutputSerializer(risk)
         return Response(output.data)
+
+    @extend_schema(
+        summary="Supprimer un risque",
+        responses={204: None},
+    )
+    def delete(self, request, pk):
+        risk = get_risk_by_id(pk)
+        check_scope_access(request.user, risk.asset.scope)
+        delete_risk(risk=risk)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class RiskIsoControlSuggestionsAPI(APIView):

@@ -167,6 +167,18 @@ class RiskAPITests(TestCase):
 		self.assertEqual(self.risk.impact, 5)
 		self.assertEqual(response.data["score"], 10)
 
+	def test_delete_risk_by_authorized_user(self):
+		response = self.client.delete(f"/api/v1/risks/{self.risk.id}/")
+		self.assertEqual(response.status_code, 204)
+		self.assertFalse(Risk.objects.filter(id=self.risk.id).exists())
+
+	def test_user_without_scope_access_cannot_delete_risk(self):
+		outside_user = User.objects.create_user(username="outside_user", password="Test123456")
+		self.client.force_authenticate(user=outside_user)
+		response = self.client.delete(f"/api/v1/risks/{self.risk.id}/")
+		self.assertEqual(response.status_code, 403)
+		self.assertTrue(Risk.objects.filter(id=self.risk.id).exists())
+
 	def test_unauthenticated_user_cannot_access_risks(self):
 		self.client.force_authenticate(user=None)
 		response = self.client.get(
