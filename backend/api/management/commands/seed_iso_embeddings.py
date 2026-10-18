@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from api.models import IsoControl
-from backend.services.search.embeddings.selectors import get_embedding_provider
+from services.search.selectors import get_embedding_provider
 
 
 class Command(BaseCommand):
