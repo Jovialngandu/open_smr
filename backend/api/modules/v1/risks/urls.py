@@ -4,8 +4,7 @@ from .views import (
     RiskAIAssessmentAPI,
     RiskListCreateAPI,
     RiskDetailAPI,
-    RiskIsoControlSuggestionsAPI
-    RiskIsoControlSuggestionsAPI
+    RiskIsoControlSuggestionsAPI,	
 )
 
 
