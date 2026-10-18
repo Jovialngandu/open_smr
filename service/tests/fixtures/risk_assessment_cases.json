@@ -1,0 +1,123 @@
+
+[
+  {
+    "id": "T01",
+    "asset_name": "Base de données clients",
+    "asset_description": "Contient des données personnelles. Aucun MFA confirmé.",
+    "category": "DATA",
+    "confidentiality": 3,
+    "integrity": 3,
+    "availability": 2,
+    "threat_description": "Un compte compromis permet à un attaquant d'exfiltrer les données personnelles.",
+    "expected_likelihood": 4,
+    "expected_impact": 5
+  },
+  {
+    "id": "T02",
+    "asset_name": "PC bureautique",
+    "asset_description": "Poste utilisateur standard. Filtrage des pièces jointes actif.",
+    "category": "HARDWARE",
+    "confidentiality": 1,
+    "integrity": 2,
+    "availability": 2,
+    "threat_description": "Un employé ouvre une pièce jointe malveillante qui infecte son poste.",
+    "expected_likelihood": 3,
+    "expected_impact": 3
+  },
+  {
+    "id": "T03",
+    "asset_name": "Serveur de production",
+    "asset_description": "Héberge un service essentiel. Pas de serveur de secours disponible.",
+    "category": "SERVICE",
+    "confidentiality": 2,
+    "integrity": 3,
+    "availability": 3,
+    "threat_description": "Une panne matérielle interrompt le service de production.",
+    "expected_likelihood": 3,
+    "expected_impact": 5
+  },
+  {
+    "id": "T04",
+    "asset_name": "Dépôt de code source",
+    "asset_description": "Contient le code de production. Les modifications sont revues avant livraison.",
+    "category": "SOFTWARE",
+    "confidentiality": 2,
+    "integrity": 3,
+    "availability": 2,
+    "threat_description": "Le compte compromis d'un développeur permet de modifier le code source.",
+    "expected_likelihood": 3,
+    "expected_impact": 4
+  },
+  {
+    "id": "T05",
+    "asset_name": "Archives publiques",
+    "asset_description": "Documents destinés à être accessibles publiquement.",
+    "category": "DATA",
+    "confidentiality": 1,
+    "integrity": 2,
+    "availability": 1,
+    "threat_description": "Un utilisateur non autorisé consulte des documents déjà publics sans pouvoir les modifier.",
+    "expected_likelihood": 2,
+    "expected_impact": 1
+  },
+  {
+    "id": "T06",
+    "asset_name": "Système de sauvegarde",
+    "asset_description": "Sauvegardes nécessaires à la reprise. Aucune copie alternative confirmée.",
+    "category": "SERVICE",
+    "confidentiality": 2,
+    "integrity": 3,
+    "availability": 3,
+    "threat_description": "Une attaque rend les sauvegardes indisponibles pendant une restauration.",
+    "expected_likelihood": 3,
+    "expected_impact": 5
+  },
+  {
+    "id": "T07",
+    "asset_name": "Application financière",
+    "asset_description": "Traite des transactions confidentielles et soutient les opérations financières.",
+    "category": "SOFTWARE",
+    "confidentiality": 3,
+    "integrity": 3,
+    "availability": 2,
+    "threat_description": "Une mauvaise configuration expose des transactions financières confidentielles.",
+    "expected_likelihood": 3,
+    "expected_impact": 5
+  },
+  {
+    "id": "T08",
+    "asset_name": "Service de messagerie",
+    "asset_description": "Utilisé quotidiennement. Une interruption perturbe les communications internes.",
+    "category": "SERVICE",
+    "confidentiality": 2,
+    "integrity": 2,
+    "availability": 3,
+    "threat_description": "Une panne du fournisseur interrompt la messagerie pendant une journée.",
+    "expected_likelihood": 3,
+    "expected_impact": 4
+  },
+  {
+    "id": "T09",
+    "asset_name": "Poste du service RH",
+    "asset_description": "Accès à des dossiers du personnel contenant des informations privées.",
+    "category": "HARDWARE",
+    "confidentiality": 3,
+    "integrity": 2,
+    "availability": 2,
+    "threat_description": "Des permissions excessives permettent à un employé de consulter des dossiers RH confidentiels.",
+    "expected_likelihood": 3,
+    "expected_impact": 4
+  },
+  {
+    "id": "T10",
+    "asset_name": "Serveur de test isolé",
+    "asset_description": "Données non sensibles. Contrôles d'accès testés et efficaces. Aucun accès externe.",
+    "category": "SERVICE",
+    "confidentiality": 1,
+    "integrity": 1,
+    "availability": 1,
+    "threat_description": "Une tentative d'accès non autorisé est bloquée par les contrôles vérifiés.",
+    "expected_likelihood": 1,
+    "expected_impact": 1
+  }
+]
