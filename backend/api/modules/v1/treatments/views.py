@@ -15,7 +15,8 @@ from api.modules.v1.treatments.selectors import (
 from api.modules.v1.treatments.services import (
     create_treatment_task,
     update_task_status,
-    upload_evidence_file
+    upload_evidence_file,
+    delete_treatment_task
 )
 from api.modules.v1.treatments.serializers import (
     TreatmentTaskSerializer,
@@ -89,7 +90,19 @@ class TreatmentTaskDetailView(APIView):
             return Response({"detail": "Accès refusé à cette tâche."}, status=status.HTTP_403_FORBIDDEN)
         return Response(TreatmentTaskSerializer(task).data, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        summary="Supprimer une tâche de traitement",
+        responses={204: None}
+    )
+    def delete(self, request, pk):
+        task = get_task_by_id(task_id=pk)
+        if not task:
+            raise NotFound("Tâche de traitement introuvable.")
+        if task.assignee_id != request.user.id and not user_can_access_scope(request.user, task.risk.asset.scope_id):
+            return Response({"detail": "Accès refusé à cette tâche."}, status=status.HTTP_403_FORBIDDEN)
 
+        delete_treatment_task(task=task)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class EvidenceUploadView(APIView):

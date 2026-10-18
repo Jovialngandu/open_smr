@@ -205,6 +205,18 @@ class TreatmentTaskApiTests(APITestCase):
         self.task.refresh_from_db()
         self.assertEqual(self.task.status, 'COMPLETED')
 
+    def test_assignee_can_delete_task(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.delete(self.url_detail)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(TreatmentTask.objects.filter(id=self.task.id).exists())
+
+    def test_non_authorized_user_cannot_delete_task(self):
+        self.client.force_authenticate(user=self.other_user)
+        response = self.client.delete(self.url_detail)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(TreatmentTask.objects.filter(id=self.task.id).exists())
+
 class EvidenceApiTests(APITestCase):
 
     def setUp(self):
