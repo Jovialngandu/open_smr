@@ -98,8 +98,22 @@ class TreatmentTaskDetailView(APIView):
         task = get_task_by_id(task_id=pk)
         if not task:
             raise NotFound("Tâche de traitement introuvable.")
-        if task.assignee_id != request.user.id and not user_can_access_scope(request.user, task.risk.asset.scope_id):
-            return Response({"detail": "Accès refusé à cette tâche."}, status=status.HTTP_403_FORBIDDEN)
+
+        if request.user.id == task.assignee_id:
+            return Response(
+                {"detail": "L'assigné ne peut pas supprimer cette tâche."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if not user_can_access_scope(
+            request.user,
+            task.risk.asset.scope_id,
+            ['ADMIN', 'RSSI', 'RISK_OWNER'],
+        ):
+            return Response(
+                {"detail": "Accès refusé à cette tâche."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         delete_treatment_task(task=task)
         return Response(status=status.HTTP_204_NO_CONTENT)
