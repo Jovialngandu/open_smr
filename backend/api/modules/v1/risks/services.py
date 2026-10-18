@@ -73,3 +73,9 @@ def update_risk(
     risk.save()
 
     return risk
+
+
+@transaction.atomic
+def delete_risk(*, risk: Risk) -> None:
+    """Supprime un risque après validation de l'accès au périmètre."""
+    risk.delete()

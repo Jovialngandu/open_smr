@@ -69,6 +69,12 @@ def update_task_status(*, task_id: str, new_status: str) -> TreatmentTask:
     return task
 
 
+@transaction.atomic
+def delete_treatment_task(*, task: TreatmentTask) -> None:
+    """Supprime une tâche de traitement après validation d'autorisation."""
+    task.delete()
+
+
 def upload_evidence_file(
     *,
     task_id: str,

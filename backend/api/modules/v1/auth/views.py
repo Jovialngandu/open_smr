@@ -84,10 +84,23 @@ class UserProfileView(APIView):
         user = get_user_by_id(user_id=request.user.id)
         if not user:
             return Response({"detail": "Utilisateur non trouvé ou inactif."}, status=status.HTTP_404_NOT_FOUND)
-            
+
         serializer = UserProfileSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
+    @extend_schema(
+        tags=['Authentication'],
+        summary="Supprimer mon compte",
+        responses={204: None}
+    )
+    def delete(self, request):
+        user = get_user_by_id(user_id=request.user.id)
+        if not user:
+            return Response({"detail": "Utilisateur non trouvé ou inactif."}, status=status.HTTP_404_NOT_FOUND)
+
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 @extend_schema(
     tags=['Authentication'],
     request=RegisterSerializer,

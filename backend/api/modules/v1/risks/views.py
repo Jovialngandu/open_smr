@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.models import Asset, Scope
-from api.modules.v1.permissions import IsAccountActive, check_scope_access
+from api.modules.v1.permissions import IsAccountActive, check_scope_access, user_can_access_scope
 from services.scoring.client import AIServiceError, assess_risk
 from services.search.selectors import search_soa_controls
 
@@ -18,7 +18,7 @@ from .serializers import (
     RiskOutputSerializer,
     RiskUpdateSerializer,
 )
-from .services import create_risk, update_risk
+from .services import create_risk, update_risk, delete_risk
 
 
 class RiskListCreateAPI(APIView):
@@ -114,6 +114,26 @@ class RiskDetailAPI(APIView):
 
         output = RiskOutputSerializer(risk)
         return Response(output.data)
+
+    @extend_schema(
+        summary="Supprimer un risque",
+        responses={204: None},
+    )
+    def delete(self, request, pk):
+        risk = get_risk_by_id(pk)
+
+        if not user_can_access_scope(
+            request.user,
+            risk.asset.scope_id,
+            ['ADMIN', 'RSSI', 'RISK_OWNER'],
+        ):
+            return Response(
+                {"detail": "Vous n'êtes pas autorisé à supprimer ce risque."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        delete_risk(risk=risk)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class RiskIsoControlSuggestionsAPI(APIView):
