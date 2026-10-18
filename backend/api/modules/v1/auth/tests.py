@@ -39,3 +39,17 @@ class OrganizationRegistrationTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(User.objects.filter(username='choix.invalide').exists())
+
+    def test_authenticated_user_can_delete_own_account(self):
+        user = User.objects.create_user(
+            username='selfdelete',
+            email='selfdelete@example.com',
+            password='MotDePasseSolide123!',
+            is_active=True,
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.delete('/api/v1/auth/me/')
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(User.objects.filter(id=user.id).exists())

@@ -62,3 +62,23 @@ def toggle_member_active_status(*, role_id: UUID, is_active: bool) -> UserOrgani
     user_role.is_active = is_active
     user_role.save()
     return user_role
+
+
+@transaction.atomic
+def delete_organization(*, organization: Organization, user) -> None:
+    """Supprime une organisation uniquement si l'utilisateur est bien son propriétaire (ADMIN actif)."""
+    if user.is_superuser:
+        organization.delete()
+        return
+
+    is_owner = UserOrganizationRole.objects.filter(
+        user=user,
+        organization=organization,
+        is_active=True,
+        role='ADMIN',
+    ).exists()
+
+    if not is_owner:
+        raise PermissionError("Vous devez être le propriétaire de l'organisation pour la supprimer.")
+
+    organization.delete()

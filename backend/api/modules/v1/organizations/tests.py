@@ -118,3 +118,21 @@ class OrganizationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         role_b.refresh_from_db()
         self.assertFalse(role_b.is_active)
+
+    def test_owner_can_delete_organization(self):
+        self.client.force_authenticate(user=self.user_a)
+        url = reverse('org-detail', kwargs={'pk': self.org_a.id})
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Organization.objects.filter(id=self.org_a.id).exists())
+
+    def test_non_owner_cannot_delete_organization(self):
+        self.client.force_authenticate(user=self.user_b)
+        url = reverse('org-detail', kwargs={'pk': self.org_a.id})
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(Organization.objects.filter(id=self.org_a.id).exists())

@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from drf_spectacular.utils import extend_schema
+from rest_framework.exceptions import PermissionDenied
 
 from .selectors import (
     get_organization_by_id,
@@ -13,6 +14,7 @@ from .services import (
     update_organization,
     assign_user_role,
     toggle_member_active_status,
+    delete_organization,
 )
 from .serializers import (
     OrganizationInputSerializer,
@@ -72,6 +74,22 @@ class OrganizationDetailAPI(APIView):
         serializer.is_valid(raise_exception=True)
         updated_org = update_organization(organization=org, **serializer.validated_data)
         return Response(OrganizationOutputSerializer(updated_org).data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        summary="Supprimer une organisation",
+        responses={204: None}
+    )
+    def delete(self, request, pk):
+        org = get_organization_by_id(pk)
+        if request.user.is_superuser:
+            org.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        if not org.user_roles.filter(user=request.user, is_active=True, role='ADMIN').exists():
+            raise PermissionDenied("Vous devez être le propriétaire de l'organisation pour la supprimer.")
+
+        org.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class OrganizationMembersAPI(APIView):
