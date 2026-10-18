@@ -41,6 +41,9 @@ def search_soa_controls(query_text: str, top_k: int = 5):
     if top_k < 1:
         return []
 
-    engine = get_search_engine()
-    return engine.search(query_text.strip(), top_k=top_k)
+    try:
+        engine = get_search_engine()
+        return engine.search(query_text.strip(), top_k=top_k)
+    except Exception:
+        return []
 

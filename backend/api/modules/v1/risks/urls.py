@@ -1,9 +1,10 @@
 from django.urls import path
 
 from .views import (
+    RiskAIAssessmentAPI,
     RiskListCreateAPI,
     RiskDetailAPI,
-    RiskIsoControlSuggestionsAPI
+    RiskIsoControlSuggestionsAPI,	
 )
 
 
@@ -23,5 +24,7 @@ urlpatterns = [
 		RiskIsoControlSuggestionsAPI.as_view(),
 		name="risk-iso-control-suggestions",
 	),
+    path("assess-risk/", RiskAIAssessmentAPI.as_view(), name="assess-risk"),
+
 ]
 

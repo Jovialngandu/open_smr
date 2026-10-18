@@ -227,3 +227,10 @@ FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
 EMBEDDING_ENGINE = "local"
 SOA_SEARCH_ENGINE = "hybrid"  # vector | bm25 | hybrid
 HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY", "")
+
+AI_SERVICE_URL = os.environ.get(
+    "AI_SERVICE_URL",
+    "http://127.0.0.1:8001",
+)
+
+AI_SERVICE_API_KEY = os.environ["AI_SERVICE_API_KEY"]
