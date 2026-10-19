@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.db import models
 from api.models.base import TimeStampedUUIDModel
@@ -40,6 +42,47 @@ class UserOrganizationRole(TimeStampedUUIDModel):
 
     class Meta:
         unique_together = ('user', 'organization')
+
+
+class OrganizationInvitation(TimeStampedUUIDModel):
+    class Role(models.TextChoices):
+        ADMIN = 'ADMIN', 'Administrateur'
+        RSSI = 'RSSI', 'RSSI'
+        RISK_OWNER = 'RISK_OWNER', 'Propriétaire des Risques'
+        AUDITOR = 'AUDITOR', 'Auditeur'
+
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', 'En attente'
+        ACCEPTED = 'ACCEPTED', 'Acceptée'
+        DECLINED = 'DECLINED', 'Refusée'
+
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='invitations')
+    invited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='organization_invitations_sent'
+    )
+    invited_user_email = models.EmailField(db_index=True)
+    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
+    role = models.CharField(
+        max_length=20,
+        choices=Role.choices,
+        default=Role.RISK_OWNER,
+        db_index=True,
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+        db_index=True,
+    )
+    expires_at = models.DateTimeField()
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Invitation {self.invited_user_email} -> {self.organization.name} ({self.status})"
 
 
 class UserScopeAccess(TimeStampedUUIDModel):
