@@ -31,6 +31,7 @@ from .serializers import (
 User = get_user_model()
 
 
+@extend_schema(tags=['Assets'])
 class AssetListCreateAPI(APIView):
     """
     Liste ou crée les actifs.
@@ -164,6 +165,7 @@ class AssetListCreateAPI(APIView):
         )
 
 
+@extend_schema(tags=['Assets'])
 class AssetDetailAPI(APIView):
     """
     Affiche, modifie ou supprime un actif.
