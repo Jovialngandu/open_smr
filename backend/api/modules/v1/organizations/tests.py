@@ -1,9 +1,13 @@
+from datetime import timedelta
+from unittest.mock import patch
+
+from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
-from django.contrib.auth import get_user_model
 
-from api.models import Organization, UserOrganizationRole
+from api.models import Organization, OrganizationInvitation, UserOrganizationRole
 from api.modules.v1.organizations.helpers import generate_unique_org_code
 
 User = get_user_model()
@@ -136,3 +140,53 @@ class OrganizationTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(Organization.objects.filter(id=self.org_a.id).exists())
+
+    @patch('api.modules.v1.organizations.services.send_email')
+    def test_create_organization_invitation_sends_email_and_creates_record(self, mock_send_email):
+        mock_send_email.return_value = True
+        self.client.force_authenticate(user=self.user_a)
+        url = reverse('org-invitation-create', kwargs={'org_id': self.org_a.id})
+
+        response = self.client.post(
+            url,
+            {'invited_user_email': 'newmember@example.com', 'role': 'AUDITOR'},
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        invitation = OrganizationInvitation.objects.get(
+            organization=self.org_a,
+            invited_user_email='newmember@example.com',
+            status=OrganizationInvitation.Status.PENDING,
+        )
+        self.assertEqual(invitation.role, 'AUDITOR')
+        mock_send_email.assert_called_once()
+
+    def test_accept_invitation_adds_user_to_organization_with_invited_role(self):
+        invited_user = User.objects.create_user(
+            username='new_member',
+            email='newmember@example.com',
+            password='Password123!',
+            is_active=True,
+        )
+        invitation = OrganizationInvitation.objects.create(
+            organization=self.org_a,
+            invited_by=self.user_a,
+            invited_user_email='newmember@example.com',
+            role='AUDITOR',
+            expires_at=timezone.now() + timedelta(days=7),
+        )
+
+        self.client.force_authenticate(user=invited_user)
+        url = reverse('org-invitation-accept')
+        response = self.client.post(url, {'token': str(invitation.token)}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(UserOrganizationRole.objects.filter(
+            user=invited_user,
+            organization=self.org_a,
+            role='AUDITOR',
+            is_active=True,
+        ).exists())
+        invitation.refresh_from_db()
+        self.assertEqual(invitation.status, OrganizationInvitation.Status.ACCEPTED)
