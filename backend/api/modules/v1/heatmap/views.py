@@ -10,6 +10,7 @@ from api.modules.v1.heatmap.serializers import HeatmapMatrixSerializer
 from api.modules.v1.permissions import HasRequestedScopeAccessPermission
 
 
+@extend_schema(tags=['Heatmap'])
 class HeatmapView(APIView):
     permission_classes = [IsAuthenticated, HasRequestedScopeAccessPermission]
 
