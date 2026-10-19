@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenSMR : Invitation à rejoindre une organisation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+            color: #1f2937;
+        }
+        .container {
+            max-width: 620px;
+            margin: 32px auto;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+        .header {
+            background: #055135;
+            color: #ffffff;
+            padding: 24px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 28px 24px;
+        }
+        .content p {
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        .button {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 12px 24px;
+            background: #055135;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .footer {
+            background: #f8fafc;
+            padding: 20px 24px;
+            font-size: 12px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Invitation OpenSMR</h1>
+        </div>
+        <div class="content">
+            <p>Bonjour,</p>
+            <p><strong>{{ inviter_name }}</strong> vous a invité à rejoindre l’organisation <strong>{{ organization_name }}</strong>.</p>
+            <p>Vous pouvez accepter cette invitation avant le <strong>{{ expires_at }}</strong>.</p>
+            <p>
+                <a href="{{ invitation_url }}" class="button">Accepter l’invitation</a>
+            </p>
+            <p>Si le bouton ne fonctionne pas, utilisez ce lien : <br>{{ invitation_url }}</p>
+        </div>
+        <div class="footer">
+            Ce lien est sécurisé et lié à votre adresse e-mail : {{ invited_user_email }}.<br>
+            Frontend URL : {{ frontend_url }}
+        </div>
+    </div>
+</body>
+</html>
