@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.db.models import Q
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import  status
@@ -6,6 +7,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .serializers import UserSearchQuerySerializer, UserSearchResultSerializer
+
+User = get_user_model()
 
 
 
