@@ -25,6 +25,7 @@ from .serializers import (
 from ..permissions import IsAdminRole
 
 
+@extend_schema(tags=['Organizations'])
 class OrganizationListCreateAPI(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -52,6 +53,7 @@ class OrganizationListCreateAPI(APIView):
         return Response(OrganizationOutputSerializer(org).data, status=status.HTTP_201_CREATED)
 
 
+@extend_schema(tags=['Organizations'])
 class OrganizationDetailAPI(APIView):
     permission_classes = [permissions.IsAuthenticated, IsAdminRole]
 
@@ -92,6 +94,7 @@ class OrganizationDetailAPI(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@extend_schema(tags=['Organizations'])
 class OrganizationMembersAPI(APIView):
     permission_classes = [permissions.IsAuthenticated, IsAdminRole]
 
@@ -119,6 +122,7 @@ class OrganizationMembersAPI(APIView):
         return Response(MemberRoleAssignmentSerializer(member).data, status=status.HTTP_200_OK)
 
 
+@extend_schema(tags=['Organizations'])
 class MemberStatusToggleAPI(APIView):
     permission_classes = [permissions.IsAuthenticated, IsAdminRole]
 
