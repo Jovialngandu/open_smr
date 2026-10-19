@@ -27,6 +27,8 @@ from api.modules.v1.treatments.serializers import (
 )
 from api.modules.v1.permissions import IsAccountActive, IsAdminRole, CanCreateTreatmentTaskPermission, CanUpdateTaskStatusPermission, user_can_access_scope
 
+
+@extend_schema(tags=['Treatments'])
 class TreatmentTaskListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -75,6 +77,7 @@ class TreatmentTaskListView(APIView):
         return Response(TreatmentTaskSerializer(task).data, status=status.HTTP_201_CREATED)
 
 
+@extend_schema(tags=['Treatments'])
 class TreatmentTaskDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -119,6 +122,7 @@ class TreatmentTaskDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@extend_schema(tags=['Treatments'])
 class EvidenceUploadView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
@@ -150,6 +154,7 @@ class EvidenceUploadView(APIView):
         return Response(EvidenceSerializer(evidence).data, status=status.HTTP_201_CREATED)
 
 
+@extend_schema(tags=['Treatments'])
 class TaskEvidenceListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -187,6 +192,7 @@ class TaskEvidenceListView(APIView):
 
 
 
+@extend_schema(tags=['Treatments'])
 class TreatmentTaskStatusView(APIView):
     # Combinaison DRF : Compte actif AND (Admin de l'Org OR Assigné/Scope)
     permission_classes = [IsAccountActive & (IsAdminRole | CanUpdateTaskStatusPermission)]
