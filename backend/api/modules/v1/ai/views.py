@@ -12,6 +12,7 @@ from services.search.selectors import search_soa_controls
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(tags=['AI'])
 class SoaVectorSearchView(APIView):
     """Recherche sémantique de contrôles ISO 27001."""
 

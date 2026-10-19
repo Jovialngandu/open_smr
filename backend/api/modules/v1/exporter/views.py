@@ -9,7 +9,10 @@ from api.models import Scope
 from .selectors import get_soa_export_data
 from .utils import generate_soa_excel, generate_soa_pdf
 from api.modules.v1.permissions import HasScopeAccessPermission
+from drf_spectacular.utils import extend_schema
 
+
+@extend_schema(tags=['Exporter'])
 class SoaExportAPIView(APIView):
     permission_classes = [IsAuthenticated, HasScopeAccessPermission]
 

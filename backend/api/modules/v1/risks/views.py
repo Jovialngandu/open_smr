@@ -21,6 +21,7 @@ from .serializers import (
 from .services import create_risk, update_risk, delete_risk
 
 
+@extend_schema(tags=['Risks'])
 class RiskListCreateAPI(APIView):
     permission_classes = [IsAccountActive]
 
@@ -86,6 +87,7 @@ class RiskListCreateAPI(APIView):
         return Response(output.data, status=status.HTTP_201_CREATED)
 
 
+@extend_schema(tags=['Risks'])
 class RiskDetailAPI(APIView):
     permission_classes = [IsAccountActive]
 
@@ -136,6 +138,7 @@ class RiskDetailAPI(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@extend_schema(tags=['Risks'])
 class RiskIsoControlSuggestionsAPI(APIView):
     permission_classes = [IsAccountActive]
 
@@ -175,6 +178,7 @@ class RiskIsoControlSuggestionsAPI(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+@extend_schema(tags=['Risks'])
 class RiskAIAssessmentAPI(APIView):
     permission_classes = [IsAccountActive]
 

@@ -1,6 +1,7 @@
-from rest_framework import serializers
-from api.models import Organization, UserOrganizationRole
 from django.contrib.auth import get_user_model
+from rest_framework import serializers
+
+from api.models import Organization, OrganizationInvitation, UserOrganizationRole
 
 User = get_user_model()
 
@@ -33,3 +34,43 @@ class MemberRoleAssignmentSerializer(serializers.ModelSerializer):
 
 class ToggleActiveStatusSerializer(serializers.Serializer):
     is_active = serializers.BooleanField()
+
+
+class OrganizationInvitationCreateSerializer(serializers.Serializer):
+    invited_user_email = serializers.EmailField()
+    role = serializers.ChoiceField(
+        choices=OrganizationInvitation.Role.choices,
+        required=False,
+        default=OrganizationInvitation.Role.RISK_OWNER,
+    )
+
+
+class OrganizationInvitationSerializer(serializers.ModelSerializer):
+    organization = OrganizationOutputSerializer(read_only=True)
+    invited_by = UserSimpleSerializer(read_only=True)
+
+    class Meta:
+        model = OrganizationInvitation
+        fields = [
+            'id',
+            'organization',
+            'invited_by',
+            'invited_user_email',
+            'token',
+            'role',
+            'status',
+            'created_at',
+            'expires_at',
+        ]
+
+
+class OrganizationInvitationDecisionSerializer(serializers.Serializer):
+    token = serializers.UUIDField()
+
+
+class OrganizationInvitationAcceptSerializer(OrganizationInvitationDecisionSerializer):
+    pass
+
+
+class OrganizationInvitationDeclineSerializer(OrganizationInvitationDecisionSerializer):
+    pass

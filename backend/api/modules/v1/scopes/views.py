@@ -16,6 +16,7 @@ from api.modules.v1.scopes.selectors import get_scope_dashboard_metrics
 from api.modules.v1.scopes.serializers import ScopeDashboardMetricsSerializer
 from api.modules.v1.permissions import IsAccountActive, HasScopeAccessPermission, CanManageScopeAccessPermission
 
+@extend_schema(tags=['Scopes'])
 class ScopeListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -46,6 +47,7 @@ class ScopeListCreateView(APIView):
         return Response(ScopeOutputSerializer(scope).data, status=status.HTTP_201_CREATED)
 
 
+@extend_schema(tags=['Scopes'])
 class ScopeDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -71,6 +73,7 @@ class ScopeDetailView(APIView):
     
 
 
+@extend_schema(tags=['Scopes'])
 class SetScopeAccessView(APIView):
     permission_classes = [IsAuthenticated, CanManageScopeAccessPermission]
 
@@ -100,6 +103,7 @@ class SetScopeAccessView(APIView):
         status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
         return Response(UserScopeAccessSerializer(access).data, status=status_code)
 
+@extend_schema(tags=['Scopes'])
 class RemoveScopeAccessView(APIView):
     permission_classes = [IsAuthenticated, CanManageScopeAccessPermission]
 
@@ -120,6 +124,7 @@ class RemoveScopeAccessView(APIView):
         return Response({"detail": "Accès retiré avec succès."}, status=status.HTTP_200_OK)
     
     
+@extend_schema(tags=['Scopes'])
 class ScopeDashboardMetricsView(APIView):
     permission_classes = [IsAccountActive & HasScopeAccessPermission]
 

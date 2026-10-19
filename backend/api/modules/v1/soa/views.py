@@ -25,6 +25,7 @@ from .services import (
 
 
 
+@extend_schema(tags=['SoA'])
 class SoaEntryListAPI(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -78,6 +79,7 @@ class SoaEntryListAPI(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
+@extend_schema(tags=['SoA'])
 class SoaEntryDetailAPI(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -133,6 +135,7 @@ class SoaEntryDetailAPI(APIView):
         )
 
 
+@extend_schema(tags=['SoA'])
 class SoaVersionListCreateAPI(APIView):
     permission_classes = [permissions.IsAuthenticated]
 

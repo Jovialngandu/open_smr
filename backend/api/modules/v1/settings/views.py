@@ -20,6 +20,7 @@ from api.modules.v1.settings.serializers import (
 )
 
 
+@extend_schema(tags=['Settings'])
 class UserPreferenceMeView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -47,6 +48,7 @@ class UserPreferenceMeView(APIView):
         return Response(UserPreferenceSerializer(updated_preferences).data, status=status.HTTP_200_OK)
 
 
+@extend_schema(tags=['Settings'])
 class SystemSettingListView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
@@ -59,6 +61,7 @@ class SystemSettingListView(APIView):
         return Response(SystemSettingSerializer(settings_list, many=True).data, status=status.HTTP_200_OK)
 
 
+@extend_schema(tags=['Settings'])
 class SystemSettingDetailView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 

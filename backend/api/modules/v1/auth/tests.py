@@ -53,3 +53,46 @@ class OrganizationRegistrationTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(User.objects.filter(id=user.id).exists())
+
+
+class UserSearchPublicApiTests(APITestCase):
+    def setUp(self):
+        self.user_1 = User.objects.create_user(
+            username='alice.dev',
+            email='alice@example.com',
+            password='MotDePasseSolide123!',
+            is_active=True,
+        )
+        self.user_2 = User.objects.create_user(
+            username='bob.admin',
+            email='bob@example.com',
+            password='MotDePasseSolide123!',
+            is_active=True,
+        )
+        self.user_3 = User.objects.create_user(
+            username='charlie',
+            email='charlie@company.fr',
+            password='MotDePasseSolide123!',
+            is_active=True,
+        )
+
+    def test_public_user_search_filters_by_username_or_email(self):
+        response = self.client.get('/api/v1/users/search/', {'q': 'alice'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['username'], 'alice.dev')
+        self.assertEqual(response.data[0]['email'], 'alice@example.com')
+
+    def test_public_user_search_matches_email(self):
+        response = self.client.get('/api/v1/users/search/', {'q': 'company.fr'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['username'], 'charlie')
+
+    def test_public_user_search_without_q_returns_empty_list(self):
+        response = self.client.get('/api/v1/users/search/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [])
