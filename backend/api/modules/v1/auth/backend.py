@@ -21,8 +21,7 @@ class OIDCBackend:
     @classmethod
     def authenticate(cls, *, id_token: str, provider: str = 'google') -> Dict[str, str]:
         provider_cls = cls.get_provider(provider)
-        print( provider_cls.verify_id_token(id_token)
-)
+
         return provider_cls.verify_id_token(id_token)
 
 
