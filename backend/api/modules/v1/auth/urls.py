@@ -4,7 +4,8 @@ from api.modules.v1.auth.views import (
     CustomTokenRefreshView, 
     UserProfileView, 
     SwitchContextView,
-    RegisterView
+    RegisterView,
+    OIDCCallbackView,
 )
 
 urlpatterns = [
@@ -13,4 +14,5 @@ urlpatterns = [
     path('refresh/', CustomTokenRefreshView.as_view(), name='auth_refresh'),
     path('switch-context/', SwitchContextView.as_view(), name='auth_switch_context'),
     path('me/', UserProfileView.as_view(), name='auth_me'),
+    path('oidc/callback/', OIDCCallbackView.as_view(), name='auth_oidc_callback'),
 ]
