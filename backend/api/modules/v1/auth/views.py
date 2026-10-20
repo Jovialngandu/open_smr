@@ -18,7 +18,9 @@ from api.modules.v1.auth.serializers import (
 from api.modules.v1.auth.selectors import get_user_by_id
 from api.modules.v1.permissions import IsAccountActive
 from api.modules.v1.auth.services import authenticate_oidc_user, register_user
+import logging
 
+logger = logging.getLogger(__name__)
 
 @extend_schema(
 	tags=['Authentication'],
@@ -163,19 +165,19 @@ class OIDCCallbackView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        
         serializer = OIDCCallbackSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-
         try:
             result = authenticate_oidc_user(
                 id_token=serializer.validated_data['id_token'],
                 provider=serializer.validated_data.get('provider', 'google'),
             )
-            
-        except (ValueError, PermissionDenied, ValidationError):
-            return Response({'detail': 'Authentification OIDC refusée.'}, status=status.HTTP_401_UNAUTHORIZED)
+        except (ValueError, PermissionDenied, ValidationError) as exc:
+            return Response({'detail': str(exc) or 'Authentification OIDC refusée.'}, status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as exc:
+            logger.exception(" Erreur inattendue dans OIDCCallbackView: %s", exc)
+            return Response({'detail': 'Une erreur serveur est survenue lors de l’inscription OIDC.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         user = result['user']
         refresh = result['tokens']
