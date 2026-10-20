@@ -1,4 +1,5 @@
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -11,11 +12,12 @@ from api.modules.v1.auth.serializers import (
     SwitchContextSerializer,
     build_jwt_payload_for_user,
     RegisterResponseSerializer,
-    RegisterSerializer
+    RegisterSerializer,
+    OIDCCallbackSerializer,
 )
 from api.modules.v1.auth.selectors import get_user_by_id
 from api.modules.v1.permissions import IsAccountActive
-from api.modules.v1.auth.services import register_user
+from api.modules.v1.auth.services import authenticate_oidc_user, register_user
 
 
 @extend_schema(
@@ -145,3 +147,42 @@ class RegisterView(APIView):
         }
 
         return Response(response_data, status=status.HTTP_201_CREATED)
+
+
+@extend_schema(
+    tags=['Authentication'],
+    request=OIDCCallbackSerializer,
+    responses={
+        200: OpenApiResponse(description='Connexion / inscription OIDC réussie.'),
+        400: OpenApiResponse(description='Payload invalide.'),
+        401: OpenApiResponse(description='Jeton OIDC invalide ou non autorisé.')
+    }
+)
+class OIDCCallbackView(APIView):
+    """POST /api/v1/auth/oidc/callback/"""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        
+        serializer = OIDCCallbackSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+
+        try:
+            result = authenticate_oidc_user(
+                id_token=serializer.validated_data['id_token'],
+                provider=serializer.validated_data.get('provider', 'google'),
+            )
+            
+        except (ValueError, PermissionDenied, ValidationError):
+            return Response({'detail': 'Authentification OIDC refusée.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        user = result['user']
+        refresh = result['tokens']
+
+        return Response({
+            'user': UserProfileSerializer(user).data,
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+        }, status=status.HTTP_200_OK)
+

@@ -234,3 +234,9 @@ AI_SERVICE_URL = os.environ.get(
 )
 
 AI_SERVICE_API_KEY = os.environ["AI_SERVICE_API_KEY"]
+
+GOOGLE_CLIENT_ID= GOOGLE_OIDC_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET= os.environ.get("GOOGLE_CLIENT_SECRET")
+
+CSP_SCRIPT_SRC = ("'self'", "https://accounts.google.com")
+CSP_FRAME_SRC = ("'self'", "https://accounts.google.com")

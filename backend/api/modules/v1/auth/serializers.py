@@ -140,6 +140,16 @@ class RegisterResponseSerializer(serializers.Serializer):
     user = UserProfileSerializer()
     access = serializers.CharField()
     refresh = serializers.CharField()
+
+
+class OIDCCallbackSerializer(serializers.Serializer):
+    id_token = serializers.CharField(required=True)
+    provider = serializers.ChoiceField(
+        choices=['google'],
+        required=False,
+        default='google',
+        help_text='Fournisseur OIDC à utiliser. Par défaut, Google.'
+    )
     
 class  SimpleUserSerializer(serializers.ModelSerializer):
 	class Meta:
