@@ -107,7 +107,7 @@ def authenticate_oidc_user(*, id_token: str, provider: str = 'google') -> dict:
             raise PermissionDenied('Compte utilisateur désactivé.')
         return {'user': user, 'tokens': build_jwt_payload_for_user(user)}
 
-    # 2. CAS : L'utilisateur n'existe pas (Nouveau venu ou compte préalablement supprimé)
+    # 2. CAS : L'utilisateur n'existe pas -> Création de l'utilisateur
     username = _generate_unique_username(email)
     first_name = (claims.get('first_name') or '').strip() or 'Google'
     last_name = (claims.get('last_name') or '').strip() or 'User'
@@ -121,7 +121,7 @@ def authenticate_oidc_user(*, id_token: str, provider: str = 'google') -> dict:
         is_active=True,
     )
 
-    # 2a. Vérification si une invitation B2B était en attente pour cet e-mail
+    # 2a. Vérification d'une invitation B2B en attente
     invitation = OrganizationInvitation.objects.filter(
         invited_user_email__iexact=email,
         status=OrganizationInvitation.Status.PENDING,
@@ -129,7 +129,6 @@ def authenticate_oidc_user(*, id_token: str, provider: str = 'google') -> dict:
     ).order_by('-created_at').first()
 
     if invitation:
-        # Rattachement à l'organisation de l'invitation
         UserOrganizationRole.objects.create(
             user=user,
             organization=invitation.organization,
@@ -139,10 +138,15 @@ def authenticate_oidc_user(*, id_token: str, provider: str = 'google') -> dict:
         invitation.status = OrganizationInvitation.Status.ACCEPTED
         invitation.save(update_fields=['status'])
     else:
-        # 2b. Signup Public : Création d'un espace/organisation par défaut pour le nouvel utilisateur
+        # 2b. Signup Public : Générer un code d'organisation unique pour éviter l'IntegrityError !
         org_name = f"Organisation de {first_name} {last_name}".strip()
-        organization = Organization.objects.create(name=org_name)
-        
+        org_code = generate_unique_org_code(org_name)  # Utilise ta fonction de génération de code
+
+        organization = Organization.objects.create(
+            name=org_name,
+            code=org_code,
+        )
+
         UserOrganizationRole.objects.create(
             user=user,
             organization=organization,
