@@ -232,7 +232,8 @@ AI_SERVICE_URL = os.environ.get(
     "AI_SERVICE_URL",
     "http://127.0.0.1:8001",
 )
-
+AI_SERVICE_RISK_TIMEOUT = float(os.environ.get("AI_SERVICE_RISK_TIMEOUT", "30.0"))
+AI_SERVICE_CHAT_TIMEOUT = float(os.environ.get("AI_SERVICE_CHAT_TIMEOUT", "30.0"))
 AI_SERVICE_API_KEY = os.environ["AI_SERVICE_API_KEY"]
 
 GOOGLE_CLIENT_ID= GOOGLE_OIDC_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")

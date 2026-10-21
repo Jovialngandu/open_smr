@@ -14,4 +14,5 @@ urlpatterns = [
     path('v1/exporter/', include('api.modules.v1.exporter.urls')),
     path('v1/emails/', include('api.modules.v1.emails.urls')),
     path('v1/ai/', include('api.modules.v1.ai.urls')),
+    path('v1/chat/', include('api.modules.v1.chat.urls')),
 ]

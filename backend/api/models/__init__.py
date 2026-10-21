@@ -3,6 +3,7 @@ from .iso27001 import Asset, Evidence, IsoControl, Risk, SoaEntry, SoaVersion, T
 from .organization import Organization, OrganizationInvitation, Scope, UserOrganizationRole, UserScopeAccess
 from .support import SystemSetting, UserPreference
 from .email import EmailLog
+from .chat import ChatConversation, ChatMessage
 
 __all__ = [
     'TimeStampedUUIDModel',
@@ -20,5 +21,7 @@ __all__ = [
     'SoaVersion',
     'UserPreference',
     'SystemSetting',
-    'EmailLog'
+    'EmailLog',
+    'ChatConversation',
+    'ChatMessage',
 ]
