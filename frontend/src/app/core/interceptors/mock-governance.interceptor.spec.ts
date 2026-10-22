@@ -56,8 +56,11 @@ describe('mockGovernanceInterceptor', () => {
     expect(response.body?.scope_id).toBe(DIGITAL_SCOPE_ID);
   });
 
-  it('refuse la suppression des risques absente du backend', async () => {
-    await expect(intercept(new HttpRequest('DELETE', `${DOMAIN_ENDPOINTS.risks}risk-001/`))).rejects.toMatchObject({ status: 405 });
+  it('supprime un risque et renvoie 204', async () => {
+    const created = await intercept<Risk>(new HttpRequest('POST', DOMAIN_ENDPOINTS.risks, { asset_id: 'asset-001', threat_description: 'Risque temporaire', likelihood: 2, impact: 3, status: 'OPEN' }));
+    const url = `${DOMAIN_ENDPOINTS.risks}${created.body?.id}/`;
+    expect((await intercept(new HttpRequest('DELETE', url))).status).toBe(204);
+    await expect(intercept(new HttpRequest('DELETE', url))).rejects.toMatchObject({ status: 404 });
   });
 });
 

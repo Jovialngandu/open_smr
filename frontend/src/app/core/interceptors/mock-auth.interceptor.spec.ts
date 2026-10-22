@@ -138,4 +138,20 @@ describe('mockAuthInterceptor', () => {
     const declined = await intercept<{ invitation: { status: string } }>(new HttpRequest('POST', `${DOMAIN_ENDPOINTS.organizations}invitations/decline/`, { token: sent.body?.token }));
     expect(declined.body?.invitation.status).toBe('DECLINED');
   });
+
+  it('supprime une organisation administrée sans supprimer le compte', async () => {
+    const intercept = <T>(request: HttpRequest<unknown>) => firstValueFrom(mockAuthInterceptor(request, () => { throw new Error('Requête non interceptée.'); })) as Promise<HttpResponse<T>>;
+    await intercept(new HttpRequest('POST', AUTH_ENDPOINTS.login, { username: 'demo.rssi', password: 'Demo1234!' }));
+    const created = await intercept<{ id: string }>(new HttpRequest('POST', DOMAIN_ENDPOINTS.organizations, { name: 'Organisation temporaire' }));
+    expect((await intercept(new HttpRequest('DELETE', `${DOMAIN_ENDPOINTS.organizations}${created.body?.id}/`))).status).toBe(204);
+    const profile = await intercept<{ roles: Array<{ organization_id: string }> }>(new HttpRequest('GET', AUTH_ENDPOINTS.profile));
+    expect(profile.body?.roles.some((role) => role.organization_id === created.body?.id)).toBe(false);
+  });
+
+  it('supprime un compte et refuse sa reconnexion', async () => {
+    const intercept = <T>(request: HttpRequest<unknown>) => firstValueFrom(mockAuthInterceptor(request, () => { throw new Error('Requête non interceptée.'); })) as Promise<HttpResponse<T>>;
+    await intercept(new HttpRequest('POST', AUTH_ENDPOINTS.register, { username: 'compte.temporaire', email: 'compte.temporaire@example.com', password: 'MotDePasse123!' }));
+    expect((await intercept(new HttpRequest('DELETE', AUTH_ENDPOINTS.profile))).status).toBe(204);
+    await expect(intercept(new HttpRequest('POST', AUTH_ENDPOINTS.login, { username: 'compte.temporaire', password: 'MotDePasse123!' }))).rejects.toMatchObject({ status: 401 });
+  });
 });
