@@ -45,7 +45,7 @@ Le serveur recharge automatiquement l'application après une modification du cod
 
 ## Connexion Google (OIDC)
 
-Le bouton Google sur `/login` utilise le SDK Google Identity Services chargé dans `src/index.html`. Renseignez le **Client ID Web public** dans `src/app/core/config/oidc.config.ts` (la même valeur que `GOOGLE_CLIENT_ID` côté Django). Aucun secret Google ne doit être placé dans le frontend. Configurez également `http://localhost:4200` et l'origine du frontend déployé parmi les origines JavaScript autorisées du client OAuth Google.
+Le bouton Google sur `/login` utilise le SDK Google Identity Services chargé dans `src/index.html`. Le **Client ID Web public** de `src/app/core/config/oidc.config.ts` provient de l'exemple `index.html` fourni par l'équipe backend ; il doit correspondre à `GOOGLE_CLIENT_ID` dans l'environnement Django. Aucun secret Google ne doit être placé dans le frontend. Configurez également `http://localhost:4200` et l'origine du frontend déployé parmi les origines JavaScript autorisées du client OAuth Google.
 
 Le callback Google fournit un `credential` : Angular l'envoie à `POST /api/v1/auth/oidc/callback/` avec `provider: "google"`. La réponse fournit les JWT applicatifs et le profil. `AuthService` sauvegarde les JWT, hydrate les périmètres, restaure le dernier contexte accessible et ouvre le dashboard (ou revient à une invitation en cours). L'endpoint est public : l'intercepteur JWT n'y ajoute pas d'ancien token et ne tente pas de rafraîchissement sur un refus `401`.
 
