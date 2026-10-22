@@ -7,6 +7,7 @@ import { ContextService } from '../../../../core/services/context.service';
 import { RiskScoreBadgeComponent } from '../../../../shared/components/risk-score-badge/risk-score-badge.component';
 import { TopbarComponent } from '../../../../shared/components/topbar/topbar.component';
 import { AssetsService } from '../../../assets/services/assets.service';
+import { TreatmentsService } from '../../../treatments/services/treatments.service';
 import { RiskFormModalComponent } from '../../components/risk-form-modal/risk-form-modal.component';
 import { RisksService } from '../../services/risks.service';
 
@@ -18,11 +19,14 @@ import { RisksService } from '../../services/risks.service';
 export class RisksPageComponent {
   protected readonly risksService = inject(RisksService);
   protected readonly assetsService = inject(AssetsService);
+  private readonly treatments = inject(TreatmentsService);
   protected readonly context = inject(ContextService);
   protected readonly search = signal('');
   protected readonly status = signal<RiskStatus | 'ALL'>('ALL');
   protected readonly modalOpen = signal(false);
   protected readonly selectedRisk = signal<Risk | null>(null);
+  protected readonly riskToDelete = signal<Risk | null>(null);
+  protected readonly deleting = signal(false);
   protected readonly actionError = signal('');
   protected readonly successMessage = signal('');
   protected readonly statusLabels = RISK_STATUS_LABELS;
@@ -79,6 +83,23 @@ export class RisksPageComponent {
     this.status.set('ALL');
     this.successMessage.set(`Le risque « ${risk.code} » a bien été enregistré.`);
     this.closeModal();
+  }
+
+  protected deleteRisk(): void {
+    const risk = this.riskToDelete();
+    if (!risk || !this.editable() || this.deleting()) return;
+    this.deleting.set(true);
+    this.actionError.set('');
+    this.risksService.deleteRisk(risk.id).subscribe({
+      next: () => {
+        this.deleting.set(false);
+        this.riskToDelete.set(null);
+        this.successMessage.set(`Le risque « ${risk.code} » a été supprimé.`);
+        const scopeId = this.context.activeScopeId();
+        if (scopeId) this.treatments.fetch(scopeId);
+      },
+      error: (error: Error) => { this.deleting.set(false); this.actionError.set(error.message); },
+    });
   }
 
 }

@@ -56,6 +56,15 @@ export class RisksService {
     );
   }
 
+  deleteRisk(id: string): Observable<void> {
+    this.savingState.set(true);
+    return this.http.delete<void>(`${DOMAIN_ENDPOINTS.risks}${id}/`).pipe(
+      tap(() => this.risksState.update((items) => items.filter((item) => item.id !== id))),
+      finalize(() => this.savingState.set(false)),
+      catchError((error) => throwError(() => this.friendlyError(error))),
+    );
+  }
+
   private friendlyError(error: unknown): Error {
     if (error instanceof HttpErrorResponse) {
       return new Error(error.error?.detail ?? "L'opération sur le risque a échoué.");
