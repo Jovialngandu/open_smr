@@ -94,6 +94,17 @@
         </button>
       </form>
 
+      <div class="google-signin" aria-label="Autre méthode de connexion">
+        <p class="google-signin__separator">ou</p>
+        @if (googleConfigured) {
+          <div #googleButton class="google-signin__button" [class.google-signin__button--busy]="auth.busy()"></div>
+          @if (auth.busy()) { <p role="status">Connexion Google en cours…</p> }
+          @if (googleError()) { <p class="field__error" role="alert">{{ googleError() }}</p> }
+        } @else {
+          <p class="google-signin__unavailable">La connexion Google n’est pas encore configurée.</p>
+        }
+      </div>
+
       <div class="demo-note">
         <span class="demo-note__icon" aria-hidden="true"><svg lucideSparkles class="ui-icon"></svg></span>
         <div><strong>Comptes de démonstration</strong><br /><small>RSSI :</small> <code>chucknorris</code> · <code>Chuck123456789</code><br /><small>Auditeur :</small> <code>brucelee</code> · <code>Brucelee12345</code></div>
