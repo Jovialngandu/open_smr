@@ -65,6 +65,13 @@ export class SettingsService {
     });
   }
 
+  clearEmailLogs(): void {
+    ++this.emailLogsRequest;
+    this.emailLogsState.set([]);
+    this.emailLogsErrorState.set('');
+    this.emailLogsLoadingState.set(false);
+  }
+
   constructor() {
     const savedTheme = localStorage.getItem('opensmr.theme') as AppTheme | null;
     this.applyTheme(savedTheme && ['LIGHT', 'DARK', 'SYSTEM'].includes(savedTheme) ? savedTheme : 'SYSTEM');
