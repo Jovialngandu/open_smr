@@ -143,15 +143,24 @@ describe('mockAuthInterceptor', () => {
     await expect(intercept(new HttpRequest('POST', `${DOMAIN_ENDPOINTS.organizations}invitations/accept/`, { token: sent.body?.token }))).rejects.toMatchObject({ status: 400 });
   });
 
+  it('refuse une invitation envoyée à sa propre adresse', async () => {
+    const intercept = (request: HttpRequest<unknown>) => firstValueFrom(mockAuthInterceptor(request, () => {
+      throw new Error('Requête non interceptée.');
+    }));
+    await intercept(new HttpRequest('POST', AUTH_ENDPOINTS.login, { username: 'demo.rssi', password: 'Demo1234!' }));
+    await expect(intercept(new HttpRequest('POST', `${DOMAIN_ENDPOINTS.organizations}8f4b8400-e29b-41d4-a716-446655440001/invitations/`, {
+      invited_user_email: 'DEMO@OPENSMR.FR', role: 'RISK_OWNER',
+    }))).rejects.toMatchObject({ status: 400 });
+  });
+
   it('refuse une décision avec le mauvais compte et permet de décliner ensuite', async () => {
     const intercept = <T>(request: HttpRequest<unknown>) => firstValueFrom(mockAuthInterceptor(request, () => {
       throw new Error('Requête non interceptée.');
     })) as Promise<HttpResponse<T>>;
     await intercept(new HttpRequest('POST', AUTH_ENDPOINTS.login, { username: 'demo.rssi', password: 'Demo1234!' }));
-    const sent = await intercept<{ token: string }>(new HttpRequest('POST', `${DOMAIN_ENDPOINTS.organizations}8f4b8400-e29b-41d4-a716-446655440001/invitations/`, { invited_user_email: 'demo@opensmr.fr', role: 'RISK_OWNER' }));
-    await intercept(new HttpRequest('POST', AUTH_ENDPOINTS.login, { username: 'demo.owner', password: 'Demo1234!' }));
+    const sent = await intercept<{ token: string }>(new HttpRequest('POST', `${DOMAIN_ENDPOINTS.organizations}8f4b8400-e29b-41d4-a716-446655440001/invitations/`, { invited_user_email: 'owner@opensmr.fr', role: 'RISK_OWNER' }));
     await expect(intercept(new HttpRequest('POST', `${DOMAIN_ENDPOINTS.organizations}invitations/decline/`, { token: sent.body?.token }))).rejects.toMatchObject({ status: 403 });
-    await intercept(new HttpRequest('POST', AUTH_ENDPOINTS.login, { username: 'demo.rssi', password: 'Demo1234!' }));
+    await intercept(new HttpRequest('POST', AUTH_ENDPOINTS.login, { username: 'demo.owner', password: 'Demo1234!' }));
     const declined = await intercept<{ invitation: { status: string } }>(new HttpRequest('POST', `${DOMAIN_ENDPOINTS.organizations}invitations/decline/`, { token: sent.body?.token }));
     expect(declined.body?.invitation.status).toBe('DECLINED');
   });

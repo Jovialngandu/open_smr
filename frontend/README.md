@@ -51,6 +51,8 @@ Le callback Google fournit un `credential` : Angular l'envoie à `POST /api/v1/a
 
 En mode mock, l'endpoint est simulé : le contenu du jeton est décodé **sans vérification cryptographique**, uniquement pour les essais locaux. Il ne doit jamais être considéré comme une authentification réelle. Le backend actuel crée une organisation d'administration lors de la première connexion OIDC sans invitation ; ce parcours diffère de l'inscription classique, qui peut laisser le dashboard vide. Avec une invitation en attente, Django rattache le nouveau compte à l'organisation invitante.
 
+La création automatique de cette organisation appartient au service Django OIDC, pas au composant Angular. Elle reste volontairement inchangée pour l'instant ; la modifier nécessitera une évolution backend et des tests associés.
+
 ## Mode de démonstration
 
 Le frontend peut fonctionner sans le backend grâce aux mocks couvrant l'ensemble du parcours MVP. Ils sont contrôlés par `useMocks` dans `src/app/core/config/api.config.ts`. La configuration actuelle utilise l’API déployée ; activez explicitement les mocks pour travailler hors connexion.
@@ -101,6 +103,8 @@ Après une connexion, l'utilisateur arrive directement sur `/dashboard`. Chaque 
 Les preuves d'une tâche se déposent depuis « Mes tâches » ou, pour les personnes autorisées, directement depuis les cartes et la liste des traitements. Le dépôt utilise un formulaire `multipart/form-data` (`task_id`, `file_path`, `description`). Dans le tableau Kanban, déplacer une carte change son statut ; le sélecteur de statut n'est disponible qu'en vue liste. Une preuve est demandée avant de terminer une tâche.
 
 La liste des utilisateurs est rechargée et vidée immédiatement lors d'un changement d'organisation ou de périmètre. Les réponses arrivées en retard pour l'ancien contexte sont ignorées. L'invitation n'est disponible que lorsqu'une organisation est active et que le rôle dans celle-ci est Admin ou RSSI : un compte resté sans organisation ne peut ni ouvrir le formulaire ni envoyer une invitation. Depuis `/users`, la recherche propose les comptes existants, mais une adresse encore inconnue peut aussi recevoir une invitation. Le rôle par défaut est `RISK_OWNER`. Le membre apparaît dans l’organisation seulement après avoir accepté le lien reçu. L’accès à un périmètre reste à attribuer séparément.
+
+Le compte connecté apparaît dans la liste sans action de modification de ses propres droits, de son statut ou de son accès au périmètre. Une invitation à sa propre adresse e-mail est également refusée avant l'appel API. Ces protections frontend ne remplacent pas des vérifications équivalentes dans Django pour les appels directs à l'API.
 
 Les liens envoyés par Django pointent vers `/invitations?token=...` ; `/invitations/accept?token=...` est également accepté par le frontend. Une session est demandée avant toute décision. Après acceptation, le profil et le JWT de contexte sont actualisés et le dashboard de la nouvelle organisation s’ouvre. Le backend ne fournit pas de route de prévisualisation de l’invitation : son nom d’organisation n’est disponible qu’après acceptation/refus. Attention, l’API accepte actuellement une décision anonyme et peut consommer l’invitation sans rattacher de compte ; l’interface évite ce chemin, mais le backend devra le sécuriser avant mise en production.
 
