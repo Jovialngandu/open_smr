@@ -7,7 +7,10 @@
         <h1>Notifications</h1>
         <p>Consultez les rappels liés à votre compte dans l’organisation sélectionnée.</p>
       </div>
-      <button class="button button--ghost" type="button" (click)="center.refresh()" [disabled]="center.loading()">Actualiser</button>
+      <div class="notifications-actions">
+        <a class="button button--ghost" routerLink="/dashboard">Retour au tableau de bord</a>
+        <button class="button button--ghost" type="button" (click)="center.refresh()" [disabled]="center.loading()">Actualiser</button>
+      </div>
     </header>
 
     <section class="notifications-note" aria-label="À propos des notifications">

@@ -43,6 +43,16 @@ http://localhost:4200
 
 Le serveur recharge automatiquement l'application après une modification du code.
 
+## Connexion Google (OIDC)
+
+Le bouton Google sur `/login` utilise le SDK Google Identity Services chargé dans `src/index.html`. Le **Client ID Web public** de `src/app/core/config/oidc.config.ts` provient de l'exemple `index.html` fourni par l'équipe backend ; il doit correspondre à `GOOGLE_CLIENT_ID` dans l'environnement Django. Aucun secret Google ne doit être placé dans le frontend. Configurez également `http://localhost:4200` et l'origine du frontend déployé parmi les origines JavaScript autorisées du client OAuth Google.
+
+Le callback Google fournit un `credential` : Angular l'envoie à `POST /api/v1/auth/oidc/callback/` avec `provider: "google"`. La réponse fournit les JWT applicatifs et le profil. `AuthService` sauvegarde les JWT, hydrate les périmètres, restaure le dernier contexte accessible et ouvre le dashboard (ou revient à une invitation en cours). L'endpoint est public : l'intercepteur JWT n'y ajoute pas d'ancien token et ne tente pas de rafraîchissement sur un refus `401`.
+
+En mode mock, l'endpoint est simulé : le contenu du jeton est décodé **sans vérification cryptographique**, uniquement pour les essais locaux. Il ne doit jamais être considéré comme une authentification réelle. Le backend actuel crée une organisation d'administration lors de la première connexion OIDC sans invitation ; ce parcours diffère de l'inscription classique, qui peut laisser le dashboard vide. Avec une invitation en attente, Django rattache le nouveau compte à l'organisation invitante.
+
+La création automatique de cette organisation appartient au service Django OIDC, pas au composant Angular. Elle reste volontairement inchangée pour l'instant ; la modifier nécessitera une évolution backend et des tests associés.
+
 ## Mode de démonstration
 
 Le frontend peut fonctionner sans le backend grâce aux mocks couvrant l'ensemble du parcours MVP. Ils sont contrôlés par `useMocks` dans `src/app/core/config/api.config.ts`. La configuration actuelle utilise l’API déployée ; activez explicitement les mocks pour travailler hors connexion.
@@ -65,7 +75,7 @@ Le mode mock permet de tester :
 - la protection des routes ;
 - les autorisations par rôle.
 - l'inventaire des actifs, son filtrage par périmètre et son CRUD ;
-- le registre des risques, son filtrage par périmètre, la création et la modification des scénarios (sans suppression tant que l’API ne l’expose pas).
+- le registre des risques, son filtrage par périmètre et la création, modification ou suppression des scénarios ;
 - le dashboard, ses indicateurs et la heatmap interactive 5 × 5 ;
 - les plans de traitement et leur suivi ;
 - le tableau Kanban des traitements avec glisser-déposer entre les statuts ;
@@ -75,13 +85,14 @@ Le mode mock permet de tester :
 - les exports PDF/CSV simulés ;
 - le portail auditeur en lecture seule ;
 - les comptes, rôles, statuts et habilitations par périmètre ;
+- la recherche de comptes et l’invitation par e-mail avec rôle, ainsi que l’acceptation ou le refus par lien ;
 - les préférences personnelles : thème, langue, fuseau horaire et notifications email.
 
 ## Parcours métier
 
 L'inscription ne contient aucun champ lié à l'organisation : elle crée uniquement le compte avec un nom d'utilisateur, un email et un mot de passe ; les prénom et nom restent facultatifs. Juste après, un onboarding distinct propose de créer une organisation et son premier périmètre. Cette configuration peut être ignorée : le compte ouvre alors un dashboard vide, depuis lequel l'utilisateur pourra reprendre la création avec « Créer une organisation ».
 
-Le backend autorise bien un compte sans organisation et expose ensuite `POST /organizations/`, puis `POST /scopes/`. Le frontend enchaîne ces deux appels, régénère le contexte JWT et ouvre le nouveau périmètre. La jonction à une organisation existante demeure liée au contrat d'inscription actuel (`join_organization_code`) tant qu'un endpoint de rattachement après inscription n'est pas exposé.
+Le backend autorise bien un compte sans organisation et expose ensuite `POST /organizations/`, puis `POST /scopes/`. Le frontend enchaîne ces deux appels, régénère le contexte JWT et ouvre le nouveau périmètre. Pour rejoindre une organisation existante, l’utilisateur reçoit désormais une invitation par e-mail et l’accepte depuis son compte.
 
 Depuis le dashboard, tout utilisateur authentifié peut créer une organisation supplémentaire avec son premier périmètre. Le formulaire ne demande aucun code : Django le génère et le renvoie. Le nouvel espace est ajouté au sélecteur global puis activé immédiatement.
 
@@ -91,7 +102,11 @@ Après une connexion, l'utilisateur arrive directement sur `/dashboard`. Chaque 
 
 Les preuves d'une tâche se déposent depuis « Mes tâches » ou, pour les personnes autorisées, directement depuis les cartes et la liste des traitements. Le dépôt utilise un formulaire `multipart/form-data` (`task_id`, `file_path`, `description`). Dans le tableau Kanban, déplacer une carte change son statut ; le sélecteur de statut n'est disponible qu'en vue liste. Une preuve est demandée avant de terminer une tâche.
 
-La liste des utilisateurs est rechargée et vidée immédiatement lors d'un changement d'organisation ou de périmètre. Les réponses arrivées en retard pour l'ancien contexte sont ignorées.
+La liste des utilisateurs est rechargée et vidée immédiatement lors d'un changement d'organisation ou de périmètre. Les réponses arrivées en retard pour l'ancien contexte sont ignorées. L'invitation n'est disponible que lorsqu'une organisation est active et que le rôle dans celle-ci est Admin ou RSSI : un compte resté sans organisation ne peut ni ouvrir le formulaire ni envoyer une invitation. Depuis `/users`, la recherche propose les comptes existants, mais une adresse encore inconnue peut aussi recevoir une invitation. Le rôle par défaut est `RISK_OWNER`. Le membre apparaît dans l’organisation seulement après avoir accepté le lien reçu. L’accès à un périmètre reste à attribuer séparément.
+
+Le compte connecté apparaît dans la liste sans action de modification de ses propres droits, de son statut ou de son accès au périmètre. Une invitation à sa propre adresse e-mail est également refusée avant l'appel API. Ces protections frontend ne remplacent pas des vérifications équivalentes dans Django pour les appels directs à l'API.
+
+Les liens envoyés par Django pointent vers `/invitations?token=...` ; `/invitations/accept?token=...` est également accepté par le frontend. Une session est demandée avant toute décision. Après acceptation, le profil et le JWT de contexte sont actualisés et le dashboard de la nouvelle organisation s’ouvre. Le backend ne fournit pas de route de prévisualisation de l’invitation : son nom d’organisation n’est disponible qu’après acceptation/refus. Attention, l’API accepte actuellement une décision anonyme et peut consommer l’invitation sans rattacher de compte ; l’interface évite ce chemin, mais le backend devra le sécuriser avant mise en production.
 
 Un ADMIN ou un RSSI peut créer d'autres périmètres à tout moment avec le bouton « + » situé à côté du sélecteur de périmètre, dans la barre supérieure. Le formulaire utilise `POST /scopes/` avec l'organisation active ; après création, l'application bascule vers le nouveau périmètre. Le backend accorde automatiquement l'accès au créateur et initialise les entrées SoA.
 
@@ -103,6 +118,15 @@ Compte → Organisation → Périmètre → Actif → Risque
 Après la connexion ou l'inscription, l'utilisateur passe par `/select-context`. Il peut choisir un contexte existant, créer une organisation et son premier périmètre, ou continuer vers un dashboard vide. Les pages métier nécessitent toujours une organisation, un périmètre et un rôle autorisé.
 
 Le dashboard dépend du rôle : l'Admin et le RSSI pilotent le périmètre, le responsable de risque retrouve ses propres tâches et preuves, et l'auditeur consulte les informations sans action d'édition.
+
+## Suppressions
+
+- Sur `/risks`, ADMIN et RSSI peuvent supprimer un risque après confirmation. Les tâches et preuves qui en dépendent peuvent également disparaître par cascade.
+- Sur `/treatments`, ADMIN et RSSI peuvent supprimer une tâche depuis le tableau ou la liste, sauf si la tâche leur est assignée : Django refuse explicitement ce cas. Les preuves liées sont également supprimées.
+- Dans `/settings`, un ADMIN peut supprimer l'organisation active après avoir saisi son nom exact. L'interface bascule vers une autre organisation disponible, ou affiche un dashboard sans organisation. Cette suppression affecte tous ses membres et périmètres.
+- Chaque utilisateur peut supprimer son propre compte depuis `/settings` après avoir saisi son nom d'utilisateur exact. La session locale est effacée puis la page de connexion confirme l'opération.
+
+Les quatre opérations utilisent les routes `DELETE /api/v1/organizations/{id}/`, `DELETE /api/v1/auth/me/`, `DELETE /api/v1/risks/{id}/` et `DELETE /api/v1/treatments/tasks/{id}/`. Les mocks reproduisent le résultat `204` et retirent les données locales concernées. Les confirmations frontend ne remplacent pas les contrôles d'autorisation du serveur.
 
 Les 93 mesures ISO ne sont jamais saisies depuis l'interface. Elles proviennent du catalogue de référence chargé côté Django par le seeder `seed_iso_controls.py`.
 
@@ -136,6 +160,10 @@ GET  /api/v1/auth/me/
 POST /api/v1/auth/switch-context/
 GET|POST /api/v1/organizations/
 GET|POST /api/v1/organizations/{organization_id}/members/
+GET /api/v1/users/search/?q=...
+POST /api/v1/organizations/{organization_id}/invitations/
+POST /api/v1/organizations/invitations/accept/
+POST /api/v1/organizations/invitations/decline/
 PATCH /api/v1/organizations/{organization_id}/members/{role_id}/toggle-status/
 GET|POST /api/v1/scopes/
 GET|POST /api/v1/scopes/{scope_id}/access/
@@ -326,7 +354,7 @@ Fonctionnalités terminées :
 - backend d'authentification mocké ;
 - inventaire des actifs avec badge DIC et formulaire de création/édition ;
 - registre des risques avec score coloré et rattachement aux actifs ;
-- mocks de création et de modification des risques, et CRUD des actifs, filtrés par le périmètre actif. La suppression d’un risque n’est pas proposée car Django n’expose pas encore cette opération.
+- mocks de création, modification et suppression des risques, ainsi que le CRUD des actifs, filtrés par le périmètre actif.
 - dashboard avec indicateurs, tâches urgentes et heatmap filtrante ;
 - plans de traitement avec mesure ISO, responsable et échéance ;
 - espace Mes tâches avec dépôt de preuves PDF/image et clôture ;

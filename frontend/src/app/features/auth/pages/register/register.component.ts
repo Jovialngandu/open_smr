@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { LucideShieldCheck, LucideCircleAlert, LucideArrowRight } from '@lucide/angular';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../../core/services/auth.service';
 
@@ -14,6 +14,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 export class RegisterComponent {
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly formBuilder = inject(FormBuilder);
   protected readonly passwordVisible = signal(false);
   protected readonly errorMessage = signal('');
@@ -52,7 +53,10 @@ export class RegisterComponent {
       username: value.username.trim(),
       password: value.password,
     }).subscribe({
-      next: () => void this.router.navigate(['/select-context']),
+      next: () => {
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        void this.router.navigateByUrl(returnUrl?.startsWith('/invitations?') || returnUrl?.startsWith('/invitations/accept?') ? returnUrl : '/select-context');
+      },
       error: (error: Error) => this.errorMessage.set(error.message),
     });
   }

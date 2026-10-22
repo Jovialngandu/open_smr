@@ -1,6 +1,8 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LucideBell, LucideCheck, LucideClock3, LucideGlobe2, LucidePalette, LucideUserRound } from '@lucide/angular';
+import { Router } from '@angular/router';
 
 import { AuthService } from '../../../../core/services/auth.service';
 import { ContextService } from '../../../../core/services/context.service';
@@ -17,8 +19,15 @@ export class SettingsPageComponent {
   protected readonly context = inject(ContextService);
   protected readonly service = inject(SettingsService);
   private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
   protected readonly feedback = signal('');
   protected readonly submitError = signal('');
+  protected readonly organizationConfirmation = signal('');
+  protected readonly accountConfirmation = signal('');
+  protected readonly deletingOrganization = signal(false);
+  protected readonly deletingAccount = signal(false);
+  protected readonly deletionError = signal('');
+  protected readonly organizationName = computed(() => this.context.activeOrganization()?.organization_name ?? '');
   protected readonly themes: Array<{ value: AppTheme; label: string; description: string }> = [
     { value: 'LIGHT', label: 'Clair', description: 'Fond clair en permanence' },
     { value: 'DARK', label: 'Sombre', description: 'Fond sombre en permanence' },
@@ -96,5 +105,43 @@ export class SettingsPageComponent {
       },
       error: (error: Error) => this.submitError.set(error.message),
     });
+  }
+
+  protected deleteOrganization(): void {
+    const id = this.context.activeOrganizationId();
+    if (!id || this.context.activeRole() !== 'ADMIN' || this.organizationConfirmation() !== this.organizationName() || this.deletingOrganization()) return;
+    this.deletionError.set('');
+    this.deletingOrganization.set(true);
+    this.context.deleteOrganization(id).subscribe({
+      next: () => {
+        this.deletingOrganization.set(false);
+        const next = this.context.organizations()[0];
+        if (!next) { void this.router.navigate(['/dashboard'], { queryParams: { organizationDeleted: '1' } }); return; }
+        this.context.switchContext({ organization_id: next.organization_id, scope_id: next.scopes[0]?.id ?? null }).subscribe({
+          next: () => void this.router.navigate(['/dashboard'], { queryParams: { organizationDeleted: '1' } }),
+          error: () => void this.router.navigate(['/select-context']),
+        });
+      },
+      error: (error: unknown) => { this.deletingOrganization.set(false); this.deletionError.set(this.deletionMessage(error)); },
+    });
+  }
+
+  protected deleteAccount(): void {
+    const username = this.auth.user()?.username;
+    if (!username || this.accountConfirmation() !== username || this.deletingAccount()) return;
+    this.deletionError.set('');
+    this.deletingAccount.set(true);
+    this.auth.deleteAccount().subscribe({
+      next: () => void this.router.navigate(['/login'], { queryParams: { accountDeleted: '1' } }),
+      error: (error: unknown) => { this.deletingAccount.set(false); this.deletionError.set(this.deletionMessage(error)); },
+    });
+  }
+
+  private deletionMessage(error: unknown): string {
+    if (error instanceof HttpErrorResponse) {
+      const detail = error.error?.detail;
+      if (typeof detail === 'string') return detail;
+    }
+    return error instanceof Error ? error.message : 'La suppression a échoué. Réessayez.';
   }
 }

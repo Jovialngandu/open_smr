@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { LucideClipboardList, LucideClock3, LucideCheck, LucidePackage, LucideTriangleAlert, LucideHourglass } from '@lucide/angular';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { ContextService } from '../../../core/services/context.service';
@@ -20,6 +20,8 @@ import { TreatmentsService } from '../../treatments/services/treatments.service'
   templateUrl: './authenticated-home.component.html',
 })
 export class AuthenticatedHomeComponent {
+  protected readonly invitationAccepted = inject(ActivatedRoute).snapshot.queryParamMap.get('invitation') === 'accepted';
+  protected readonly organizationDeleted = inject(ActivatedRoute).snapshot.queryParamMap.get('organizationDeleted') === '1';
   protected readonly auth = inject(AuthService);
   protected readonly context = inject(ContextService);
   protected readonly assets = inject(AssetsService);

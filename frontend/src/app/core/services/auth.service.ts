@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { catchError, finalize, Observable, of, switchMap, tap, throwError } from 'rxjs';
 
 import { AUTH_ENDPOINTS } from '../config/api.config';
+import { GOOGLE_OIDC_ENDPOINT } from '../config/oidc.config';
 import {
   AuthResponse,
   LoginRequest,
@@ -48,6 +49,25 @@ export class AuthService {
     );
   }
 
+  loginWithGoogle(idToken: string): Observable<UserProfile> {
+    this.busyState.set(true);
+    return this.http.post<AuthResponse>(GOOGLE_OIDC_ENDPOINT, {
+      id_token: idToken,
+      provider: 'google',
+    }).pipe(
+      tap((response) => this.tokens.save(response)),
+      switchMap((response) => response.user ? this.acceptProfile(response.user) : this.loadProfile()),
+      switchMap((profile) => this.restoreContext(profile)),
+      finalize(() => this.busyState.set(false)),
+      catchError((error) => {
+        if (error instanceof HttpErrorResponse && error.status === 401) {
+          return throwError(() => new Error('Échec de la connexion Google. Assurez-vous d’avoir une invitation valide ou un compte actif.'));
+        }
+        return throwError(() => this.toFriendlyError(error));
+      }),
+    );
+  }
+
   register(payload: RegisterRequest): Observable<UserProfile> {
     this.busyState.set(true);
     return this.http.post<AuthResponse>(AUTH_ENDPOINTS.register, payload).pipe(
@@ -73,6 +93,13 @@ export class AuthService {
 
   logout(redirect = true): void {
     this.endSession(redirect);
+  }
+
+  deleteAccount(): Observable<void> {
+    return this.http.delete<void>(AUTH_ENDPOINTS.profile).pipe(
+      tap(() => this.endSession(false)),
+      catchError((error) => throwError(() => this.toFriendlyError(error))),
+    );
   }
 
   private acceptProfile(profile: UserProfile): Observable<UserProfile> {

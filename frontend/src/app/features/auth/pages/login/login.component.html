@@ -32,6 +32,7 @@
       <p class="eyebrow">Connexion</p>
       <h2 id="login-title">Accédez à OpenSMR</h2>
       <p class="auth-intro">Saisissez votre nom d’utilisateur et votre mot de passe.</p>
+      @if (accountDeleted) { <div class="alert alert--success" role="status"><p>Votre compte a été supprimé.</p></div> }
 
       @if (errorMessage()) {
         <div class="alert alert--error" role="alert">
@@ -93,12 +94,23 @@
         </button>
       </form>
 
+      <div class="google-signin" aria-label="Autre méthode de connexion">
+        <p class="google-signin__separator">ou</p>
+        @if (googleConfigured) {
+          <div #googleButton class="google-signin__button" [class.google-signin__button--busy]="auth.busy()"></div>
+          @if (auth.busy()) { <p role="status">Connexion Google en cours…</p> }
+          @if (googleError()) { <p class="field__error" role="alert">{{ googleError() }}</p> }
+        } @else {
+          <p class="google-signin__unavailable">La connexion Google n’est pas encore configurée.</p>
+        }
+      </div>
+
       <div class="demo-note">
         <span class="demo-note__icon" aria-hidden="true"><svg lucideSparkles class="ui-icon"></svg></span>
         <div><strong>Comptes de démonstration</strong><br /><small>RSSI :</small> <code>chucknorris</code> · <code>Chuck123456789</code><br /><small>Auditeur :</small> <code>brucelee</code> · <code>Brucelee12345</code></div>
       </div>
 
-      <p class="auth-switch">Première visite&nbsp;? <a routerLink="/register">Créer un compte</a></p>
+      <p class="auth-switch">Première visite&nbsp;? <a routerLink="/register" queryParamsHandling="preserve">Créer un compte</a></p>
     </div>
   </section>
 </main>

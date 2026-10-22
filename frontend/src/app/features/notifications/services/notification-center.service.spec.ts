@@ -14,14 +14,15 @@ describe('NotificationCenterService', () => {
   beforeEach(() => localStorage.clear());
 
   it('conserve la lecture localement et l’isole par organisation', () => {
-    const user = signal({ id: 'user-1' } as UserProfile);
+    const user = signal<UserProfile | null>({ id: 'user-1' } as UserProfile);
     const organization = signal<string | null>('org-a');
     const items = signal([log('message-a')]);
     const loadEmailLogs = vi.fn();
+    const clearEmailLogs = vi.fn(() => items.set([]));
     TestBed.configureTestingModule({ providers: [
       { provide: AuthService, useValue: { user } },
       { provide: ContextService, useValue: { activeOrganizationId: organization } },
-      { provide: SettingsService, useValue: { emailLogs: items, emailLogsLoading: signal(false), emailLogsError: signal(''), loadEmailLogs } },
+      { provide: SettingsService, useValue: { emailLogs: items, emailLogsLoading: signal(false), emailLogsError: signal(''), loadEmailLogs, clearEmailLogs } },
     ] });
     const center = TestBed.inject(NotificationCenterService);
     TestBed.flushEffects();
@@ -41,5 +42,11 @@ describe('NotificationCenterService', () => {
     items.set([log('message-a')]);
     TestBed.flushEffects();
     expect(center.isRead('message-a')).toBe(true);
+
+    user.set(null);
+    TestBed.flushEffects();
+    expect(clearEmailLogs).toHaveBeenCalledOnce();
+    expect(center.items()).toEqual([]);
+    expect(center.unreadCount()).toBe(0);
   });
 });

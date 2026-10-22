@@ -4,10 +4,11 @@ import { Router } from '@angular/router';
 import { catchError, switchMap, tap, throwError } from 'rxjs';
 
 import { AUTH_ENDPOINTS } from '../config/api.config';
+import { GOOGLE_OIDC_ENDPOINT } from '../config/oidc.config';
 import { AuthTokens } from '../models/auth.models';
 import { TokenStorageService } from '../services/token-storage.service';
 
-const PUBLIC_ENDPOINTS = [AUTH_ENDPOINTS.login, AUTH_ENDPOINTS.register, AUTH_ENDPOINTS.refresh];
+const PUBLIC_ENDPOINTS = [AUTH_ENDPOINTS.login, GOOGLE_OIDC_ENDPOINT, AUTH_ENDPOINTS.register, AUTH_ENDPOINTS.refresh];
 
 export const jwtInterceptor: HttpInterceptorFn = (request, next) => {
   const storage = inject(TokenStorageService);

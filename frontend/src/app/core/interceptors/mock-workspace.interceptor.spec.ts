@@ -53,6 +53,15 @@ describe('mockWorkspaceInterceptor', () => {
     expect(asteria.body?.map((member) => member.user.id)).toEqual([1, 2, 3]);
     expect(novacare.body?.map((member) => member.user.id)).toEqual([4]);
   });
+
+  it('supprime une tâche de traitement sans la conserver dans la liste', async () => {
+    const created = await intercept<{ id: string }>(new HttpRequest('POST', DOMAIN_ENDPOINTS.treatments, {
+      risk: 'risk-001', iso_control: 'control-001', assignee: '2', title: 'Tâche temporaire', description: '', due_date: '2026-12-01',
+    }, { params: new HttpParams().set('scope_id', SCOPE_ID).set('risk_code', 'RSK-PAY-001') }));
+    expect((await intercept(new HttpRequest('DELETE', `${DOMAIN_ENDPOINTS.treatments}${created.body?.id}/`))).status).toBe(204);
+    const remaining = await intercept<Array<{ id: string }>>(new HttpRequest('GET', DOMAIN_ENDPOINTS.treatments, null, { params: new HttpParams().set('risk_id', 'risk-001') }));
+    expect(remaining.body?.some((task) => task.id === created.body?.id)).toBe(false);
+  });
 });
 
 function scopeParams(): HttpParams { return new HttpParams().set('scope_id', SCOPE_ID); }

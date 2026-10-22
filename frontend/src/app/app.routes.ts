@@ -103,6 +103,18 @@ export const routes: Routes = [
     loadComponent: () => import('./features/users/pages/users-page/users-page.component').then((module) => module.UsersPageComponent),
   },
   {
+    path: 'invitations',
+    title: 'Invitation | OpenSMR',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/users/pages/invitation-page/invitation-page.component').then((module) => module.InvitationPageComponent),
+  },
+  {
+    path: 'invitations/accept',
+    title: 'Accepter une invitation | OpenSMR',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/users/pages/invitation-page/invitation-page.component').then((module) => module.InvitationPageComponent),
+  },
+  {
     path: 'my-tasks',
     title: 'Mes tâches | OpenSMR',
     canActivate: [authGuard, roleGuard],

@@ -10,6 +10,13 @@ const DIGITAL_SCOPE = '8f4b8400-e29b-41d4-a716-446655440101';
 const DATACENTER_SCOPE = '8f4b8400-e29b-41d4-a716-446655440102';
 const ASTERIA_ORG = '8f4b8400-e29b-41d4-a716-446655440001';
 const NOVACARE_ORG = '8f4b8400-e29b-41d4-a716-446655440002';
+let heatmapRisks = [
+  { id: 'risk-001', scope_id: DIGITAL_SCOPE, likelihood: 4, impact: 5 },
+  { id: 'risk-002', scope_id: DIGITAL_SCOPE, likelihood: 3, impact: 5 },
+  { id: 'risk-003', scope_id: DIGITAL_SCOPE, likelihood: 3, impact: 4 },
+  { id: 'risk-004', scope_id: DIGITAL_SCOPE, likelihood: 4, impact: 3 },
+  { id: 'risk-005', scope_id: DATACENTER_SCOPE, likelihood: 2, impact: 5 },
+];
 const members: (ManagedUser & { organization_id: string })[] = [
   { id: '1', organization_id: ASTERIA_ORG, role_assignment_id: 'role-001', name: 'Camille Durand', email: 'camille.durand@opensmr.fr', role: 'RISK_OWNER', is_active: true, scope_ids: [DIGITAL_SCOPE, DATACENTER_SCOPE] },
   { id: '2', organization_id: ASTERIA_ORG, role_assignment_id: 'role-002', name: 'Nadia Bernard', email: 'nadia.bernard@opensmr.fr', role: 'RSSI', is_active: true, scope_ids: [DIGITAL_SCOPE] },
@@ -18,7 +25,8 @@ const members: (ManagedUser & { organization_id: string })[] = [
 ];
 
 export function registerMockMember(profile: UserProfile, organizationId: string, role: UserRole): void {
-  if (members.some((member) => member.id === profile.id && member.organization_id === organizationId)) return;
+  const existing = members.find((member) => member.id === profile.id && member.organization_id === organizationId);
+  if (existing) { existing.role = role; existing.is_active = true; return; }
   members.push({
     id: profile.id,
     organization_id: organizationId,
@@ -29,6 +37,27 @@ export function registerMockMember(profile: UserProfile, organizationId: string,
     is_active: true,
     scope_ids: [],
   });
+}
+
+export function removeMockUser(userId: string): void {
+  for (let index = members.length - 1; index >= 0; index--) if (members[index].id === userId) members.splice(index, 1);
+}
+
+export function removeMockRiskTreatments(riskId: string): void {
+  treatments = treatments.filter((task) => task.risk_id !== riskId);
+  heatmapRisks = heatmapRisks.filter((risk) => risk.id !== riskId);
+}
+
+export function updateMockHeatmapRisk(risk: { id: string; scope_id: string; likelihood: number; impact: number }): void {
+  heatmapRisks = [...heatmapRisks.filter((item) => item.id !== risk.id), risk];
+}
+
+export function removeMockOrganizationData(organizationId: string, scopeIds: string[]): void {
+  for (let index = members.length - 1; index >= 0; index--) if (members[index].organization_id === organizationId) members.splice(index, 1);
+  treatments = treatments.filter((task) => !scopeIds.includes(task.scope_id));
+  soaEntries = soaEntries.filter((entry) => !scopeIds.includes(entry.scope_id));
+  soaVersions = soaVersions.filter((version) => !scopeIds.includes(version.scope_id));
+  heatmapRisks = heatmapRisks.filter((risk) => !scopeIds.includes(risk.scope_id));
 }
 
 const controls: IsoControl[] = Array.from({ length: 93 }, (_, index) => {
@@ -92,7 +121,8 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
   const dashboardMatch = request.url.match(/\/scopes\/([^/]+)\/dashboard\/$/);
   if (dashboardMatch && request.method === 'GET') {
     const isDatacenter = dashboardMatch[1] === DATACENTER_SCOPE;
-    return ok({ risks_by_level: { high: isDatacenter ? 0 : 2, medium: isDatacenter ? 1 : 2, low: 0 }, soa_completion: { total_applicable: 84, implemented: isDatacenter ? 31 : 30, percentage: isDatacenter ? 36.9 : 35.71 }, overdue_tasks_count: isDatacenter ? 0 : 1 });
+    const scopedRisks = heatmapRisks.filter((risk) => risk.scope_id === dashboardMatch[1]);
+    return ok({ risks_by_level: { high: scopedRisks.filter((risk) => risk.likelihood * risk.impact >= 15).length, medium: scopedRisks.filter((risk) => risk.likelihood * risk.impact >= 8 && risk.likelihood * risk.impact < 15).length, low: scopedRisks.filter((risk) => risk.likelihood * risk.impact < 8).length }, soa_completion: { total_applicable: 84, implemented: isDatacenter ? 31 : 30, percentage: isDatacenter ? 36.9 : 35.71 }, overdue_tasks_count: isDatacenter ? 0 : 1 });
   }
   const membersMatch = request.url.match(/\/organizations\/([^/]+)\/members\/$/);
   if (membersMatch && request.method === 'GET') return ok(members.filter((member) => member.organization_id === membersMatch[1]).map(toBackendMember));
@@ -131,11 +161,11 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
     return ok(toBackendScopeAccess(member, scopeAccessMatch[1]), 201);
   }
   if (request.url === DOMAIN_ENDPOINTS.heatmap && request.method === 'GET') {
-    const populated = scopeId === DATACENTER_SCOPE ? [[2, 5, 'risk-005']] : [[4, 5, 'risk-001'], [3, 5, 'risk-002'], [3, 4, 'risk-003'], [4, 3, 'risk-004']];
+    const populated = heatmapRisks.filter((risk) => risk.scope_id === scopeId);
     const cells = Array.from({ length: 25 }, (_, index) => {
       const likelihood = Math.floor(index / 5) + 1;
       const impact = index % 5 + 1;
-      const ids = populated.filter(([v, i]) => v === likelihood && i === impact).map(([, , id]) => String(id));
+      const ids = populated.filter((risk) => risk.likelihood === likelihood && risk.impact === impact).map((risk) => risk.id);
       return { likelihood, impact, risk_count: ids.length, risk_ids: ids };
     });
     return ok({ scope_id: scopeId ?? '', total_risks: cells.reduce((sum, cell) => sum + cell.risk_count, 0), matrix: cells.map((cell) => ({ likelihood: cell.likelihood, impact: cell.impact, score: cell.likelihood * cell.impact, count: cell.risk_count })) });
@@ -151,6 +181,13 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
     return ok(toBackendTask(created), 201);
   }
   const treatmentMatch = request.url.match(/\/treatments\/tasks\/([^/]+)\/(?:status\/)?$/);
+  if (treatmentMatch && request.method === 'DELETE' && !request.url.endsWith('/status/')) {
+    const task = treatments.find((item) => item.id === treatmentMatch[1]);
+    if (!task) return fail(404, 'Tâche introuvable.');
+    treatments = treatments.filter((item) => item.id !== task.id);
+    synchronizeSoa(task);
+    return ok(null, 204);
+  }
   if (treatmentMatch && request.method === 'PATCH') {
     const id = treatmentMatch[1];
     const current = treatments.find((item) => item.id === id);

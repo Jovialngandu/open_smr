@@ -22,6 +22,7 @@ export class NotificationCenterService {
       const organizationId = this.context.activeOrganizationId();
       this.readIdsState.set(this.restoreReadIds(userId, organizationId));
       if (userId) this.settings.loadEmailLogs(organizationId);
+      else this.settings.clearEmailLogs();
     });
   }
 
