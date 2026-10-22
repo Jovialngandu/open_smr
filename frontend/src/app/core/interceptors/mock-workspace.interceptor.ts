@@ -18,7 +18,8 @@ const members: (ManagedUser & { organization_id: string })[] = [
 ];
 
 export function registerMockMember(profile: UserProfile, organizationId: string, role: UserRole): void {
-  if (members.some((member) => member.id === profile.id && member.organization_id === organizationId)) return;
+  const existing = members.find((member) => member.id === profile.id && member.organization_id === organizationId);
+  if (existing) { existing.role = role; existing.is_active = true; return; }
   members.push({
     id: profile.id,
     organization_id: organizationId,

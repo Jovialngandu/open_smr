@@ -61,10 +61,54 @@ let activeOrganizationId = ORGANIZATIONS[0].organization_id;
 let activeScopeId = ORGANIZATIONS[0].scopes[0].id;
 let nextMockUserId = 5;
 const registeredAccounts = new Map<string, { profile: UserProfile; password: string }>();
+type MockInvitation = {
+  id: string; organization: { id: string; name: string }; invited_user_email: string;
+  role: UserRole; status: 'PENDING' | 'ACCEPTED' | 'DECLINED'; expires_at: string;
+};
+const mockInvitations = new Map<string, MockInvitation>();
 
 export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
   if (!API_CONFIG.useMocks) {
     return next(request);
+  }
+
+  if (request.url === `${DOMAIN_ENDPOINTS.users}search/` && request.method === 'GET') {
+    const query = (request.params.get('q') ?? '').trim().toLocaleLowerCase('fr');
+    const profiles = [DEMO_PROFILE, OWNER_PROFILE, ...Array.from(registeredAccounts.values(), (account) => account.profile)];
+    return mockOk(query ? profiles.filter((profile) => `${profile.username} ${profile.email}`.toLocaleLowerCase('fr').includes(query)).slice(0, 10).map(({ id, username, email, first_name, last_name }) => ({ id, username, email, first_name, last_name })) : []);
+  }
+
+  const invitationCreate = request.url.match(/\/organizations\/([^/]+)\/invitations\/$/);
+  if (invitationCreate && request.method === 'POST') {
+    const organization = ORGANIZATIONS.find((item) => item.organization_id === invitationCreate[1]);
+    const senderRole = currentProfile.roles.find((item) => item.organization_id === invitationCreate[1])?.role;
+    if (!organization || !senderRole || !['ADMIN', 'RSSI'].includes(senderRole)) return mockError(403, 'Vous ne pouvez pas inviter de membre dans cette organisation.');
+    const body = request.body as { invited_user_email: string; role: UserRole };
+    const email = body.invited_user_email?.trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return mockError(400, 'Saisissez une adresse e-mail valide.');
+    if (!['ADMIN', 'RSSI', 'RISK_OWNER', 'AUDITOR'].includes(body.role)) return mockError(400, 'Le rôle choisi n’est pas valide.');
+    if ([...mockInvitations.values()].some((item) => item.organization.id === organization.organization_id && item.invited_user_email === email && item.status === 'PENDING')) return mockError(400, 'Une invitation en attente existe déjà pour cet e-mail.');
+    const token = crypto.randomUUID();
+    const invitation: MockInvitation = { id: crypto.randomUUID(), organization: { id: organization.organization_id, name: organization.organization_name }, invited_user_email: email, role: body.role, status: 'PENDING', expires_at: new Date(Date.now() + 7 * 86400000).toISOString() };
+    mockInvitations.set(token, invitation);
+    return mockOk({ ...invitation, token }, 201);
+  }
+
+  const invitationDecision = request.url.match(/\/organizations\/invitations\/(accept|decline)\/$/);
+  if (invitationDecision && request.method === 'POST') {
+    const token = (request.body as { token: string })?.token;
+    const invitation = mockInvitations.get(token);
+    if (!invitation) return mockError(404, 'Cette invitation est introuvable ou le lien est incorrect.');
+    if (invitation.status !== 'PENDING') return mockError(400, 'Cette invitation a déjà été utilisée.');
+    if (new Date(invitation.expires_at).getTime() < Date.now()) return mockError(400, 'Cette invitation a expiré.');
+    if (currentProfile.email.toLowerCase() !== invitation.invited_user_email) return mockError(403, 'Connectez-vous avec l’adresse e-mail qui a reçu cette invitation.');
+    invitation.status = invitationDecision[1] === 'accept' ? 'ACCEPTED' : 'DECLINED';
+    if (invitation.status === 'ACCEPTED') {
+      const organization = ORGANIZATIONS.find((item) => item.organization_id === invitation.organization.id)!;
+      currentProfile.roles = [...currentProfile.roles.filter((item) => item.organization_id !== organization.organization_id), { ...organization, role: invitation.role, scopes: [] }];
+      registerMockMember(currentProfile, organization.organization_id, invitation.role);
+    }
+    return mockOk({ detail: invitation.status === 'ACCEPTED' ? 'Invitation acceptée.' : 'Invitation refusée.', invitation });
   }
 
   if (request.url === DOMAIN_ENDPOINTS.organizations && request.method === 'POST') {
