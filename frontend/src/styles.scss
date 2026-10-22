@@ -495,6 +495,16 @@ td > small { display: block; max-width: 310px; margin-top: .25rem; overflow: hid
 .row-actions button { padding: .35rem; color: var(--brand); border: 0; background: transparent; font-size: .7rem; font-weight: 750; }
 .row-actions button:hover { text-decoration: underline; }
 .row-actions .danger-link { color: #b42318; }
+.danger-link { color: var(--danger); }
+.button--danger { color: #fff; border-color: #a32219; background: #b42318; }
+.button--danger:hover:not(:disabled) { background: #901c14; }
+.button--danger:disabled { opacity: .55; cursor: not-allowed; }
+:root[data-theme='dark'] .danger-link { color: #ffb4aa; }
+.settings-danger { margin-top: 1.25rem; }
+.settings-danger__item { display: grid; justify-items: start; gap: .75rem; padding: 1rem 0; border-top: 1px solid var(--line); }
+.settings-danger__item h3 { margin: 0 0 .3rem; font-size: .95rem; }
+.settings-danger__item p { margin: 0; color: var(--muted); line-height: 1.5; }
+.settings-danger__item .field { width: min(100%, 420px); margin: 0; }
 .numeric-cell { text-align: center; font-weight: 800; }
 .threat-cell { min-width: 260px; line-height: 1.45; }
 .risk-code { color: #1f5544; font-family: ui-monospace, "Cascadia Code", monospace; font-size: .76rem; }

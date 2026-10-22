@@ -21,6 +21,7 @@ import { TreatmentsService } from '../../treatments/services/treatments.service'
 })
 export class AuthenticatedHomeComponent {
   protected readonly invitationAccepted = inject(ActivatedRoute).snapshot.queryParamMap.get('invitation') === 'accepted';
+  protected readonly organizationDeleted = inject(ActivatedRoute).snapshot.queryParamMap.get('organizationDeleted') === '1';
   protected readonly auth = inject(AuthService);
   protected readonly context = inject(ContextService);
   protected readonly assets = inject(AssetsService);

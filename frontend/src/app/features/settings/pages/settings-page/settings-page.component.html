@@ -80,6 +80,22 @@
         @else if (!service.emailLogs().length) { <div class="empty-state empty-state--compact"><p>Aucun e-mail enregistré pour ce contexte.</p></div> }
         @else { <div class="table-scroll"><table><thead><tr><th>Date</th><th>Objet</th><th>Destinataire</th><th>Envoi</th></tr></thead><tbody>@for (log of service.emailLogs(); track log.id) { <tr><td>{{ log.sent_at.slice(0, 16).replace('T', ' ') }}</td><td>{{ log.subject }}</td><td>{{ log.recipient }}</td><td><span class="status-chip" [attr.data-status]="log.status ? 'CLOSED' : 'OPEN'">{{ log.status ? 'Envoyé' : 'Échec' }}</span></td></tr> }</tbody></table></div> }
       </section>
+      <section class="settings-section settings-danger" aria-labelledby="deletion-title">
+        <header><div><h2 id="deletion-title">Suppression</h2><p>Ces actions sont définitives. Vérifiez votre choix avant de confirmer.</p></div></header>
+        @if (deletionError()) { <div class="alert alert--error" role="alert"><p>{{ deletionError() }}</p></div> }
+        @if (context.activeRole() === 'ADMIN' && context.activeOrganizationId()) {
+          <div class="settings-danger__item">
+            <div><h3>Supprimer l’organisation</h3><p>L’organisation « {{ organizationName() }} », ses périmètres et leurs données seront supprimés pour tous les membres.</p></div>
+            <div class="field"><label for="delete-organization-confirmation">Saisissez « {{ organizationName() }} » pour confirmer</label><input id="delete-organization-confirmation" type="text" autocomplete="off" [value]="organizationConfirmation()" (input)="organizationConfirmation.set($any($event.target).value)"></div>
+            <button class="button button--danger" type="button" (click)="deleteOrganization()" [disabled]="organizationConfirmation() !== organizationName() || deletingOrganization() || deletingAccount()">{{ deletingOrganization() ? 'Suppression…' : 'Supprimer l’organisation' }}</button>
+          </div>
+        }
+        <div class="settings-danger__item">
+          <div><h3>Supprimer mon compte</h3><p>Votre compte et vos accès seront supprimés. Vous serez déconnecté.</p></div>
+          <div class="field"><label for="delete-account-confirmation">Saisissez « {{ auth.user()?.username }} » pour confirmer</label><input id="delete-account-confirmation" type="text" autocomplete="off" [value]="accountConfirmation()" (input)="accountConfirmation.set($any($event.target).value)"></div>
+          <button class="button button--danger" type="button" (click)="deleteAccount()" [disabled]="accountConfirmation() !== auth.user()?.username || deletingAccount() || deletingOrganization()">{{ deletingAccount() ? 'Suppression…' : 'Supprimer mon compte' }}</button>
+        </div>
+      </section>
     }
   </div>
 </main>
