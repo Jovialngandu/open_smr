@@ -65,7 +65,7 @@ Le mode mock permet de tester :
 - la protection des routes ;
 - les autorisations par rôle.
 - l'inventaire des actifs, son filtrage par périmètre et son CRUD ;
-- le registre des risques, son filtrage par périmètre, la création et la modification des scénarios (sans suppression tant que l’API ne l’expose pas).
+- le registre des risques, son filtrage par périmètre et la création, modification ou suppression des scénarios ;
 - le dashboard, ses indicateurs et la heatmap interactive 5 × 5 ;
 - les plans de traitement et leur suivi ;
 - le tableau Kanban des traitements avec glisser-déposer entre les statuts ;
@@ -106,6 +106,15 @@ Compte → Organisation → Périmètre → Actif → Risque
 Après la connexion ou l'inscription, l'utilisateur passe par `/select-context`. Il peut choisir un contexte existant, créer une organisation et son premier périmètre, ou continuer vers un dashboard vide. Les pages métier nécessitent toujours une organisation, un périmètre et un rôle autorisé.
 
 Le dashboard dépend du rôle : l'Admin et le RSSI pilotent le périmètre, le responsable de risque retrouve ses propres tâches et preuves, et l'auditeur consulte les informations sans action d'édition.
+
+## Suppressions
+
+- Sur `/risks`, ADMIN et RSSI peuvent supprimer un risque après confirmation. Les tâches et preuves qui en dépendent peuvent également disparaître par cascade.
+- Sur `/treatments`, ADMIN et RSSI peuvent supprimer une tâche depuis le tableau ou la liste, sauf si la tâche leur est assignée : Django refuse explicitement ce cas. Les preuves liées sont également supprimées.
+- Dans `/settings`, un ADMIN peut supprimer l'organisation active après avoir saisi son nom exact. L'interface bascule vers une autre organisation disponible, ou affiche un dashboard sans organisation. Cette suppression affecte tous ses membres et périmètres.
+- Chaque utilisateur peut supprimer son propre compte depuis `/settings` après avoir saisi son nom d'utilisateur exact. La session locale est effacée puis la page de connexion confirme l'opération.
+
+Les quatre opérations utilisent les routes `DELETE /api/v1/organizations/{id}/`, `DELETE /api/v1/auth/me/`, `DELETE /api/v1/risks/{id}/` et `DELETE /api/v1/treatments/tasks/{id}/`. Les mocks reproduisent le résultat `204` et retirent les données locales concernées. Les confirmations frontend ne remplacent pas les contrôles d'autorisation du serveur.
 
 Les 93 mesures ISO ne sont jamais saisies depuis l'interface. Elles proviennent du catalogue de référence chargé côté Django par le seeder `seed_iso_controls.py`.
 
@@ -333,7 +342,7 @@ Fonctionnalités terminées :
 - backend d'authentification mocké ;
 - inventaire des actifs avec badge DIC et formulaire de création/édition ;
 - registre des risques avec score coloré et rattachement aux actifs ;
-- mocks de création et de modification des risques, et CRUD des actifs, filtrés par le périmètre actif. La suppression d’un risque n’est pas proposée car Django n’expose pas encore cette opération.
+- mocks de création, modification et suppression des risques, ainsi que le CRUD des actifs, filtrés par le périmètre actif.
 - dashboard avec indicateurs, tâches urgentes et heatmap filtrante ;
 - plans de traitement avec mesure ISO, responsable et échéance ;
 - espace Mes tâches avec dépôt de preuves PDF/image et clôture ;
