@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { forkJoin, map, Observable, of, tap } from 'rxjs';
 
@@ -12,11 +12,14 @@ export class UsersService {
   private readonly http = inject(HttpClient);
   private readonly context = inject(ContextService);
   private readonly usersState = signal<ManagedUser[]>([]);
+  private readonly fetchErrorState = signal('');
   readonly users = this.usersState.asReadonly();
+  readonly fetchError = this.fetchErrorState.asReadonly();
   private fetchVersion = 0;
   fetch(): void {
     const version = ++this.fetchVersion;
     this.usersState.set([]);
+    this.fetchErrorState.set('');
     const organizationId = this.context.activeOrganizationId();
     if (!organizationId) return;
     const scopeId = this.context.activeScopeId();
@@ -25,7 +28,7 @@ export class UsersService {
       accesses: scopeId ? this.http.get<BackendScopeAccess[]>(scopeAccessEndpoint(scopeId)) : of([]),
     }).pipe(map(({ members, accesses }) => members.map((member) => toManagedUser(member, accesses, scopeId)))).subscribe({
       next: (users) => { if (version === this.fetchVersion && organizationId === this.context.activeOrganizationId() && scopeId === this.context.activeScopeId()) this.usersState.set(users); },
-      error: () => { if (version === this.fetchVersion) this.usersState.set([]); },
+      error: (error: unknown) => { if (version === this.fetchVersion) { this.usersState.set([]); this.fetchErrorState.set(error instanceof HttpErrorResponse && error.status === 403 ? 'La liste des membres est réservée aux administrateurs de cette organisation.' : 'Impossible de charger les membres. Réessayez plus tard.'); } },
     });
   }
   assign(userId: number, role: Exclude<UserRole, 'ADMIN'>): Observable<ManagedUser> {
