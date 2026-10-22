@@ -22,9 +22,15 @@ export class ContextService {
   readonly profile = this.profileState.asReadonly();
   readonly claims = this.claimsState.asReadonly();
   readonly organizations = computed(() => this.profileState()?.roles ?? []);
-  readonly activeOrganizationId = computed(() => this.claimsState()?.organization_id ?? null);
-  readonly activeScopeId = computed(() => this.claimsState()?.scope_id ?? null);
-  readonly activeRole = computed(() => this.claimsState()?.role ?? null);
+  readonly activeOrganizationId = computed(() => {
+    const id = this.claimsState()?.organization_id;
+    return id && this.profileState()?.roles.some((role) => role.organization_id === id) ? id : null;
+  });
+  readonly activeScopeId = computed(() => {
+    const id = this.claimsState()?.scope_id;
+    return id && this.activeOrganization()?.scopes.some((scope) => scope.id === id) ? id : null;
+  });
+  readonly activeRole = computed(() => this.activeOrganization()?.role ?? null);
   readonly activeOrganization = computed<OrganizationRole | null>(() =>
     this.organizations().find((item) => item.organization_id === this.activeOrganizationId()) ?? null,
   );
@@ -100,6 +106,21 @@ export class ContextService {
         ...profile,
         roles: profile.roles.some((role) => role.organization_id === organization.id) ? profile.roles : [...profile.roles, { organization_id: organization.id, organization_name: organization.name, role: 'ADMIN', scopes: [] }],
       } : profile)),
+    );
+  }
+
+  deleteOrganization(organizationId: string): Observable<void> {
+    return this.http.delete<void>(`${DOMAIN_ENDPOINTS.organizations}${organizationId}/`).pipe(
+      tap(() => {
+        const userId = this.profileState()?.id;
+        if (userId) {
+          const saved = localStorage.getItem(this.lastContextKey(userId));
+          if (saved?.includes(organizationId)) this.clearPreferredContext(userId);
+        }
+        this.profileState.update((profile) => profile ? {
+          ...profile, roles: profile.roles.filter((role) => role.organization_id !== organizationId),
+        } : profile);
+      }),
     );
   }
 

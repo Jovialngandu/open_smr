@@ -75,6 +75,13 @@ export class AuthService {
     this.endSession(redirect);
   }
 
+  deleteAccount(): Observable<void> {
+    return this.http.delete<void>(AUTH_ENDPOINTS.profile).pipe(
+      tap(() => this.endSession(false)),
+      catchError((error) => throwError(() => this.toFriendlyError(error))),
+    );
+  }
+
   private acceptProfile(profile: UserProfile): Observable<UserProfile> {
     return this.context.hydrateProfile(profile).pipe(tap((hydratedProfile) => {
       this.context.setProfile(hydratedProfile);
