@@ -75,13 +75,14 @@ Le mode mock permet de tester :
 - les exports PDF/CSV simulés ;
 - le portail auditeur en lecture seule ;
 - les comptes, rôles, statuts et habilitations par périmètre ;
+- la recherche de comptes et l’invitation par e-mail avec rôle, ainsi que l’acceptation ou le refus par lien ;
 - les préférences personnelles : thème, langue, fuseau horaire et notifications email.
 
 ## Parcours métier
 
 L'inscription ne contient aucun champ lié à l'organisation : elle crée uniquement le compte avec un nom d'utilisateur, un email et un mot de passe ; les prénom et nom restent facultatifs. Juste après, un onboarding distinct propose de créer une organisation et son premier périmètre. Cette configuration peut être ignorée : le compte ouvre alors un dashboard vide, depuis lequel l'utilisateur pourra reprendre la création avec « Créer une organisation ».
 
-Le backend autorise bien un compte sans organisation et expose ensuite `POST /organizations/`, puis `POST /scopes/`. Le frontend enchaîne ces deux appels, régénère le contexte JWT et ouvre le nouveau périmètre. La jonction à une organisation existante demeure liée au contrat d'inscription actuel (`join_organization_code`) tant qu'un endpoint de rattachement après inscription n'est pas exposé.
+Le backend autorise bien un compte sans organisation et expose ensuite `POST /organizations/`, puis `POST /scopes/`. Le frontend enchaîne ces deux appels, régénère le contexte JWT et ouvre le nouveau périmètre. Pour rejoindre une organisation existante, l’utilisateur reçoit désormais une invitation par e-mail et l’accepte depuis son compte.
 
 Depuis le dashboard, tout utilisateur authentifié peut créer une organisation supplémentaire avec son premier périmètre. Le formulaire ne demande aucun code : Django le génère et le renvoie. Le nouvel espace est ajouté au sélecteur global puis activé immédiatement.
 
@@ -91,7 +92,9 @@ Après une connexion, l'utilisateur arrive directement sur `/dashboard`. Chaque 
 
 Les preuves d'une tâche se déposent depuis « Mes tâches » ou, pour les personnes autorisées, directement depuis les cartes et la liste des traitements. Le dépôt utilise un formulaire `multipart/form-data` (`task_id`, `file_path`, `description`). Dans le tableau Kanban, déplacer une carte change son statut ; le sélecteur de statut n'est disponible qu'en vue liste. Une preuve est demandée avant de terminer une tâche.
 
-La liste des utilisateurs est rechargée et vidée immédiatement lors d'un changement d'organisation ou de périmètre. Les réponses arrivées en retard pour l'ancien contexte sont ignorées.
+La liste des utilisateurs est rechargée et vidée immédiatement lors d'un changement d'organisation ou de périmètre. Les réponses arrivées en retard pour l'ancien contexte sont ignorées. Un Admin ou un RSSI peut inviter un membre par e-mail depuis `/users` : la recherche propose les comptes existants, mais une adresse encore inconnue peut aussi recevoir une invitation. Le rôle par défaut est `RISK_OWNER`. Le membre apparaît dans l’organisation seulement après avoir accepté le lien reçu. L’accès à un périmètre reste à attribuer séparément.
+
+Les liens envoyés par Django pointent vers `/invitations?token=...` ; `/invitations/accept?token=...` est également accepté par le frontend. Une session est demandée avant toute décision. Après acceptation, le profil et le JWT de contexte sont actualisés et le dashboard de la nouvelle organisation s’ouvre. Le backend ne fournit pas de route de prévisualisation de l’invitation : son nom d’organisation n’est disponible qu’après acceptation/refus. Attention, l’API accepte actuellement une décision anonyme et peut consommer l’invitation sans rattacher de compte ; l’interface évite ce chemin, mais le backend devra le sécuriser avant mise en production.
 
 Un ADMIN ou un RSSI peut créer d'autres périmètres à tout moment avec le bouton « + » situé à côté du sélecteur de périmètre, dans la barre supérieure. Le formulaire utilise `POST /scopes/` avec l'organisation active ; après création, l'application bascule vers le nouveau périmètre. Le backend accorde automatiquement l'accès au créateur et initialise les entrées SoA.
 
@@ -136,6 +139,10 @@ GET  /api/v1/auth/me/
 POST /api/v1/auth/switch-context/
 GET|POST /api/v1/organizations/
 GET|POST /api/v1/organizations/{organization_id}/members/
+GET /api/v1/users/search/?q=...
+POST /api/v1/organizations/{organization_id}/invitations/
+POST /api/v1/organizations/invitations/accept/
+POST /api/v1/organizations/invitations/decline/
 PATCH /api/v1/organizations/{organization_id}/members/{role_id}/toggle-status/
 GET|POST /api/v1/scopes/
 GET|POST /api/v1/scopes/{scope_id}/access/
