@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { forkJoin, map, Observable, of, tap } from 'rxjs';
+import { forkJoin, map, Observable, of, tap, throwError } from 'rxjs';
 
 import { organizationMembersEndpoint, organizationMemberStatusEndpoint, scopeAccessEndpoint, scopeAccessRemovalEndpoint } from '../../../core/config/api.config';
 import { UserRole } from '../../../core/models/auth.models';
@@ -16,6 +16,10 @@ export class UsersService {
   readonly users = this.usersState.asReadonly();
   readonly fetchError = this.fetchErrorState.asReadonly();
   private fetchVersion = 0;
+  isCurrentUser(user: ManagedUser): boolean {
+    const currentId = this.context.profile()?.id;
+    return currentId != null && String(user.id) === String(currentId);
+  }
   fetch(): void {
     const version = ++this.fetchVersion;
     this.usersState.set([]);
@@ -32,21 +36,26 @@ export class UsersService {
     });
   }
   assign(userId: number, role: Exclude<UserRole, 'ADMIN'>): Observable<ManagedUser> {
+    if (String(userId) === String(this.context.profile()?.id)) {
+      return throwError(() => new Error('Vous ne pouvez pas modifier vos propres droits.'));
+    }
     const organizationId = this.context.activeOrganizationId();
     if (!organizationId) throw new Error('Aucune organisation active.');
     return this.http.post<BackendMemberRole>(organizationMembersEndpoint(organizationId), { user_id: userId, role }).pipe(map((member) => toManagedUser(member, [], this.context.activeScopeId())), tap((created) => this.usersState.update((users) => [...users.filter((user) => user.id !== created.id), created])));
   }
   changeRole(user: ManagedUser, role: ManagedUser['role']): void {
-    if (role === 'ADMIN') return;
+    if (role === 'ADMIN' || this.isCurrentUser(user)) return;
     this.assign(Number(user.id), role).subscribe();
   }
   toggle(user: ManagedUser): void {
+    if (this.isCurrentUser(user)) return;
     const organizationId = this.context.activeOrganizationId();
     if (!organizationId || !user.role_assignment_id) return;
     this.http.patch<BackendMemberRole>(organizationMemberStatusEndpoint(organizationId, user.role_assignment_id), { is_active: !user.is_active }).pipe(map((member) => toManagedUser(member, [], this.context.activeScopeId()))).subscribe((updated) => this.usersState.update((users) => users.map((item) => item.id === updated.id ? { ...updated, scope_ids: item.scope_ids } : item)));
   }
 
   setScopeAccess(user: ManagedUser, granted: boolean): void {
+    if (this.isCurrentUser(user)) return;
     const scopeId = this.context.activeScopeId();
     if (!scopeId) return;
     const endpoint = granted ? scopeAccessEndpoint(scopeId) : scopeAccessRemovalEndpoint(scopeId);
