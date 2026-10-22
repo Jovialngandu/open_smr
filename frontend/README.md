@@ -43,6 +43,14 @@ http://localhost:4200
 
 Le serveur recharge automatiquement l'application après une modification du code.
 
+## Connexion Google (OIDC)
+
+Le bouton Google sur `/login` utilise le SDK Google Identity Services chargé dans `src/index.html`. Renseignez le **Client ID Web public** dans `src/app/core/config/oidc.config.ts` (la même valeur que `GOOGLE_CLIENT_ID` côté Django). Aucun secret Google ne doit être placé dans le frontend. Configurez également `http://localhost:4200` et l'origine du frontend déployé parmi les origines JavaScript autorisées du client OAuth Google.
+
+Le callback Google fournit un `credential` : Angular l'envoie à `POST /api/v1/auth/oidc/callback/` avec `provider: "google"`. La réponse fournit les JWT applicatifs et le profil. `AuthService` sauvegarde les JWT, hydrate les périmètres, restaure le dernier contexte accessible et ouvre le dashboard (ou revient à une invitation en cours). L'endpoint est public : l'intercepteur JWT n'y ajoute pas d'ancien token et ne tente pas de rafraîchissement sur un refus `401`.
+
+En mode mock, l'endpoint est simulé : le contenu du jeton est décodé **sans vérification cryptographique**, uniquement pour les essais locaux. Il ne doit jamais être considéré comme une authentification réelle. Le backend actuel crée une organisation d'administration lors de la première connexion OIDC sans invitation ; ce parcours diffère de l'inscription classique, qui peut laisser le dashboard vide. Avec une invitation en attente, Django rattache le nouveau compte à l'organisation invitante.
+
 ## Mode de démonstration
 
 Le frontend peut fonctionner sans le backend grâce aux mocks couvrant l'ensemble du parcours MVP. Ils sont contrôlés par `useMocks` dans `src/app/core/config/api.config.ts`. La configuration actuelle utilise l’API déployée ; activez explicitement les mocks pour travailler hors connexion.

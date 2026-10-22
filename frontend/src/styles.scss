@@ -408,6 +408,11 @@ form { display: grid; gap: 1.15rem; }
 .demo-note code { font-family: inherit; color: #53615b; }
 
 .auth-switch { margin: 1.7rem 0 0; color: var(--muted); font-size: .88rem; text-align: center; }
+.google-signin { margin-top: 1.25rem; text-align: center; }
+.google-signin__separator { margin: 0 0 1rem; color: var(--muted); font-size: .82rem; }
+.google-signin__button { display: flex; justify-content: center; min-height: 42px; }
+.google-signin__button--busy { pointer-events: none; opacity: .55; }
+.google-signin__unavailable { margin: 0; color: var(--muted); font-size: .8rem; }
 .auth-switch a { color: var(--brand); font-weight: 750; text-underline-offset: 3px; }
 
 .welcome-page { min-height: 100dvh; padding: 1.5rem clamp(1.2rem, 5vw, 5rem); background: radial-gradient(circle at 80% 0, #e9f4d0, transparent 28%), #f5f7f4; }
