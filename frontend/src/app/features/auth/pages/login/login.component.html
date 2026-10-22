@@ -32,6 +32,7 @@
       <p class="eyebrow">Connexion</p>
       <h2 id="login-title">Accédez à OpenSMR</h2>
       <p class="auth-intro">Saisissez votre nom d’utilisateur et votre mot de passe.</p>
+      @if (accountDeleted) { <div class="alert alert--success" role="status"><p>Votre compte a été supprimé.</p></div> }
 
       @if (errorMessage()) {
         <div class="alert alert--error" role="alert">

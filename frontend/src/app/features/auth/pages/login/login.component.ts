@@ -20,6 +20,7 @@ export class LoginComponent {
   private readonly formBuilder = inject(FormBuilder);
   protected readonly passwordVisible = signal(false);
   protected readonly errorMessage = signal('');
+  protected readonly accountDeleted = this.route.snapshot.queryParamMap.get('accountDeleted') === '1';
   protected readonly form = this.formBuilder.nonNullable.group({
     username: ['', Validators.required],
     password: ['', Validators.required],

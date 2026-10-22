@@ -2,6 +2,7 @@
   <app-topbar />
   <div class="workspace-content">
     @if (invitationAccepted) { <div class="alert alert--success" role="status"><p>Invitation acceptée. Vous avez maintenant accès à l’organisation.</p></div> }
+    @if (organizationDeleted) { <div class="alert alert--success" role="status"><p>L’organisation a été supprimée.</p></div> }
     <header class="page-heading"><div><p class="eyebrow">Tableau de bord</p><h1>Bonjour, {{ auth.user()?.first_name || auth.user()?.username }}.</h1><p>{{ context.activeScopeId() ? 'Consultez les indicateurs du périmètre actif.' : 'Aucun périmètre n’est sélectionné.' }}</p></div></header>
     @if (!context.activeOrganizationId()) {
       <section class="empty-workspace"><span aria-hidden="true"><svg lucidePackage class="ui-icon"></svg></span><p class="eyebrow">Première configuration</p><h2>Aucune organisation</h2><p>Créez une organisation pour définir un périmètre, inventorier les actifs et commencer l’analyse des risques.</p><div class="onboarding-actions"><a class="button button--primary" routerLink="/select-context">Créer une organisation</a><span>Vous pourrez également le faire plus tard.</span></div></section>
