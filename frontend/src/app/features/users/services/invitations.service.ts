@@ -41,8 +41,12 @@ export class InvitationsService {
     if (!['ADMIN', 'RSSI'].includes(this.context.activeRole() ?? '')) {
       return throwError(() => new Error('Seuls les administrateurs et RSSI peuvent inviter un membre.'));
     }
+    const normalizedEmail = email.trim().toLowerCase();
+    if (normalizedEmail === this.context.profile()?.email.trim().toLowerCase()) {
+      return throwError(() => new Error('Vous ne pouvez pas vous inviter vous-même.'));
+    }
     return this.http.post<OrganizationInvitation>(`${DOMAIN_ENDPOINTS.organizations}${organizationId}/invitations/`, {
-      invited_user_email: email.trim().toLowerCase(), role,
+      invited_user_email: normalizedEmail, role,
     }).pipe(catchError((error) => throwError(() => invitationError(error))));
   }
 

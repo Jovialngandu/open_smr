@@ -88,6 +88,7 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
     const body = request.body as { invited_user_email: string; role: UserRole };
     const email = body.invited_user_email?.trim().toLowerCase();
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return mockError(400, 'Saisissez une adresse e-mail valide.');
+    if (email === currentProfile.email.trim().toLowerCase()) return mockError(400, 'Vous ne pouvez pas vous inviter vous-même.');
     if (!['ADMIN', 'RSSI', 'RISK_OWNER', 'AUDITOR'].includes(body.role)) return mockError(400, 'Le rôle choisi n’est pas valide.');
     if ([...mockInvitations.values()].some((item) => item.organization.id === organization.organization_id && item.invited_user_email === email && item.status === 'PENDING')) return mockError(400, 'Une invitation en attente existe déjà pour cet e-mail.');
     const token = crypto.randomUUID();
