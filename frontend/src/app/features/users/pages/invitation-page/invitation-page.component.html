@@ -1,0 +1,26 @@
+<main class="workspace-page">
+  <app-topbar />
+  <div class="workspace-content">
+    <section class="message-card invitation-card" aria-labelledby="invitation-title">
+      <p class="eyebrow">Invitation</p>
+      @if (!validToken) {
+        <h1 id="invitation-title">Lien invalide</h1>
+        <p>Le lien d’invitation est incomplet. Ouvrez celui reçu par e-mail ou demandez une nouvelle invitation.</p>
+        <a class="button button--ghost" routerLink="/dashboard">Retour au tableau de bord</a>
+      } @else if (declined()) {
+        <h1 id="invitation-title">Invitation refusée</h1>
+        <p>Vous n’avez pas rejoint l’organisation. Si vous changez d’avis, demandez une nouvelle invitation.</p>
+        <a class="button button--primary" routerLink="/dashboard">Retour au tableau de bord</a>
+      } @else {
+        <h1 id="invitation-title">Rejoindre une organisation</h1>
+        <p>Vous avez reçu une invitation pour rejoindre l’organisation indiquée dans votre e-mail. Acceptez-la pour y accéder avec le rôle qui vous a été attribué.</p>
+        <p class="muted-copy">Vérifiez que vous êtes connecté avec l’adresse qui a reçu l’invitation.</p>
+        @if (error()) { <div class="alert alert--error" role="alert"><p>{{ error() }}</p></div> }
+        <div class="button-group">
+          <button class="button button--primary" type="button" (click)="accept()" [disabled]="busy()">{{ busy() ? 'Traitement en cours…' : 'Accepter l’invitation' }}</button>
+          <button class="button button--ghost" type="button" (click)="decline()" [disabled]="busy()">Refuser</button>
+        </div>
+      }
+    </section>
+  </div>
+</main>
