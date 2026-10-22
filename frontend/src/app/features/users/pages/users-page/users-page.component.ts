@@ -24,7 +24,7 @@ export class UsersPageComponent {
   protected readonly searching = signal(false);
   protected readonly sending = signal(false);
   protected readonly suggestions = signal<UserSearchResult[]>([]);
-  protected readonly canInvite = computed(() => ['ADMIN', 'RSSI'].includes(this.context.activeRole() ?? ''));
+  protected readonly canInvite = computed(() => !!this.context.activeOrganizationId() && ['ADMIN', 'RSSI'].includes(this.context.activeRole() ?? ''));
   protected readonly canManageRoles = computed(() => this.context.activeRole() === 'ADMIN');
   protected readonly form = this.fb.nonNullable.group({ email: ['', [Validators.required, Validators.email]], role: ['RISK_OWNER' as UserRole, Validators.required] });
   constructor() {
@@ -43,12 +43,17 @@ export class UsersPageComponent {
       takeUntilDestroyed(),
     ).subscribe((users) => this.suggestions.set(users));
   }
-  protected openModal(): void { this.submitError.set(''); this.modalOpen.set(true); }
+  protected openModal(): void {
+    if (!this.canInvite()) return;
+    this.submitError.set('');
+    this.modalOpen.set(true);
+  }
   protected closeModal(): void { this.modalOpen.set(false); this.suggestions.set([]); this.searchError.set(''); this.form.reset({ email: '', role: 'RISK_OWNER' }); }
   protected onEmailInput(event: Event): void { const value = (event.target as HTMLInputElement).value; this.form.controls.email.setValue(value); this.searchTerms.next(value); }
   protected chooseUser(user: UserSearchResult): void { this.form.controls.email.setValue(user.email); this.suggestions.set([]); this.searchTerms.next(''); }
   protected submit(): void {
-    if (this.form.invalid || this.sending()) { this.form.markAllAsTouched(); return; }
+    if (!this.canInvite() || this.sending()) return;
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     const organizationId = this.context.activeOrganizationId();
     if (!organizationId) { this.submitError.set('Choisissez une organisation avant d’inviter un membre.'); return; }
     const { email, role } = this.form.getRawValue();

@@ -23,7 +23,7 @@
   </div>
 </main>
 
-@if (modalOpen()) {
+@if (modalOpen() && canInvite()) {
   <div class="modal-backdrop" (click)="$event.target === $event.currentTarget && !sending() && closeModal()">
     <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="invitation-title" (keydown.escape)="!sending() && closeModal()" (click)="$event.stopPropagation()">
       <header class="modal-card__header"><div><p class="eyebrow">Organisation active</p><h2 id="invitation-title">Inviter un membre</h2><p>Un lien de confirmation sera envoyé par e-mail.</p></div><button class="icon-button" type="button" (click)="closeModal()" [disabled]="sending()" aria-label="Fermer"><svg lucideX class="ui-icon" aria-hidden="true"></svg></button></header>

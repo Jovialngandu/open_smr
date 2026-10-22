@@ -4,6 +4,7 @@ import { catchError, Observable, throwError } from 'rxjs';
 
 import { API_CONFIG, DOMAIN_ENDPOINTS } from '../../../core/config/api.config';
 import { UserRole } from '../../../core/models/auth.models';
+import { ContextService } from '../../../core/services/context.service';
 
 export interface UserSearchResult {
   id: number | string;
@@ -25,6 +26,7 @@ export interface OrganizationInvitation {
 @Injectable({ providedIn: 'root' })
 export class InvitationsService {
   private readonly http = inject(HttpClient);
+  private readonly context = inject(ContextService);
 
   searchUsers(query: string): Observable<UserSearchResult[]> {
     return this.http.get<UserSearchResult[]>(`${DOMAIN_ENDPOINTS.users}search/`, {
@@ -33,6 +35,12 @@ export class InvitationsService {
   }
 
   send(organizationId: string, email: string, role: UserRole): Observable<OrganizationInvitation> {
+    if (!organizationId || this.context.activeOrganizationId() !== organizationId) {
+      return throwError(() => new Error('Créez ou sélectionnez une organisation avant d’inviter un membre.'));
+    }
+    if (!['ADMIN', 'RSSI'].includes(this.context.activeRole() ?? '')) {
+      return throwError(() => new Error('Seuls les administrateurs et RSSI peuvent inviter un membre.'));
+    }
     return this.http.post<OrganizationInvitation>(`${DOMAIN_ENDPOINTS.organizations}${organizationId}/invitations/`, {
       invited_user_email: email.trim().toLowerCase(), role,
     }).pipe(catchError((error) => throwError(() => invitationError(error))));
