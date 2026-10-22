@@ -57,6 +57,14 @@ export class TreatmentsService {
     return this.setStatus(id, 'COMPLETED');
   }
 
+  delete(id: string): Observable<void> {
+    this.savingState.set(true);
+    return this.http.delete<void>(`${DOMAIN_ENDPOINTS.treatments}${id}/`).pipe(
+      tap(() => this.itemsState.update((items) => items.filter((item) => item.id !== id))),
+      finalize(() => this.savingState.set(false)),
+    );
+  }
+
   uploadEvidence(taskId: string, file: File, description: string): Observable<Evidence> {
     this.savingState.set(true);
     const form = new FormData();
