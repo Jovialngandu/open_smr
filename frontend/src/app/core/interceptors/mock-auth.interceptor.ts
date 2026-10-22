@@ -3,7 +3,8 @@ import { delay, of, throwError } from 'rxjs';
 
 import { API_CONFIG, AUTH_ENDPOINTS, DOMAIN_ENDPOINTS } from '../config/api.config';
 import { createMockId } from '../utils/mock-id';
-import { registerMockMember } from './mock-workspace.interceptor';
+import { registerMockMember, removeMockOrganizationData, removeMockUser } from './mock-workspace.interceptor';
+import { removeMockOrganizationAssets } from './mock-governance.interceptor';
 import {
   AuthResponse,
   JwtClaims,
@@ -126,6 +127,23 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
     return mockOk({ id, name, code, description: body.description?.trim() ?? '' }, 201);
   }
 
+  const organizationDelete = request.url.match(/\/organizations\/([^/]+)\/$/);
+  if (organizationDelete && request.method === 'DELETE') {
+    const index = ORGANIZATIONS.findIndex((organization) => organization.organization_id === organizationDelete[1]);
+    if (index < 0) return mockError(404, 'Organisation introuvable.');
+    if (currentProfile.roles.find((role) => role.organization_id === organizationDelete[1])?.role !== 'ADMIN') return mockError(403, 'Seul un administrateur peut supprimer cette organisation.');
+    const [organization] = ORGANIZATIONS.splice(index, 1);
+    const scopeIds = organization.scopes.map((scope) => scope.id);
+    for (const profile of [DEMO_PROFILE, OWNER_PROFILE, ...Array.from(registeredAccounts.values(), (account) => account.profile)]) {
+      profile.roles = profile.roles.filter((role) => role.organization_id !== organizationDelete[1]);
+    }
+    for (const [code, id] of Object.entries(ORGANIZATION_CODES)) if (id === organizationDelete[1]) delete ORGANIZATION_CODES[code];
+    removeMockOrganizationData(organizationDelete[1], scopeIds);
+    removeMockOrganizationAssets(scopeIds);
+    if (activeOrganizationId === organizationDelete[1]) { activeOrganizationId = ''; activeScopeId = ''; }
+    return mockOk(null, 204);
+  }
+
   if (request.url === DOMAIN_ENDPOINTS.scopes && request.method === 'POST') {
     const body = request.body as { organization_id: string; name: string; description?: string };
     const role = currentProfile.roles.find((item) => item.organization_id === body.organization_id);
@@ -155,6 +173,7 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
       return mockError(401, 'Nom d’utilisateur ou mot de passe incorrect.');
     }
     currentProfile = account?.profile ?? (body.username === 'demo.owner' ? OWNER_PROFILE : DEMO_PROFILE);
+    if (!currentProfile.is_active) return mockError(401, 'Ce compte a été supprimé.');
     activeOrganizationId = currentProfile.roles[0]?.organization_id ?? '';
     activeScopeId = currentProfile.roles[0]?.scopes?.[0]?.id ?? '';
     return mockOk(tokensFor(currentProfile));
@@ -204,7 +223,18 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
   }
 
   if (request.url === AUTH_ENDPOINTS.profile && request.method === 'GET') {
+    if (!currentProfile.is_active) return mockError(401, 'Ce compte a été supprimé.');
     return mockOk(currentProfile);
+  }
+
+  if (request.url === AUTH_ENDPOINTS.profile && request.method === 'DELETE') {
+    if (!currentProfile.is_active) return mockError(404, 'Compte introuvable.');
+    currentProfile.is_active = false;
+    registeredAccounts.delete(currentProfile.username);
+    removeMockUser(currentProfile.id);
+    activeOrganizationId = '';
+    activeScopeId = '';
+    return mockOk(null, 204);
   }
 
   if (request.url === AUTH_ENDPOINTS.switchContext && request.method === 'POST') {

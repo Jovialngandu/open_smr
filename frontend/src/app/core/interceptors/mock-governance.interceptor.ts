@@ -4,6 +4,7 @@ import { delay, of, throwError } from 'rxjs';
 import { API_CONFIG, DOMAIN_ENDPOINTS } from '../config/api.config';
 import { Asset, AssetPayload, Risk, RiskPayload } from '../models/governance.models';
 import { createMockId } from '../utils/mock-id';
+import { removeMockRiskTreatments, updateMockHeatmapRisk } from './mock-workspace.interceptor';
 
 const SCOPE_DIGITAL = '8f4b8400-e29b-41d4-a716-446655440101';
 const SCOPE_DATACENTER = '8f4b8400-e29b-41d4-a716-446655440102';
@@ -31,6 +32,11 @@ let risks: Risk[] = [
   risk('risk-005', 'asset-005', 'RSK-INF-005', 'Panne matérielle simultanée de plusieurs hôtes.', 2, 5, 'CLOSED'),
 ];
 
+export function removeMockOrganizationAssets(scopeIds: string[]): void {
+  assets = assets.filter((asset) => !scopeIds.includes(asset.scope_id));
+  risks = risks.filter((risk) => !scopeIds.includes(risk.scope_id));
+}
+
 export const mockGovernanceInterceptor: HttpInterceptorFn = (request, next) => {
   if (!API_CONFIG.useMocks) return next(request);
 
@@ -56,7 +62,9 @@ export const mockGovernanceInterceptor: HttpInterceptorFn = (request, next) => {
   if (assetId && request.method === 'DELETE') {
     if (!assets.some((item) => item.id === assetId)) return mockError(404, 'Actif introuvable.');
     assets = assets.filter((item) => item.id !== assetId);
+    const removedRisks = risks.filter((item) => item.asset_id === assetId);
     risks = risks.filter((item) => item.asset_id !== assetId);
+    removedRisks.forEach((risk) => removeMockRiskTreatments(risk.id));
     return mockOk(null, 204);
   }
 
@@ -72,6 +80,7 @@ export const mockGovernanceInterceptor: HttpInterceptorFn = (request, next) => {
     }
     const created = buildRisk(payload);
     risks = [created, ...risks];
+    updateMockHeatmapRisk(created);
     return mockOk(created, 201);
   }
 
@@ -81,10 +90,14 @@ export const mockGovernanceInterceptor: HttpInterceptorFn = (request, next) => {
     if (index < 0) return mockError(404, 'Risque introuvable.');
     const updated = buildRisk(request.body as Partial<RiskPayload>, risks[index]);
     risks = risks.map((item) => item.id === riskId ? updated : item);
+    updateMockHeatmapRisk(updated);
     return mockOk(updated);
   }
   if (riskId && request.method === 'DELETE') {
-    return mockError(405, 'La suppression des risques n’est pas disponible dans l’API actuelle.');
+    if (!risks.some((item) => item.id === riskId)) return mockError(404, 'Risque introuvable.');
+    risks = risks.filter((item) => item.id !== riskId);
+    removeMockRiskTreatments(riskId);
+    return mockOk(null, 204);
   }
 
   return next(request);
