@@ -2,6 +2,7 @@ import { HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
 import { API_CONFIG, AUTH_ENDPOINTS, DOMAIN_ENDPOINTS } from '../config/api.config';
+import { GOOGLE_OIDC_ENDPOINT } from '../config/oidc.config';
 import { AuthResponse } from '../models/auth.models';
 import { mockAuthInterceptor } from './mock-auth.interceptor';
 
@@ -31,6 +32,22 @@ describe('mockAuthInterceptor', () => {
     await expect(firstValueFrom(mockAuthInterceptor(request, () => {
       throw new Error('Le mock aurait du intercepter la requete.');
     }))).rejects.toMatchObject({ status: 401 });
+  });
+
+  it('simule la connexion OIDC et la création de l’organisation par défaut', async () => {
+    const payload = btoa(JSON.stringify({ email: 'google.mock@example.com', given_name: 'Google', family_name: 'Mock' }));
+    const request = new HttpRequest('POST', GOOGLE_OIDC_ENDPOINT, { id_token: `header.${payload}.signature`, provider: 'google' });
+    const response = await firstValueFrom(mockAuthInterceptor(request, () => {
+      throw new Error('Le mock aurait dû intercepter la requête.');
+    })) as HttpResponse<AuthResponse>;
+
+    expect(response.status).toBe(200);
+    expect(response.body?.user?.email).toBe('google.mock@example.com');
+    expect(response.body?.user?.roles[0].role).toBe('ADMIN');
+    expect(response.body?.access.split('.')).toHaveLength(3);
+    await expect(firstValueFrom(mockAuthInterceptor(new HttpRequest('POST', GOOGLE_OIDC_ENDPOINT, {
+      id_token: 'invalid', provider: 'google',
+    }), () => { throw new Error('Le mock aurait dû intercepter la requête.'); }))).rejects.toMatchObject({ status: 401 });
   });
 
   it('rattache une inscription à une organisation sans accorder de périmètre', async () => {

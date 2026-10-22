@@ -2,6 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn, HttpResponse } from '@angular/com
 import { delay, of, throwError } from 'rxjs';
 
 import { API_CONFIG, AUTH_ENDPOINTS, DOMAIN_ENDPOINTS } from '../config/api.config';
+import { GOOGLE_OIDC_ENDPOINT } from '../config/oidc.config';
 import { createMockId } from '../utils/mock-id';
 import { registerMockMember, removeMockOrganizationData, removeMockUser } from './mock-workspace.interceptor';
 import { removeMockOrganizationAssets } from './mock-governance.interceptor';
@@ -165,6 +166,39 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
 
   if (!request.url.startsWith(`${API_CONFIG.baseUrl}/auth/`)) return next(request);
 
+  if (request.url === GOOGLE_OIDC_ENDPOINT && request.method === 'POST') {
+    const body = request.body as { id_token?: string; provider?: string };
+    if (!body.id_token?.trim()) return mockError(400, 'Le jeton Google est obligatoire.');
+    if (body.provider && body.provider !== 'google') return mockError(400, 'Fournisseur OIDC non pris en charge.');
+    const claims = parseMockGoogleToken(body.id_token);
+    if (!claims?.email) return mockError(401, 'Authentification OIDC refusée.');
+    const email = claims.email.toLowerCase();
+    const profiles = [DEMO_PROFILE, OWNER_PROFILE, ...Array.from(registeredAccounts.values(), (account) => account.profile)];
+    const existing = profiles.find((profile) => profile.email.toLowerCase() === email);
+    if (existing && !existing.is_active) return mockError(401, 'Authentification OIDC refusée.');
+    if (existing) currentProfile = existing;
+    else {
+      const firstName = claims.given_name?.trim() || 'Google';
+      const lastName = claims.family_name?.trim() || 'User';
+      const organizationId = createMockId('organization');
+      const organizationName = `Organisation de ${firstName} ${lastName}`;
+      const usernameBase = email.split('@')[0].replace(/[^a-z0-9._-]/gi, '') || 'user';
+      let username = usernameBase;
+      while (profiles.some((profile) => profile.username === username)) username = `${usernameBase}${nextMockUserId}`;
+      const role: OrganizationRole = { organization_id: organizationId, organization_name: organizationName, role: 'ADMIN', scopes: [] };
+      ORGANIZATIONS.push(role);
+      currentProfile = {
+        id: String(nextMockUserId++), username, email,
+        first_name: firstName, last_name: lastName, is_active: true, roles: [role],
+      };
+      registeredAccounts.set(username, { profile: currentProfile, password: '' });
+      registerMockMember(currentProfile, organizationId, 'ADMIN');
+    }
+    activeOrganizationId = currentProfile.roles[0]?.organization_id ?? '';
+    activeScopeId = currentProfile.roles[0]?.scopes[0]?.id ?? '';
+    return mockOk({ ...tokensFor(currentProfile), user: currentProfile });
+  }
+
   if (request.url === AUTH_ENDPOINTS.login && request.method === 'POST') {
     const body = request.body as { username?: string; password?: string };
     const account = registeredAccounts.get(body.username ?? '');
@@ -282,6 +316,14 @@ function encodeToken(payload: object): string {
       .replace(/\+/g, '-')
       .replace(/\//g, '_');
   return `${encode({ alg: 'none', typ: 'JWT' })}.${encode(payload)}.mock-signature`;
+}
+
+function parseMockGoogleToken(token: string): { email?: string; given_name?: string; family_name?: string } | null {
+  try {
+    const encoded = token.split('.')[1];
+    if (!encoded) return null;
+    return JSON.parse(atob(encoded.replace(/-/g, '+').replace(/_/g, '/')));
+  } catch { return null; }
 }
 
 function mockOk<T>(body: T, status = 200) {
