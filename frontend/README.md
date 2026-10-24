@@ -53,6 +53,12 @@ En mode mock, l'endpoint est simulé : le contenu du jeton est décodé **sans v
 
 La création automatique de cette organisation appartient au service Django OIDC, pas au composant Angular. Elle reste volontairement inchangée pour l'instant ; la modifier nécessitera une évolution backend et des tests associés.
 
+## Sentinel
+
+La page `/sentinel`, disponible à tout utilisateur connecté même sans organisation, utilise exclusivement les routes Django `GET|POST /api/v1/chat/conversations/`, `GET /api/v1/chat/conversations/{id}/` et `POST /api/v1/chat/conversations/{id}/messages/`. `SentinelService` passe par le `HttpClient` et l’intercepteur JWT existants ; aucune clé IA ni adresse FastAPI ne figure dans le client. L’identifiant de la conversation sélectionnée reste dans le paramètre d’URL `conversation`, permettant de reprendre la discussion après navigation ou actualisation.
+
+L’envoi transmet uniquement `{ "message": "..." }` ; Django reconstitue lui-même l’historique. Si la génération échoue après l’enregistrement du message utilisateur, l’API retourne ce `user_message` avec une erreur : l’interface l’ajoute à la conversation, signale l’indisponibilité et ne le renvoie pas automatiquement. Les messages déjà affichés sont conservés en cas d’erreur. En mode mock, les conversations sont stockées dans `localStorage` sous une clé par utilisateur ; les réponses sont clairement des démonstrations et ne représentent pas un avis de sécurité réel.
+
 ## Mode de démonstration
 
 Le frontend peut fonctionner sans le backend grâce aux mocks couvrant l'ensemble du parcours MVP. Ils sont contrôlés par `useMocks` dans `src/app/core/config/api.config.ts`. La configuration actuelle utilise l’API déployée ; activez explicitement les mocks pour travailler hors connexion.
@@ -247,6 +253,7 @@ Le fichier TypeScript gère l'état et les actions. Le fichier HTML gère la str
 | `/register` | Public | Inscription |
 | `/select-context` | Authentifié | Choix de l'organisation et du périmètre |
 | `/dashboard` | Authentifié | Indicateurs, heatmap et priorités |
+| `/sentinel` | Authentifié | Conversations avec le copilote IA |
 | `/assets` | ADMIN, RSSI | Inventaire des actifs |
 | `/risks` | ADMIN, RSSI, AUDITOR | Registre des risques |
 | `/treatments` | ADMIN, RSSI | Plans de traitement |

@@ -6,6 +6,7 @@ import { GOOGLE_OIDC_ENDPOINT } from '../config/oidc.config';
 import { createMockId } from '../utils/mock-id';
 import { registerMockMember, removeMockOrganizationData, removeMockUser } from './mock-workspace.interceptor';
 import { removeMockOrganizationAssets } from './mock-governance.interceptor';
+import { removeMockSentinelUser } from './mock-sentinel.interceptor';
 import {
   AuthResponse,
   JwtClaims,
@@ -267,6 +268,7 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
     currentProfile.is_active = false;
     registeredAccounts.delete(currentProfile.username);
     removeMockUser(currentProfile.id);
+    removeMockSentinelUser(String(currentProfile.id));
     activeOrganizationId = '';
     activeScopeId = '';
     return mockOk(null, 204);
