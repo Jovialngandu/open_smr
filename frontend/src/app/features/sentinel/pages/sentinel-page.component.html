@@ -1,0 +1,73 @@
+<main class="workspace-page">
+  <app-topbar />
+  <div class="workspace-content sentinel-page">
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">Copilote IA</p>
+        <h1>Sentinel</h1>
+        <p>Posez une question sur la sécurité de l’information et retrouvez vos échanges.</p>
+      </div>
+      <button class="button button--ghost sentinel-mobile-history" type="button" (click)="sidebarOpen.set(!sidebarOpen())" [attr.aria-expanded]="sidebarOpen()">Conversations</button>
+    </header>
+
+    <div class="sentinel-layout">
+      <aside class="sentinel-sidebar" [class.sentinel-sidebar--open]="sidebarOpen()" aria-label="Historique des conversations">
+        <div class="sentinel-sidebar__header">
+          <h2>Conversations</h2>
+          <button class="button button--primary" type="button" (click)="createConversation()" [disabled]="creating() || sending()">
+            <svg lucidePlus class="ui-icon" aria-hidden="true"></svg> {{ creating() ? 'Création…' : 'Nouvelle' }}
+          </button>
+        </div>
+        @if (listError()) { <div class="sentinel-sidebar__error" role="alert"><p>{{ listError() }}</p><button class="text-button" type="button" (click)="loadConversations()">Réessayer</button></div> }
+        @if (loadingList() && !conversations().length) { <p class="sentinel-sidebar__status" role="status">Chargement des conversations…</p> }
+        <nav aria-label="Conversations précédentes">
+          @for (conversation of conversations(); track conversation.id) {
+            <button class="sentinel-conversation" type="button" [class.sentinel-conversation--active]="selectedId() === conversation.id" [attr.aria-current]="selectedId() === conversation.id ? 'page' : null" (click)="selectConversation(conversation.id)">
+              <svg lucideMessageCircle class="ui-icon" aria-hidden="true"></svg>
+              <span><strong>{{ conversation.title }}</strong><small>{{ conversation.last_activity | date:'dd MMM yyyy' }}</small></span>
+            </button>
+          } @empty { @if (!loadingList() && !listError()) { <p class="sentinel-sidebar__status">Aucune conversation pour le moment.</p> } }
+        </nav>
+      </aside>
+
+      <section class="sentinel-chat" aria-label="Discussion avec Sentinel">
+        @if (!selectedId()) {
+          <div class="sentinel-welcome">
+            <span class="sentinel-welcome__icon" aria-hidden="true"><svg lucideSparkles class="ui-icon"></svg></span>
+            <h2>Comment puis-je vous aider ?</h2>
+            <p>Ouvrez une conversation pour poser une question. Sentinel peut vous aider à comprendre les notions de sécurité de l’information ; vérifiez ses réponses avant toute décision.</p>
+            <button class="button button--primary" type="button" (click)="createConversation()" [disabled]="creating()">{{ creating() ? 'Création…' : 'Démarrer une conversation' }}</button>
+          </div>
+        } @else {
+          <div class="sentinel-chat__heading"><div><p class="eyebrow">Discussion</p><h2>{{ title() }}</h2></div></div>
+          @if (loadingDetail()) {
+            <div class="sentinel-chat__state" role="status">Chargement des messages…</div>
+          } @else if (detailError()) {
+            <div class="sentinel-chat__state" role="alert"><p>{{ detailError() }}</p><button class="button button--ghost" type="button" (click)="retryDetail()">Réessayer</button></div>
+          } @else {
+            <div class="sentinel-messages" role="log" aria-label="Messages de la conversation" aria-live="polite">
+              @for (message of messages(); track message.id) {
+                <article class="sentinel-message" [class.sentinel-message--user]="message.role === 'user'" [class.sentinel-message--assistant]="message.role === 'assistant'">
+                  <div class="sentinel-message__meta"><strong>{{ message.role === 'user' ? 'Vous' : 'Sentinel' }}</strong><time [attr.datetime]="message.created_at">{{ message.created_at | date:'dd/MM/yyyy HH:mm' }}</time></div>
+                  <p>{{ message.content }}</p>
+                </article>
+              } @empty {
+                <div class="sentinel-chat__state"><p>Cette conversation est prête. Écrivez votre premier message.</p></div>
+              }
+              @if (sending()) { <div class="sentinel-thinking" role="status"><span class="spinner spinner--dark" aria-hidden="true"></span> Sentinel prépare sa réponse…</div> }
+            </div>
+            <div class="sentinel-composer">
+              @if (sendError()) { <div class="alert alert--error" role="alert"><p>{{ sendError() }}</p></div> }
+              <form (submit)="$event.preventDefault(); send()">
+                <label for="sentinel-message">Votre message</label>
+                <textarea id="sentinel-message" rows="3" maxlength="2000" [value]="draft()" (input)="draft.set($any($event.target).value)" (keydown.control.enter)="send()" (keydown.meta.enter)="send()" placeholder="Écrivez votre question ici…" [disabled]="sending()"></textarea>
+                <div class="sentinel-composer__footer"><small>{{ draft().length }}/2 000 · Ctrl + Entrée pour envoyer</small><button class="button button--primary" type="submit" [disabled]="sending() || !draft().trim()"><svg lucideSend class="ui-icon" aria-hidden="true"></svg> Envoyer</button></div>
+              </form>
+              <p class="sentinel-disclaimer">Sentinel peut se tromper. Confirmez les informations importantes avant de les appliquer.</p>
+            </div>
+          }
+        }
+      </section>
+    </div>
+  </div>
+</main>
