@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX, LucideBell, LucideBookOpen } from '@lucide/angular';
+import { LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX, LucideBell, LucideBookOpen, LucideMessageCircle } from '@lucide/angular';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
@@ -11,7 +11,7 @@ import { NotificationCenterService } from '../../../features/notifications/servi
 
 @Component({
   selector: 'app-topbar',
-  imports: [RouterLink, RouterLinkActive, ReactiveFormsModule, LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX, LucideBell, LucideBookOpen],
+  imports: [RouterLink, RouterLinkActive, ReactiveFormsModule, LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX, LucideBell, LucideBookOpen, LucideMessageCircle],
   templateUrl: './topbar.component.html',
 })
 export class TopbarComponent {

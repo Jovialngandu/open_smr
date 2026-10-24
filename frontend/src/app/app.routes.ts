@@ -36,6 +36,12 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'sentinel',
+    title: 'Sentinel | OpenSMR',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/sentinel/pages/sentinel-page.component').then((module) => module.SentinelPageComponent),
+  },
+  {
     path: 'assets',
     title: 'Inventaire des actifs | OpenSMR',
     canActivate: [authGuard, roleGuard],
