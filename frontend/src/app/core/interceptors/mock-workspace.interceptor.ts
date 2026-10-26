@@ -5,6 +5,7 @@ import { API_CONFIG, DOMAIN_ENDPOINTS } from '../config/api.config';
 import { createMockId } from '../utils/mock-id';
 import { UserProfile, UserRole } from '../models/auth.models';
 import { Evidence, IsoControl, ManagedUser, SoaEntry, SoaSnapshotEntry, SoaVersion, TreatmentTask } from '../models/governance.models';
+import { getMockRiskDetails } from './mock-governance.interceptor';
 
 const DIGITAL_SCOPE = '8f4b8400-e29b-41d4-a716-446655440101';
 const DATACENTER_SCOPE = '8f4b8400-e29b-41d4-a716-446655440102';
@@ -58,6 +59,15 @@ export function removeMockOrganizationData(organizationId: string, scopeIds: str
   soaEntries = soaEntries.filter((entry) => !scopeIds.includes(entry.scope_id));
   soaVersions = soaVersions.filter((version) => !scopeIds.includes(version.scope_id));
   heatmapRisks = heatmapRisks.filter((risk) => !scopeIds.includes(risk.scope_id));
+}
+
+export function createMockScopeSoa(scopeId: string): void {
+  if (soaEntries.some((entry) => entry.scope_id === scopeId)) return;
+  soaEntries = [...soaEntries, ...controls.map((control) => ({
+    id: createMockId('soa-entry'), scope_id: scopeId, iso_control: control,
+    is_applicable: true, justification: 'Initialisation automatique du périmètre.', implementation_status: 'NOT_IMPLEMENTED' as const,
+    updated_at: new Date().toISOString(), updated_by_name: '',
+  }))];
 }
 
 const controls: IsoControl[] = Array.from({ length: 93 }, (_, index) => {
@@ -161,6 +171,7 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
     return ok(toBackendScopeAccess(member, scopeAccessMatch[1]), 201);
   }
   if (request.url === DOMAIN_ENDPOINTS.heatmap && request.method === 'GET') {
+    if (!scopeId) return fail(400, "Le paramètre 'scope_id' est obligatoire.");
     const populated = heatmapRisks.filter((risk) => risk.scope_id === scopeId);
     const cells = Array.from({ length: 25 }, (_, index) => {
       const likelihood = Math.floor(index / 5) + 1;
@@ -168,7 +179,13 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
       const ids = populated.filter((risk) => risk.likelihood === likelihood && risk.impact === impact).map((risk) => risk.id);
       return { likelihood, impact, risk_count: ids.length, risk_ids: ids };
     });
-    return ok({ scope_id: scopeId ?? '', total_risks: cells.reduce((sum, cell) => sum + cell.risk_count, 0), matrix: cells.map((cell) => ({ likelihood: cell.likelihood, impact: cell.impact, score: cell.likelihood * cell.impact, count: cell.risk_count })) });
+    return ok({ scope_id: scopeId, total_risks: populated.length, matrix: cells.map((cell) => {
+      const score = cell.likelihood * cell.impact;
+      return { likelihood: cell.likelihood, impact: cell.impact, score,
+        severity: score >= 15 ? 'HIGH' : score >= 8 ? 'MEDIUM' : 'LOW', count: cell.risk_count,
+        risks: cell.risk_ids.map(getMockRiskDetails).filter((risk) => risk !== undefined),
+      };
+    }) });
   }
   if (request.url === DOMAIN_ENDPOINTS.treatments && request.method === 'GET') {
     const riskId = request.params.get('risk_id');
@@ -209,14 +226,20 @@ export const mockWorkspaceInterceptor: HttpInterceptorFn = (request, next) => {
     treatments = treatments.map((item) => item.id === taskId ? { ...item, evidences: [...item.evidences, evidence] } : item);
     return ok(toBackendEvidence(evidence), 201);
   }
-  if (request.url === DOMAIN_ENDPOINTS.soaVersions && request.method === 'GET') return ok(soaVersions.filter((item) => !scopeId || item.scope_id === scopeId).map(toBackendSoaVersion));
+  if (request.url === DOMAIN_ENDPOINTS.soaVersions && request.method === 'GET') {
+    if (!scopeId) return fail(400, 'Le paramètre scope_id est obligatoire.');
+    return ok(soaVersions.filter((item) => item.scope_id === scopeId).map(toBackendSoaVersion));
+  }
   if (request.url === DOMAIN_ENDPOINTS.soaVersions && request.method === 'POST') {
     const body = request.body as { scope_id: string; title: string };
     const created: SoaVersion = { id: createMockId('soa-version'), scope_id: body.scope_id, version_number: `v1.${soaVersions.filter((item) => item.scope_id === body.scope_id).length + 1}-2026`, title: body.title, status: 'DRAFT', created_at: new Date().toISOString(), approved_by_name: null, snapshot_data: snapshotFor(body.scope_id) };
     soaVersions = [created, ...soaVersions];
     return ok(toBackendSoaVersion(created), 201);
   }
-  if (request.url === DOMAIN_ENDPOINTS.soaEntries && request.method === 'GET') return ok(soaEntries.filter((item) => !scopeId || item.scope_id === scopeId).map(toBackendSoaEntry));
+  if (request.url === DOMAIN_ENDPOINTS.soaEntries && request.method === 'GET') {
+    if (!scopeId) return fail(400, 'Le paramètre scope_id est obligatoire.');
+    return ok(soaEntries.filter((item) => item.scope_id === scopeId).map(toBackendSoaEntry));
+  }
   const soaId = collectionId(request.url, DOMAIN_ENDPOINTS.soaEntries);
   if (soaId && request.method === 'PATCH') {
     const current = soaEntries.find((entry) => entry.id === soaId);

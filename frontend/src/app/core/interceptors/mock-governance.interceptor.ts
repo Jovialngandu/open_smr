@@ -32,6 +32,11 @@ let risks: Risk[] = [
   risk('risk-005', 'asset-005', 'RSK-INF-005', 'Panne matérielle simultanée de plusieurs hôtes.', 2, 5, 'CLOSED'),
 ];
 
+export function getMockRiskDetails(id: string): Pick<Risk, 'id' | 'code' | 'threat_description' | 'status'> | undefined {
+  const found = risks.find((risk) => risk.id === id);
+  return found && { id: found.id, code: found.code, threat_description: found.threat_description, status: found.status };
+}
+
 export function removeMockOrganizationAssets(scopeIds: string[]): void {
   assets = assets.filter((asset) => !scopeIds.includes(asset.scope_id));
   risks = risks.filter((risk) => !scopeIds.includes(risk.scope_id));
