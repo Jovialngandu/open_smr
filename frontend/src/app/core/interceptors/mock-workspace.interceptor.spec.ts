@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { API_CONFIG, DOMAIN_ENDPOINTS, organizationMembersEndpoint } from '../config/api.config';
 import { riskControlSuggestionsEndpoint } from '../../features/treatments/services/control-suggestions.service';
 import { HeatmapApiResponse, SoaEntry, SoaVersion } from '../models/governance.models';
-import { mockWorkspaceInterceptor } from './mock-workspace.interceptor';
+import { createMockScopeSoa, mockWorkspaceInterceptor } from './mock-workspace.interceptor';
 
 const SCOPE_ID = '8f4b8400-e29b-41d4-a716-446655440101';
 
@@ -15,6 +15,20 @@ describe('mockWorkspaceInterceptor', () => {
     const response = await intercept<HeatmapApiResponse>(new HttpRequest('GET', DOMAIN_ENDPOINTS.heatmap, null, { params: scopeParams() }));
     expect(response.body?.matrix).toHaveLength(25);
     expect(response.body?.total_risks).toBe(4);
+    expect(response.body?.matrix.find((cell) => cell.likelihood === 4 && cell.impact === 5)).toMatchObject({ score: 20, severity: 'HIGH', count: 1, risks: [{ id: 'risk-001' }] });
+  });
+
+  it('initialise les 93 entrées SoA d’un nouveau périmètre', async () => {
+    const scopeId = '8f4b8400-e29b-41d4-a716-446655440299';
+    createMockScopeSoa(scopeId);
+    const response = await intercept<Array<SoaEntry & { scope: string }>>(new HttpRequest('GET', DOMAIN_ENDPOINTS.soaEntries, null, { params: new HttpParams().set('scope_id', scopeId) }));
+    expect(response.body).toHaveLength(93);
+    expect(response.body?.every((entry) => entry.scope === scopeId && entry.implementation_status === 'NOT_IMPLEMENTED')).toBe(true);
+  });
+
+  it('exige le périmètre pour consulter la SoA, comme Django', async () => {
+    await expect(intercept(new HttpRequest('GET', DOMAIN_ENDPOINTS.soaEntries))).rejects.toMatchObject({ status: 400 });
+    await expect(intercept(new HttpRequest('GET', DOMAIN_ENDPOINTS.soaVersions))).rejects.toMatchObject({ status: 400 });
   });
 
   it('classe les mesures suggérées selon le risque et l’action saisie', async () => {

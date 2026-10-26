@@ -4,7 +4,7 @@ import { delay, of, throwError } from 'rxjs';
 import { API_CONFIG, AUTH_ENDPOINTS, DOMAIN_ENDPOINTS } from '../config/api.config';
 import { GOOGLE_OIDC_ENDPOINT } from '../config/oidc.config';
 import { createMockId } from '../utils/mock-id';
-import { registerMockMember, removeMockOrganizationData, removeMockUser } from './mock-workspace.interceptor';
+import { createMockScopeSoa, registerMockMember, removeMockOrganizationData, removeMockUser } from './mock-workspace.interceptor';
 import { removeMockOrganizationAssets } from './mock-governance.interceptor';
 import { removeMockSentinelUser } from './mock-sentinel.interceptor';
 import {
@@ -156,6 +156,7 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
     if (role.scopes.some((scope) => scope.name.toLocaleLowerCase('fr') === name.toLocaleLowerCase('fr'))) return mockError(400, 'Un périmètre avec ce nom existe déjà dans cette organisation.');
     const scope = { id: createMockId('scope'), organization_id: body.organization_id, name, description: body.description?.trim() ?? '' };
     role.scopes = [...role.scopes, scope];
+    createMockScopeSoa(scope.id);
     return mockOk(scope, 201);
   }
 
