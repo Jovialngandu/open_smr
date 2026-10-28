@@ -1,23 +1,25 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX, LucideBell, LucideBookOpen } from '@lucide/angular';
+import { LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX, LucideBell, LucideBookOpen, LucideSparkles } from '@lucide/angular';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { finalize, switchMap } from 'rxjs';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { ContextService } from '../../../core/services/context.service';
 import { NotificationCenterService } from '../../../features/notifications/services/notification-center.service';
+import { SentinelDrawerComponent } from '../../../features/sentinel/components/sentinel-drawer.component';
 
 @Component({
   selector: 'app-topbar',
-  imports: [RouterLink, RouterLinkActive, ReactiveFormsModule, LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX, LucideBell, LucideBookOpen],
+  imports: [RouterLink, RouterLinkActive, ReactiveFormsModule, LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX, LucideBell, LucideBookOpen, LucideSparkles, SentinelDrawerComponent],
   templateUrl: './topbar.component.html',
 })
 export class TopbarComponent {
   protected readonly auth = inject(AuthService);
   protected readonly context = inject(ContextService);
   protected readonly notifications = inject(NotificationCenterService);
+  private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   protected readonly switching = signal(false);
   protected readonly creatingScope = signal(false);
@@ -39,6 +41,7 @@ export class TopbarComponent {
   });
   protected readonly contextError = signal('');
   protected readonly menuOpen = signal(false);
+  protected readonly sentinelOpen = signal(false);
   protected readonly initials = computed(() => {
     const user = this.auth.user();
     return `${user?.first_name?.[0] ?? ''}${user?.last_name?.[0] ?? user?.username?.[0] ?? ''}`.toUpperCase();
@@ -49,13 +52,13 @@ export class TopbarComponent {
     const organization = this.context.organizations().find(
       (item) => item.organization_id === organizationId,
     );
-    this.applyContext(organizationId, organization?.scopes?.[0]?.id ?? null);
+    this.applyContext(organizationId, organization?.scopes?.[0]?.id ?? null, event.target as HTMLSelectElement);
   }
 
   protected changeScope(event: Event): void {
     const scopeId = (event.target as HTMLSelectElement).value || null;
     const organizationId = this.context.activeOrganizationId();
-    if (organizationId) this.applyContext(organizationId, scopeId);
+    if (organizationId) this.applyContext(organizationId, scopeId, event.target as HTMLSelectElement);
   }
 
   protected logout(): void {
@@ -147,13 +150,27 @@ export class TopbarComponent {
     });
   }
 
-  private applyContext(organizationId: string, scopeId: string | null): void {
+  private applyContext(organizationId: string, scopeId: string | null, select: HTMLSelectElement): void {
     this.contextError.set('');
     this.switching.set(true);
     this.context.switchContext({ organization_id: organizationId, scope_id: scopeId }).pipe(
       finalize(() => this.switching.set(false)),
     ).subscribe({
-      error: () => this.contextError.set('Le changement de contexte a échoué. Réessayez.'),
+      next: () => {
+        const role = this.context.activeRole();
+        const restrictedRoutes: Record<string, string[]> = {
+          '/assets': ['ADMIN', 'RSSI'], '/risks': ['ADMIN', 'RSSI', 'AUDITOR'],
+          '/treatments': ['ADMIN', 'RSSI'], '/users': ['ADMIN', 'RSSI'],
+          '/my-tasks': ['RISK_OWNER'], '/audit-view': ['AUDITOR'],
+        };
+        const allowed = restrictedRoutes[this.router.url.split('?')[0]];
+        if (allowed && !allowed.includes(role ?? '')) void this.router.navigate(['/dashboard']);
+      },
+      error: () => {
+        select.value = select.id === 'organization-select'
+          ? this.context.activeOrganizationId() ?? '' : this.context.activeScopeId() ?? '';
+        this.contextError.set('Le changement de contexte a échoué. Réessayez.');
+      },
     });
   }
 }

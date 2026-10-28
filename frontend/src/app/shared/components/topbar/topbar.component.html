@@ -33,6 +33,7 @@
   </div> } @else { <button class="button button--ghost topbar-workspace-action" type="button" (click)="openOrganizationModal()"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg> Créer une organisation</button> }
 
   <div class="profile-menu">
+    <button class="sentinel-trigger" type="button" (click)="sentinelOpen.set(true)" aria-label="Ouvrir Sentinel" title="Ouvrir Sentinel"><svg lucideSparkles class="ui-icon" aria-hidden="true"></svg><span>Sentinel</span></button>
     <a class="notification-trigger" routerLink="/notifications" [attr.aria-label]="'Notifications, ' + notifications.unreadCount() + ' non lues'" title="Notifications">
       <svg lucideBell class="ui-icon" aria-hidden="true"></svg>
       @if (notifications.unreadCount()) { <span class="notification-trigger__badge" aria-hidden="true">{{ notifications.unreadCount() > 9 ? '9+' : notifications.unreadCount() }}</span> }
@@ -57,6 +58,8 @@
     }
   </div>
 </header>
+
+<app-sentinel-drawer [open]="sentinelOpen()" (closed)="sentinelOpen.set(false)" />
 
 <nav class="module-nav" aria-label="Navigation principale">
   <a routerLink="/dashboard" routerLinkActive="module-nav__link--active">Tableau de bord</a>

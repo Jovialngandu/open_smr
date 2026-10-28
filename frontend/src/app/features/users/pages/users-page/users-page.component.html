@@ -1,4 +1,47 @@
-<main class="workspace-page"><app-topbar /><div class="workspace-content"><header class="page-heading"><div><p class="eyebrow">Habilitations</p><h1>Utilisateurs et auditeurs</h1><p>{{ canManageRoles() ? 'Gérez les rôles de l’organisation et les accès au périmètre actif.' : 'Gérez les accès des membres au périmètre actif.' }}</p></div>@if (canManageRoles()) { <button class="button button--primary" type="button" (click)="modalOpen.set(true)"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg> Affecter un membre</button> }</header>
-  @if (feedback()) { <div class="alert alert--success" role="status"><span aria-hidden="true"><svg lucideCheck class="ui-icon"></svg></span><p>{{ feedback() }}</p></div> }<section class="data-panel"><div class="table-scroll"><table><thead><tr><th>Utilisateur</th><th>Rôle</th><th>Périmètre actif</th><th>Statut</th><th>Actions</th></tr></thead><tbody>@for (user of service.users(); track user.id) { <tr><td><strong>{{ user.name }}</strong><small>{{ user.email }} · ID {{ user.id }}</small></td><td><select class="status-select" [value]="user.role" [disabled]="!canManageRoles() || user.role === 'ADMIN'" (change)="service.changeRole(user, $any($event.target).value)"><option value="RSSI">RSSI</option><option value="RISK_OWNER">Responsable de risque</option><option value="AUDITOR">Auditeur</option>@if (user.role === 'ADMIN') { <option value="ADMIN">Administrateur</option> }</select></td><td><span class="status-chip" [attr.data-status]="user.scope_ids.includes(context.activeScopeId() ?? '') ? 'CLOSED' : 'OPEN'">{{ user.scope_ids.includes(context.activeScopeId() ?? '') ? 'Autorisé' : 'Non autorisé' }}</span></td><td><span class="status-chip" [attr.data-status]="user.is_active ? 'CLOSED' : 'OPEN'">{{ user.is_active ? 'Actif' : 'Révoqué' }}</span></td><td class="row-actions"><button type="button" (click)="service.setScopeAccess(user, !user.scope_ids.includes(context.activeScopeId() ?? ''))">{{ user.scope_ids.includes(context.activeScopeId() ?? '') ? 'Retirer du périmètre' : 'Accorder le périmètre' }}</button>@if (canManageRoles()) { <button type="button" [class.danger-link]="user.is_active" (click)="service.toggle(user)">{{ user.is_active ? 'Révoquer' : 'Réactiver' }}</button> }</td></tr> }</tbody></table></div></section>
-</div></main>
-@if (modalOpen()) { <div class="modal-backdrop" (click)="$event.target === $event.currentTarget && modalOpen.set(false)"><section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="user-title" (click)="$event.stopPropagation()"><header class="modal-card__header"><div><p class="eyebrow">Organisation active</p><h2 id="user-title">Affecter un membre existant</h2><p>Le compte doit avoir été créé au préalable.</p></div><button class="icon-button" type="button" (click)="modalOpen.set(false)" aria-label="Fermer"><svg lucideX class="ui-icon" aria-hidden="true"></svg></button></header><form [formGroup]="form" (ngSubmit)="submit()"><div class="field"><label for="user-id">Identifiant utilisateur</label><input id="user-id" inputmode="numeric" formControlName="userId" placeholder="Ex. 12" [attr.aria-invalid]="form.controls.userId.invalid && form.controls.userId.touched">@if (form.controls.userId.invalid && form.controls.userId.touched) { <small class="field__error">Saisissez l’identifiant numérique d’un compte existant.</small> }</div><div class="field"><label for="user-role">Rôle dans l’organisation</label><select id="user-role" formControlName="role"><option value="RSSI">RSSI</option><option value="RISK_OWNER">Responsable de risque</option><option value="AUDITOR">Auditeur</option></select></div>@if (submitError()) { <div class="alert alert--error" role="alert"><span aria-hidden="true"><svg lucideCircleAlert class="ui-icon"></svg></span><p>{{ submitError() }}</p></div> }<footer class="modal-card__actions"><button class="button button--ghost" type="button" (click)="modalOpen.set(false)">Annuler</button><button class="button button--primary" type="submit">Enregistrer l’affectation</button></footer></form></section></div> }
+<main class="workspace-page">
+  <app-topbar />
+  <div class="workspace-content">
+    <header class="page-heading">
+      <div><p class="eyebrow">Accès</p><h1>Membres de l’organisation</h1><p>Invitez des membres et gérez leurs accès au périmètre actif.</p></div>
+      @if (canInvite()) { <button class="button button--primary" type="button" (click)="openModal()"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg> Inviter un membre</button> }
+    </header>
+    @if (feedback()) { <div class="alert alert--success" role="status"><span aria-hidden="true"><svg lucideCheck class="ui-icon"></svg></span><p>{{ feedback() }}</p></div> }
+    @if (service.fetchError()) { <div class="alert alert--error" role="alert"><p>{{ service.fetchError() }} Vous pouvez toujours envoyer une invitation si votre rôle le permet.</p></div> }
+    <section class="data-panel">
+      <div class="table-scroll"><table><thead><tr><th>Utilisateur</th><th>Rôle</th><th>Périmètre actif</th><th>Statut</th><th>Actions</th></tr></thead><tbody>
+        @for (user of service.users(); track user.id) {
+          <tr>
+            <td><strong>{{ user.name }}</strong>@if (service.isCurrentUser(user)) { <small>Vous</small> }<small>{{ user.email }}</small></td>
+            <td><select class="status-select" [value]="user.role" [disabled]="!canManageRoles() || user.role === 'ADMIN' || service.isCurrentUser(user)" (change)="service.changeRole(user, $any($event.target).value)"><option value="RSSI">RSSI</option><option value="RISK_OWNER">Responsable de risque</option><option value="AUDITOR">Auditeur</option>@if (user.role === 'ADMIN') { <option value="ADMIN">Administrateur</option> }</select></td>
+            <td><span class="status-chip" [attr.data-status]="user.scope_ids.includes(context.activeScopeId() ?? '') ? 'CLOSED' : 'OPEN'">{{ user.scope_ids.includes(context.activeScopeId() ?? '') ? 'Autorisé' : 'Non autorisé' }}</span></td>
+            <td><span class="status-chip" [attr.data-status]="user.is_active ? 'CLOSED' : 'OPEN'">{{ user.is_active ? 'Actif' : 'Révoqué' }}</span></td>
+            <td class="row-actions">@if (service.isCurrentUser(user)) { <span class="muted-copy">Votre compte</span> } @else { <button type="button" (click)="service.setScopeAccess(user, !user.scope_ids.includes(context.activeScopeId() ?? ''))">{{ user.scope_ids.includes(context.activeScopeId() ?? '') ? 'Retirer du périmètre' : 'Accorder le périmètre' }}</button>@if (canManageRoles()) { <button type="button" [class.danger-link]="user.is_active" (click)="service.toggle(user)">{{ user.is_active ? 'Révoquer' : 'Réactiver' }}</button> } }</td>
+          </tr>
+        } @empty { @if (!service.fetchError()) { <tr><td colspan="5">Aucun membre dans cette organisation.</td></tr> } }
+      </tbody></table></div>
+    </section>
+  </div>
+</main>
+
+@if (modalOpen() && canInvite()) {
+  <div class="modal-backdrop" (click)="$event.target === $event.currentTarget && !sending() && closeModal()">
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="invitation-title" (keydown.escape)="!sending() && closeModal()" (click)="$event.stopPropagation()">
+      <header class="modal-card__header"><div><p class="eyebrow">Organisation active</p><h2 id="invitation-title">Inviter un membre</h2><p>Un lien de confirmation sera envoyé par e-mail.</p></div><button class="icon-button" type="button" (click)="closeModal()" [disabled]="sending()" aria-label="Fermer"><svg lucideX class="ui-icon" aria-hidden="true"></svg></button></header>
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="field">
+          <label for="invite-email">Rechercher un compte ou saisir un e-mail</label>
+          <input id="invite-email" type="email" autocomplete="off" formControlName="email" placeholder="nom@exemple.fr" (input)="onEmailInput($event)" [attr.aria-invalid]="form.controls.email.invalid && form.controls.email.touched" aria-describedby="invite-email-hint">
+          <small id="invite-email-hint" class="field__hint">Vous pouvez aussi inviter une adresse qui n’a pas encore de compte.</small>
+          @if (isSelfEmail(form.controls.email.value)) { <small class="field__error">Vous ne pouvez pas vous inviter vous-même.</small> }
+          @if (searching()) { <small role="status">Recherche en cours…</small> }
+          @if (searchError()) { <small class="field__error" role="alert">{{ searchError() }}</small> }
+          @if (suggestions().length) { <ul class="invite-suggestions" aria-label="Comptes trouvés">@for (user of suggestions(); track user.id) { <li><button type="button" (click)="chooseUser(user)"><strong>{{ user.first_name }} {{ user.last_name || user.username }}</strong><span>{{ user.email }}</span></button></li> }</ul> }
+          @if (form.controls.email.invalid && form.controls.email.touched) { <small class="field__error">Saisissez une adresse e-mail valide.</small> }
+        </div>
+        <div class="field"><label for="invite-role">Rôle dans l’organisation</label><select id="invite-role" formControlName="role"><option value="RISK_OWNER">Responsable de risque</option><option value="RSSI">RSSI</option><option value="AUDITOR">Auditeur</option><option value="ADMIN">Administrateur</option></select></div>
+        @if (submitError()) { <div class="alert alert--error" role="alert"><span aria-hidden="true"><svg lucideCircleAlert class="ui-icon"></svg></span><p>{{ submitError() }}</p></div> }
+        <footer class="modal-card__actions"><button class="button button--ghost" type="button" (click)="closeModal()" [disabled]="sending()">Annuler</button><button class="button button--primary" type="submit" [disabled]="sending() || isSelfEmail(form.controls.email.value)">{{ sending() ? 'Envoi en cours…' : 'Envoyer l’invitation' }}</button></footer>
+      </form>
+    </section>
+  </div>
+}
