@@ -13,7 +13,7 @@ const log = (id: string): EmailLog => ({ id, email_type: 'OVERDUE_TASK_ALERT', r
 describe('NotificationCenterService', () => {
   beforeEach(() => localStorage.clear());
 
-  it('conserve la lecture localement et l’isole par organisation', () => {
+  it('conserve la lecture par compte lors du changement d’organisation', () => {
     const user = signal<UserProfile | null>({ id: 'user-1' } as UserProfile);
     const organization = signal<string | null>('org-a');
     const items = signal([log('message-a')]);
@@ -26,16 +26,17 @@ describe('NotificationCenterService', () => {
     ] });
     const center = TestBed.inject(NotificationCenterService);
     TestBed.flushEffects();
-    expect(loadEmailLogs).toHaveBeenCalledWith('org-a');
+    expect(loadEmailLogs).toHaveBeenCalledWith();
     expect(center.unreadCount()).toBe(1);
 
     center.markRead('message-a');
     expect(center.unreadCount()).toBe(0);
-    expect(localStorage.getItem('opensmr.read_email_logs.user-1.org-a')).toContain('message-a');
+    expect(localStorage.getItem('opensmr.read_email_logs.user-1')).toContain('message-a');
 
     organization.set('org-b');
-    items.set([log('message-b')]);
+    items.set([log('message-a'), log('message-b')]);
     TestBed.flushEffects();
+    expect(loadEmailLogs).toHaveBeenCalledTimes(1);
     expect(center.unreadCount()).toBe(1);
 
     organization.set('org-a');

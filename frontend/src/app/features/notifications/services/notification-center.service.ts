@@ -1,13 +1,11 @@
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
 
 import { AuthService } from '../../../core/services/auth.service';
-import { ContextService } from '../../../core/services/context.service';
 import { SettingsService } from '../../settings/services/settings.service';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationCenterService {
   private readonly auth = inject(AuthService);
-  private readonly context = inject(ContextService);
   private readonly settings = inject(SettingsService);
   private readonly readIdsState = signal<Set<string>>(new Set());
 
@@ -19,9 +17,8 @@ export class NotificationCenterService {
   constructor() {
     effect(() => {
       const userId = this.auth.user()?.id;
-      const organizationId = this.context.activeOrganizationId();
-      this.readIdsState.set(this.restoreReadIds(userId, organizationId));
-      if (userId) this.settings.loadEmailLogs(organizationId);
+      this.readIdsState.set(this.restoreReadIds(userId));
+      if (userId) this.settings.loadEmailLogs();
       else this.settings.clearEmailLogs();
     });
   }
@@ -38,17 +35,17 @@ export class NotificationCenterService {
   }
 
   refresh(): void {
-    if (this.auth.user()) this.settings.loadEmailLogs(this.context.activeOrganizationId());
+    if (this.auth.user()) this.settings.loadEmailLogs();
   }
 
   private saveReadIds(ids: Set<string>): void {
     this.readIdsState.set(ids);
-    const key = this.storageKey(this.auth.user()?.id, this.context.activeOrganizationId());
+    const key = this.storageKey(this.auth.user()?.id);
     if (key) localStorage.setItem(key, JSON.stringify([...ids]));
   }
 
-  private restoreReadIds(userId: string | undefined, organizationId: string | null): Set<string> {
-    const key = this.storageKey(userId, organizationId);
+  private restoreReadIds(userId: string | undefined): Set<string> {
+    const key = this.storageKey(userId);
     if (!key) return new Set();
     try {
       const stored = JSON.parse(localStorage.getItem(key) ?? '[]') as unknown;
@@ -56,7 +53,7 @@ export class NotificationCenterService {
     } catch { return new Set(); }
   }
 
-  private storageKey(userId: string | undefined, organizationId: string | null): string | null {
-    return userId ? `opensmr.read_email_logs.${userId}.${organizationId ?? 'personal'}` : null;
+  private storageKey(userId: string | undefined): string | null {
+    return userId ? `opensmr.read_email_logs.${userId}` : null;
   }
 }
