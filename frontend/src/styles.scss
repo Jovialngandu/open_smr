@@ -429,6 +429,8 @@ form { display: grid; gap: 1.15rem; }
 .context-separator { color: #b2bdb7; }
 .context-loader { width: .85rem; height: .85rem; border: 2px solid #bdd2c8; border-top-color: var(--brand); border-radius: 50%; animation: spin .7s linear infinite; }
 .profile-menu { position: relative; display: flex; align-items: center; gap: .4rem; justify-self: end; }
+.sentinel-trigger { display: inline-flex; align-items: center; gap: .45rem; min-height: 2.35rem; padding: .4rem .7rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface); color: var(--brand); font: inherit; font-size: .76rem; font-weight: 700; cursor: pointer; }
+.sentinel-trigger:hover, .sentinel-trigger:focus-visible { border-color: var(--brand); background: var(--surface-hover); }
 .notification-trigger { position: relative; display: grid; place-items: center; width: 2.35rem; height: 2.35rem; color: var(--ink); border-radius: .7rem; text-decoration: none; }
 .notification-trigger:hover,.notification-trigger:focus-visible { color: var(--brand); background: var(--soft); }
 .notification-trigger__badge { position: absolute; top: -.2rem; right: -.2rem; display: grid; place-items: center; min-width: 1.1rem; height: 1.1rem; padding: 0 .2rem; color: white; border-radius: 1rem; background: var(--danger); font-size: .65rem; font-weight: 800; }
@@ -592,6 +594,7 @@ app-evidence-upload-modal {
   .auth-card--wide { padding-block: 0; }
   .topbar { padding: .7rem; }
   .topbar > .brand span:last-child, .profile-menu__identity { display: none; }
+  .sentinel-trigger span { display: none; }
   .context-picker { grid-template-columns: 1fr; gap: .5rem; }
   .context-separator { display: none; }
   .workspace-page { padding-inline: .7rem; }

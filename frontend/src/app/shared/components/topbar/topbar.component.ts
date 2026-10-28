@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX, LucideBell, LucideBookOpen, LucideMessageCircle } from '@lucide/angular';
+import { LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX, LucideBell, LucideBookOpen, LucideSparkles } from '@lucide/angular';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
@@ -8,10 +8,11 @@ import { finalize, switchMap } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { ContextService } from '../../../core/services/context.service';
 import { NotificationCenterService } from '../../../features/notifications/services/notification-center.service';
+import { SentinelDrawerComponent } from '../../../features/sentinel/components/sentinel-drawer.component';
 
 @Component({
   selector: 'app-topbar',
-  imports: [RouterLink, RouterLinkActive, ReactiveFormsModule, LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX, LucideBell, LucideBookOpen, LucideMessageCircle],
+  imports: [RouterLink, RouterLinkActive, ReactiveFormsModule, LucideShieldCheck, LucideChevronDown, LucidePlus, LucideSettings, LucideX, LucideBell, LucideBookOpen, LucideSparkles, SentinelDrawerComponent],
   templateUrl: './topbar.component.html',
 })
 export class TopbarComponent {
@@ -40,6 +41,7 @@ export class TopbarComponent {
   });
   protected readonly contextError = signal('');
   protected readonly menuOpen = signal(false);
+  protected readonly sentinelOpen = signal(false);
   protected readonly initials = computed(() => {
     const user = this.auth.user();
     return `${user?.first_name?.[0] ?? ''}${user?.last_name?.[0] ?? user?.username?.[0] ?? ''}`.toUpperCase();

@@ -33,6 +33,7 @@
   </div> } @else { <button class="button button--ghost topbar-workspace-action" type="button" (click)="openOrganizationModal()"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg> Créer une organisation</button> }
 
   <div class="profile-menu">
+    <button class="sentinel-trigger" type="button" (click)="sentinelOpen.set(true)" aria-label="Ouvrir Sentinel" title="Ouvrir Sentinel"><svg lucideSparkles class="ui-icon" aria-hidden="true"></svg><span>Sentinel</span></button>
     <a class="notification-trigger" routerLink="/notifications" [attr.aria-label]="'Notifications, ' + notifications.unreadCount() + ' non lues'" title="Notifications">
       <svg lucideBell class="ui-icon" aria-hidden="true"></svg>
       @if (notifications.unreadCount()) { <span class="notification-trigger__badge" aria-hidden="true">{{ notifications.unreadCount() > 9 ? '9+' : notifications.unreadCount() }}</span> }
@@ -49,7 +50,6 @@
       <div class="profile-dropdown" id="profile-dropdown">
         <p>{{ auth.user()?.email }}</p>
         <a routerLink="/help" (click)="menuOpen.set(false)"><svg lucideBookOpen class="ui-icon" aria-hidden="true"></svg> Aide</a>
-        <a routerLink="/sentinel" (click)="menuOpen.set(false)"><svg lucideMessageCircle class="ui-icon" aria-hidden="true"></svg> Sentinel</a>
         <a routerLink="/notifications" (click)="menuOpen.set(false)"><svg lucideBell class="ui-icon" aria-hidden="true"></svg> Notifications</a>
         <a routerLink="/settings" (click)="menuOpen.set(false)"><svg lucideSettings class="ui-icon" aria-hidden="true"></svg> Paramètres</a>
         <button class="profile-dropdown__action" type="button" (click)="openOrganizationModal()"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg> Créer une organisation</button>
@@ -59,9 +59,10 @@
   </div>
 </header>
 
+<app-sentinel-drawer [open]="sentinelOpen()" (closed)="sentinelOpen.set(false)" />
+
 <nav class="module-nav" aria-label="Navigation principale">
   <a routerLink="/dashboard" routerLinkActive="module-nav__link--active">Tableau de bord</a>
-  <a routerLink="/sentinel" routerLinkActive="module-nav__link--active">Sentinel</a>
   @if (context.activeRole() === 'ADMIN' || context.activeRole() === 'RSSI') {
     <a routerLink="/assets" routerLinkActive="module-nav__link--active">Actifs</a>
   }
