@@ -48,7 +48,7 @@ export class SettingsPageComponent {
   });
 
   constructor() {
-    effect(() => this.service.loadEmailLogs(this.context.activeOrganizationId()));
+    effect(() => { if (this.auth.user()) this.service.loadEmailLogs(); });
     this.form.disable();
     this.service.load().subscribe({
       next: (preferences) => {

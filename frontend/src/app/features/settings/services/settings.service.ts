@@ -52,14 +52,13 @@ export class SettingsService {
   readonly emailLogsLoading = this.emailLogsLoadingState.asReadonly();
   readonly emailLogsError = this.emailLogsErrorState.asReadonly();
 
-  loadEmailLogs(organizationId: string | null): void {
+  loadEmailLogs(): void {
     const requestId = ++this.emailLogsRequest;
     this.emailLogsState.set([]);
     this.emailLogsErrorState.set('');
     this.emailLogsLoadingState.set(true);
-    this.http.get<EmailLog[] | { results: EmailLog[] }>(EMAIL_LOGS_ENDPOINT, {
-      params: organizationId ? { organization_id: organizationId } : {},
-    }).pipe(map((response) => Array.isArray(response) ? response : response.results)).subscribe({
+    this.http.get<EmailLog[] | { results: EmailLog[] }>(EMAIL_LOGS_ENDPOINT)
+      .pipe(map((response) => Array.isArray(response) ? response : response.results)).subscribe({
       next: (logs) => { if (requestId === this.emailLogsRequest) { this.emailLogsState.set(logs); this.emailLogsLoadingState.set(false); } },
       error: () => { if (requestId === this.emailLogsRequest) { this.emailLogsErrorState.set('Impossible de charger les notifications envoyées.'); this.emailLogsLoadingState.set(false); } },
     });
