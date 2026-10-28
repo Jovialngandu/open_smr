@@ -36,6 +36,11 @@ export class SentinelPageComponent {
   protected readonly sidebarOpen = signal(false);
   protected readonly title = computed(() => this.detail()?.title ?? this.conversations().find((item) => item.id === this.selectedId())?.title ?? 'Nouvelle conversation');
   protected readonly messages = computed(() => this.detail()?.messages ?? []);
+  protected readonly suggestions = [
+    'Comment évaluer la criticité d’un risque ?',
+    'Que doit contenir une preuve de traitement ?',
+    'Explique-moi la déclaration d’applicabilité.',
+  ];
 
   constructor() {
     this.loadConversations();
@@ -81,11 +86,31 @@ export class SentinelPageComponent {
   }
 
   protected send(): void {
-    const id = this.selectedId();
     const message = this.draft().trim();
-    if (!id || !this.detail() || !message || message.length > 2000 || this.sending()) return;
+    if (!message || message.length > 2000 || this.sending() || this.creating() || this.loadingDetail() || this.detailError()) return;
     this.sending.set(true);
     this.sendError.set('');
+    const id = this.selectedId();
+    if (id && this.detail()) { this.sendToConversation(id, message); return; }
+    if (id) { this.sending.set(false); return; }
+    this.service.create().subscribe({
+      next: (conversation) => {
+        this.conversations.update((items) => [conversation, ...items]);
+        this.selectedId.set(conversation.id);
+        this.detail.set({ ...conversation, messages: [] });
+        void this.router.navigate([], { relativeTo: this.route, queryParams: { conversation: conversation.id }, queryParamsHandling: 'merge' });
+        this.sendToConversation(conversation.id, message);
+      },
+      error: (error: Error) => { this.sending.set(false); this.sendError.set(error.message); },
+    });
+  }
+
+  protected useSuggestion(question: string): void {
+    this.draft.set(question);
+    this.send();
+  }
+
+  private sendToConversation(id: string, message: string): void {
     this.service.send(id, message).subscribe({
       next: (response) => {
         if (this.selectedId() === id) {
