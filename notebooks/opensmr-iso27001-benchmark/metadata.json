@@ -1,0 +1,20 @@
+{
+  "dataset_name": "opensmr-iso27001-benchmark",
+  "version": "0.1.0",
+  "status": "initial_seed_not_yet_expert_validated",
+  "language": "fr",
+  "purpose": "Evaluate ISO/IEC 27001:2022 control retrieval for OpenSMR risk/task descriptions.",
+  "case_count": 50,
+  "relevance_scale": {
+    "1": "Low but relevant",
+    "2": "Relevant",
+    "3": "Highly relevant"
+  },
+  "important_note": "Controls absent from a case are not automatically proven irrelevant. Recall metrics require sufficiently complete relevance judgments. Review annotations against the official control catalogue before treating this dataset as ground truth.",
+  "source_format": "Converted from the user's existing BENCHMARK_CASES Python list.",
+  "files": [
+    "retrieval/benchmark_v1.json",
+    "retrieval/benchmark_v1.csv",
+    "schemas/benchmark_case.schema.json"
+  ]
+}
