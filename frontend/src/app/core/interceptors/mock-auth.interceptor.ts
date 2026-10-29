@@ -2,8 +2,11 @@ import { HttpErrorResponse, HttpInterceptorFn, HttpResponse } from '@angular/com
 import { delay, of, throwError } from 'rxjs';
 
 import { API_CONFIG, AUTH_ENDPOINTS, DOMAIN_ENDPOINTS } from '../config/api.config';
+import { GOOGLE_OIDC_ENDPOINT } from '../config/oidc.config';
 import { createMockId } from '../utils/mock-id';
-import { registerMockMember } from './mock-workspace.interceptor';
+import { createMockScopeSoa, registerMockMember, removeMockOrganizationData, removeMockUser } from './mock-workspace.interceptor';
+import { removeMockOrganizationAssets } from './mock-governance.interceptor';
+import { removeMockSentinelUser } from './mock-sentinel.interceptor';
 import {
   AuthResponse,
   JwtClaims,
@@ -61,10 +64,55 @@ let activeOrganizationId = ORGANIZATIONS[0].organization_id;
 let activeScopeId = ORGANIZATIONS[0].scopes[0].id;
 let nextMockUserId = 5;
 const registeredAccounts = new Map<string, { profile: UserProfile; password: string }>();
+type MockInvitation = {
+  id: string; organization: { id: string; name: string }; invited_user_email: string;
+  role: UserRole; status: 'PENDING' | 'ACCEPTED' | 'DECLINED'; expires_at: string;
+};
+const mockInvitations = new Map<string, MockInvitation>();
 
 export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
   if (!API_CONFIG.useMocks) {
     return next(request);
+  }
+
+  if (request.url === `${DOMAIN_ENDPOINTS.users}search/` && request.method === 'GET') {
+    const query = (request.params.get('q') ?? '').trim().toLocaleLowerCase('fr');
+    const profiles = [DEMO_PROFILE, OWNER_PROFILE, ...Array.from(registeredAccounts.values(), (account) => account.profile)];
+    return mockOk(query ? profiles.filter((profile) => `${profile.username} ${profile.email}`.toLocaleLowerCase('fr').includes(query)).slice(0, 10).map(({ id, username, email, first_name, last_name }) => ({ id, username, email, first_name, last_name })) : []);
+  }
+
+  const invitationCreate = request.url.match(/\/organizations\/([^/]+)\/invitations\/$/);
+  if (invitationCreate && request.method === 'POST') {
+    const organization = ORGANIZATIONS.find((item) => item.organization_id === invitationCreate[1]);
+    const senderRole = currentProfile.roles.find((item) => item.organization_id === invitationCreate[1])?.role;
+    if (!organization || !senderRole || !['ADMIN', 'RSSI'].includes(senderRole)) return mockError(403, 'Vous ne pouvez pas inviter de membre dans cette organisation.');
+    const body = request.body as { invited_user_email: string; role: UserRole };
+    const email = body.invited_user_email?.trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return mockError(400, 'Saisissez une adresse e-mail valide.');
+    if (email === currentProfile.email.trim().toLowerCase()) return mockError(400, 'Vous ne pouvez pas vous inviter vous-même.');
+    if (!['ADMIN', 'RSSI', 'RISK_OWNER', 'AUDITOR'].includes(body.role)) return mockError(400, 'Le rôle choisi n’est pas valide.');
+    if ([...mockInvitations.values()].some((item) => item.organization.id === organization.organization_id && item.invited_user_email === email && item.status === 'PENDING')) return mockError(400, 'Une invitation en attente existe déjà pour cet e-mail.');
+    const token = crypto.randomUUID();
+    const invitation: MockInvitation = { id: crypto.randomUUID(), organization: { id: organization.organization_id, name: organization.organization_name }, invited_user_email: email, role: body.role, status: 'PENDING', expires_at: new Date(Date.now() + 7 * 86400000).toISOString() };
+    mockInvitations.set(token, invitation);
+    return mockOk({ ...invitation, token }, 201);
+  }
+
+  const invitationDecision = request.url.match(/\/organizations\/invitations\/(accept|decline)\/$/);
+  if (invitationDecision && request.method === 'POST') {
+    const token = (request.body as { token: string })?.token;
+    const invitation = mockInvitations.get(token);
+    if (!invitation) return mockError(404, 'Cette invitation est introuvable ou le lien est incorrect.');
+    if (invitation.status !== 'PENDING') return mockError(400, 'Cette invitation a déjà été utilisée.');
+    if (new Date(invitation.expires_at).getTime() < Date.now()) return mockError(400, 'Cette invitation a expiré.');
+    if (currentProfile.email.toLowerCase() !== invitation.invited_user_email) return mockError(403, 'Connectez-vous avec l’adresse e-mail qui a reçu cette invitation.');
+    invitation.status = invitationDecision[1] === 'accept' ? 'ACCEPTED' : 'DECLINED';
+    if (invitation.status === 'ACCEPTED') {
+      const organization = ORGANIZATIONS.find((item) => item.organization_id === invitation.organization.id)!;
+      currentProfile.roles = [...currentProfile.roles.filter((item) => item.organization_id !== organization.organization_id), { ...organization, role: invitation.role, scopes: [] }];
+      registerMockMember(currentProfile, organization.organization_id, invitation.role);
+    }
+    return mockOk({ detail: invitation.status === 'ACCEPTED' ? 'Invitation acceptée.' : 'Invitation refusée.', invitation });
   }
 
   if (request.url === DOMAIN_ENDPOINTS.organizations && request.method === 'POST') {
@@ -82,6 +130,23 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
     return mockOk({ id, name, code, description: body.description?.trim() ?? '' }, 201);
   }
 
+  const organizationDelete = request.url.match(/\/organizations\/([^/]+)\/$/);
+  if (organizationDelete && request.method === 'DELETE') {
+    const index = ORGANIZATIONS.findIndex((organization) => organization.organization_id === organizationDelete[1]);
+    if (index < 0) return mockError(404, 'Organisation introuvable.');
+    if (currentProfile.roles.find((role) => role.organization_id === organizationDelete[1])?.role !== 'ADMIN') return mockError(403, 'Seul un administrateur peut supprimer cette organisation.');
+    const [organization] = ORGANIZATIONS.splice(index, 1);
+    const scopeIds = organization.scopes.map((scope) => scope.id);
+    for (const profile of [DEMO_PROFILE, OWNER_PROFILE, ...Array.from(registeredAccounts.values(), (account) => account.profile)]) {
+      profile.roles = profile.roles.filter((role) => role.organization_id !== organizationDelete[1]);
+    }
+    for (const [code, id] of Object.entries(ORGANIZATION_CODES)) if (id === organizationDelete[1]) delete ORGANIZATION_CODES[code];
+    removeMockOrganizationData(organizationDelete[1], scopeIds);
+    removeMockOrganizationAssets(scopeIds);
+    if (activeOrganizationId === organizationDelete[1]) { activeOrganizationId = ''; activeScopeId = ''; }
+    return mockOk(null, 204);
+  }
+
   if (request.url === DOMAIN_ENDPOINTS.scopes && request.method === 'POST') {
     const body = request.body as { organization_id: string; name: string; description?: string };
     const role = currentProfile.roles.find((item) => item.organization_id === body.organization_id);
@@ -91,6 +156,7 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
     if (role.scopes.some((scope) => scope.name.toLocaleLowerCase('fr') === name.toLocaleLowerCase('fr'))) return mockError(400, 'Un périmètre avec ce nom existe déjà dans cette organisation.');
     const scope = { id: createMockId('scope'), organization_id: body.organization_id, name, description: body.description?.trim() ?? '' };
     role.scopes = [...role.scopes, scope];
+    createMockScopeSoa(scope.id);
     return mockOk(scope, 201);
   }
 
@@ -103,6 +169,39 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
 
   if (!request.url.startsWith(`${API_CONFIG.baseUrl}/auth/`)) return next(request);
 
+  if (request.url === GOOGLE_OIDC_ENDPOINT && request.method === 'POST') {
+    const body = request.body as { id_token?: string; provider?: string };
+    if (!body.id_token?.trim()) return mockError(400, 'Le jeton Google est obligatoire.');
+    if (body.provider && body.provider !== 'google') return mockError(400, 'Fournisseur OIDC non pris en charge.');
+    const claims = parseMockGoogleToken(body.id_token);
+    if (!claims?.email) return mockError(401, 'Authentification OIDC refusée.');
+    const email = claims.email.toLowerCase();
+    const profiles = [DEMO_PROFILE, OWNER_PROFILE, ...Array.from(registeredAccounts.values(), (account) => account.profile)];
+    const existing = profiles.find((profile) => profile.email.toLowerCase() === email);
+    if (existing && !existing.is_active) return mockError(401, 'Authentification OIDC refusée.');
+    if (existing) currentProfile = existing;
+    else {
+      const firstName = claims.given_name?.trim() || 'Google';
+      const lastName = claims.family_name?.trim() || 'User';
+      const organizationId = createMockId('organization');
+      const organizationName = `Organisation de ${firstName} ${lastName}`;
+      const usernameBase = email.split('@')[0].replace(/[^a-z0-9._-]/gi, '') || 'user';
+      let username = usernameBase;
+      while (profiles.some((profile) => profile.username === username)) username = `${usernameBase}${nextMockUserId}`;
+      const role: OrganizationRole = { organization_id: organizationId, organization_name: organizationName, role: 'ADMIN', scopes: [] };
+      ORGANIZATIONS.push(role);
+      currentProfile = {
+        id: String(nextMockUserId++), username, email,
+        first_name: firstName, last_name: lastName, is_active: true, roles: [role],
+      };
+      registeredAccounts.set(username, { profile: currentProfile, password: '' });
+      registerMockMember(currentProfile, organizationId, 'ADMIN');
+    }
+    activeOrganizationId = currentProfile.roles[0]?.organization_id ?? '';
+    activeScopeId = currentProfile.roles[0]?.scopes[0]?.id ?? '';
+    return mockOk({ ...tokensFor(currentProfile), user: currentProfile });
+  }
+
   if (request.url === AUTH_ENDPOINTS.login && request.method === 'POST') {
     const body = request.body as { username?: string; password?: string };
     const account = registeredAccounts.get(body.username ?? '');
@@ -111,6 +210,7 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
       return mockError(401, 'Nom d’utilisateur ou mot de passe incorrect.');
     }
     currentProfile = account?.profile ?? (body.username === 'demo.owner' ? OWNER_PROFILE : DEMO_PROFILE);
+    if (!currentProfile.is_active) return mockError(401, 'Ce compte a été supprimé.');
     activeOrganizationId = currentProfile.roles[0]?.organization_id ?? '';
     activeScopeId = currentProfile.roles[0]?.scopes?.[0]?.id ?? '';
     return mockOk(tokensFor(currentProfile));
@@ -160,7 +260,19 @@ export const mockAuthInterceptor: HttpInterceptorFn = (request, next) => {
   }
 
   if (request.url === AUTH_ENDPOINTS.profile && request.method === 'GET') {
+    if (!currentProfile.is_active) return mockError(401, 'Ce compte a été supprimé.');
     return mockOk(currentProfile);
+  }
+
+  if (request.url === AUTH_ENDPOINTS.profile && request.method === 'DELETE') {
+    if (!currentProfile.is_active) return mockError(404, 'Compte introuvable.');
+    currentProfile.is_active = false;
+    registeredAccounts.delete(currentProfile.username);
+    removeMockUser(currentProfile.id);
+    removeMockSentinelUser(String(currentProfile.id));
+    activeOrganizationId = '';
+    activeScopeId = '';
+    return mockOk(null, 204);
   }
 
   if (request.url === AUTH_ENDPOINTS.switchContext && request.method === 'POST') {
@@ -208,6 +320,14 @@ function encodeToken(payload: object): string {
       .replace(/\+/g, '-')
       .replace(/\//g, '_');
   return `${encode({ alg: 'none', typ: 'JWT' })}.${encode(payload)}.mock-signature`;
+}
+
+function parseMockGoogleToken(token: string): { email?: string; given_name?: string; family_name?: string } | null {
+  try {
+    const encoded = token.split('.')[1];
+    if (!encoded) return null;
+    return JSON.parse(atob(encoded.replace(/-/g, '+').replace(/_/g, '/')));
+  } catch { return null; }
 }
 
 function mockOk<T>(body: T, status = 200) {

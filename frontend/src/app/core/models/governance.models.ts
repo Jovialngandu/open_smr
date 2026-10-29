@@ -138,7 +138,9 @@ export interface HeatmapApiCell {
   likelihood: number;
   impact: number;
   score: number;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH';
   count: number;
+  risks: Array<{ id: string; code: string; threat_description: string; status: string }>;
 }
 
 export interface HeatmapApiResponse {

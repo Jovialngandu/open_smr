@@ -2,6 +2,7 @@ import { HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
 import { API_CONFIG, AUTH_ENDPOINTS, DOMAIN_ENDPOINTS } from '../config/api.config';
+import { GOOGLE_OIDC_ENDPOINT } from '../config/oidc.config';
 import { AuthResponse } from '../models/auth.models';
 import { mockAuthInterceptor } from './mock-auth.interceptor';
 
@@ -31,6 +32,22 @@ describe('mockAuthInterceptor', () => {
     await expect(firstValueFrom(mockAuthInterceptor(request, () => {
       throw new Error('Le mock aurait du intercepter la requete.');
     }))).rejects.toMatchObject({ status: 401 });
+  });
+
+  it('simule la connexion OIDC et la création de l’organisation par défaut', async () => {
+    const payload = btoa(JSON.stringify({ email: 'google.mock@example.com', given_name: 'Google', family_name: 'Mock' }));
+    const request = new HttpRequest('POST', GOOGLE_OIDC_ENDPOINT, { id_token: `header.${payload}.signature`, provider: 'google' });
+    const response = await firstValueFrom(mockAuthInterceptor(request, () => {
+      throw new Error('Le mock aurait dû intercepter la requête.');
+    })) as HttpResponse<AuthResponse>;
+
+    expect(response.status).toBe(200);
+    expect(response.body?.user?.email).toBe('google.mock@example.com');
+    expect(response.body?.user?.roles[0].role).toBe('ADMIN');
+    expect(response.body?.access.split('.')).toHaveLength(3);
+    await expect(firstValueFrom(mockAuthInterceptor(new HttpRequest('POST', GOOGLE_OIDC_ENDPOINT, {
+      id_token: 'invalid', provider: 'google',
+    }), () => { throw new Error('Le mock aurait dû intercepter la requête.'); }))).rejects.toMatchObject({ status: 401 });
   });
 
   it('rattache une inscription à une organisation sans accorder de périmètre', async () => {
@@ -104,5 +121,63 @@ describe('mockAuthInterceptor', () => {
     await expect(intercept(new HttpRequest('POST', DOMAIN_ENDPOINTS.scopes, {
       organization_id: organizationId, name: 'Nouveau périmètre',
     }))).rejects.toMatchObject({ status: 400 });
+  });
+
+  it('recherche un compte puis confirme une invitation avec le rôle choisi', async () => {
+    const intercept = <T>(request: HttpRequest<unknown>) => firstValueFrom(mockAuthInterceptor(request, () => {
+      throw new Error('Requête non interceptée.');
+    })) as Promise<HttpResponse<T>>;
+    await intercept(new HttpRequest('POST', AUTH_ENDPOINTS.login, { username: 'demo.rssi', password: 'Demo1234!' }));
+    const found = await intercept<Array<{ email: string }>>(new HttpRequest('GET', `${DOMAIN_ENDPOINTS.users}search/`, null, { params: new HttpParams().set('q', 'owner@') }));
+    expect(found.body?.[0].email).toBe('owner@opensmr.fr');
+
+    const organizationId = '8f4b8400-e29b-41d4-a716-446655440001';
+    const sent = await intercept<{ token: string; role: string }>(new HttpRequest('POST', `${DOMAIN_ENDPOINTS.organizations}${organizationId}/invitations/`, { invited_user_email: 'invite.mock@example.com', role: 'AUDITOR' }));
+    expect(sent.status).toBe(201);
+    expect(sent.body?.role).toBe('AUDITOR');
+    await intercept(new HttpRequest('POST', AUTH_ENDPOINTS.register, { username: 'invite.mock', email: 'invite.mock@example.com', password: 'MotDePasse123!' }));
+    const accepted = await intercept<{ invitation: { status: string } }>(new HttpRequest('POST', `${DOMAIN_ENDPOINTS.organizations}invitations/accept/`, { token: sent.body?.token }));
+    expect(accepted.body?.invitation.status).toBe('ACCEPTED');
+    const profile = await intercept<{ roles: Array<{ role: string }> }>(new HttpRequest('GET', AUTH_ENDPOINTS.profile));
+    expect(profile.body?.roles.some((role) => role.role === 'AUDITOR')).toBe(true);
+    await expect(intercept(new HttpRequest('POST', `${DOMAIN_ENDPOINTS.organizations}invitations/accept/`, { token: sent.body?.token }))).rejects.toMatchObject({ status: 400 });
+  });
+
+  it('refuse une invitation envoyée à sa propre adresse', async () => {
+    const intercept = (request: HttpRequest<unknown>) => firstValueFrom(mockAuthInterceptor(request, () => {
+      throw new Error('Requête non interceptée.');
+    }));
+    await intercept(new HttpRequest('POST', AUTH_ENDPOINTS.login, { username: 'demo.rssi', password: 'Demo1234!' }));
+    await expect(intercept(new HttpRequest('POST', `${DOMAIN_ENDPOINTS.organizations}8f4b8400-e29b-41d4-a716-446655440001/invitations/`, {
+      invited_user_email: 'DEMO@OPENSMR.FR', role: 'RISK_OWNER',
+    }))).rejects.toMatchObject({ status: 400 });
+  });
+
+  it('refuse une décision avec le mauvais compte et permet de décliner ensuite', async () => {
+    const intercept = <T>(request: HttpRequest<unknown>) => firstValueFrom(mockAuthInterceptor(request, () => {
+      throw new Error('Requête non interceptée.');
+    })) as Promise<HttpResponse<T>>;
+    await intercept(new HttpRequest('POST', AUTH_ENDPOINTS.login, { username: 'demo.rssi', password: 'Demo1234!' }));
+    const sent = await intercept<{ token: string }>(new HttpRequest('POST', `${DOMAIN_ENDPOINTS.organizations}8f4b8400-e29b-41d4-a716-446655440001/invitations/`, { invited_user_email: 'owner@opensmr.fr', role: 'RISK_OWNER' }));
+    await expect(intercept(new HttpRequest('POST', `${DOMAIN_ENDPOINTS.organizations}invitations/decline/`, { token: sent.body?.token }))).rejects.toMatchObject({ status: 403 });
+    await intercept(new HttpRequest('POST', AUTH_ENDPOINTS.login, { username: 'demo.owner', password: 'Demo1234!' }));
+    const declined = await intercept<{ invitation: { status: string } }>(new HttpRequest('POST', `${DOMAIN_ENDPOINTS.organizations}invitations/decline/`, { token: sent.body?.token }));
+    expect(declined.body?.invitation.status).toBe('DECLINED');
+  });
+
+  it('supprime une organisation administrée sans supprimer le compte', async () => {
+    const intercept = <T>(request: HttpRequest<unknown>) => firstValueFrom(mockAuthInterceptor(request, () => { throw new Error('Requête non interceptée.'); })) as Promise<HttpResponse<T>>;
+    await intercept(new HttpRequest('POST', AUTH_ENDPOINTS.login, { username: 'demo.rssi', password: 'Demo1234!' }));
+    const created = await intercept<{ id: string }>(new HttpRequest('POST', DOMAIN_ENDPOINTS.organizations, { name: 'Organisation temporaire' }));
+    expect((await intercept(new HttpRequest('DELETE', `${DOMAIN_ENDPOINTS.organizations}${created.body?.id}/`))).status).toBe(204);
+    const profile = await intercept<{ roles: Array<{ organization_id: string }> }>(new HttpRequest('GET', AUTH_ENDPOINTS.profile));
+    expect(profile.body?.roles.some((role) => role.organization_id === created.body?.id)).toBe(false);
+  });
+
+  it('supprime un compte et refuse sa reconnexion', async () => {
+    const intercept = <T>(request: HttpRequest<unknown>) => firstValueFrom(mockAuthInterceptor(request, () => { throw new Error('Requête non interceptée.'); })) as Promise<HttpResponse<T>>;
+    await intercept(new HttpRequest('POST', AUTH_ENDPOINTS.register, { username: 'compte.temporaire', email: 'compte.temporaire@example.com', password: 'MotDePasse123!' }));
+    expect((await intercept(new HttpRequest('DELETE', AUTH_ENDPOINTS.profile))).status).toBe(204);
+    await expect(intercept(new HttpRequest('POST', AUTH_ENDPOINTS.login, { username: 'compte.temporaire', password: 'MotDePasse123!' }))).rejects.toMatchObject({ status: 401 });
   });
 });

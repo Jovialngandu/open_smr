@@ -22,6 +22,9 @@ export class TreatmentsPageComponent {
   protected readonly users = inject(UsersService);
   protected readonly modalOpen = signal(false);
   protected readonly evidenceTask = signal<TreatmentTask | null>(null);
+  protected readonly taskToDelete = signal<TreatmentTask | null>(null);
+  protected readonly deleting = signal(false);
+  protected readonly successMessage = signal('');
   private readonly pendingCompletionId = signal<string | null>(null);
   protected readonly statusFilter = signal<TreatmentStatus | 'ALL'>('ALL');
   protected readonly search = signal('');
@@ -56,6 +59,17 @@ export class TreatmentsPageComponent {
     select.value = this.service.items().find((item) => item.id === id)?.status ?? select.value;
   }
   protected canUpload(task: TreatmentTask): boolean { return ['ADMIN', 'RSSI'].includes(this.context.activeRole() ?? '') || task.assignee_id === this.auth.user()?.id; }
+  protected canDelete(task: TreatmentTask): boolean { return ['ADMIN', 'RSSI'].includes(this.context.activeRole() ?? '') && task.assignee_id !== this.auth.user()?.id; }
+  protected deleteTask(): void {
+    const task = this.taskToDelete();
+    if (!task || !this.canDelete(task) || this.deleting()) return;
+    this.deleting.set(true);
+    this.actionError.set('');
+    this.service.delete(task.id).subscribe({
+      next: () => { this.deleting.set(false); this.taskToDelete.set(null); this.successMessage.set(`La tâche « ${task.title} » a été supprimée.`); const scope = this.context.activeScopeId(); if (scope) this.soa.fetch(scope); },
+      error: () => { this.deleting.set(false); this.actionError.set('La tâche n’a pas pu être supprimée. Vérifiez vos droits et réessayez.'); },
+    });
+  }
   protected dragStart(task: TreatmentTask, event: DragEvent): void { this.draggingId.set(task.id); event.dataTransfer?.setData('text/plain', task.id); if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'; }
   protected dragOver(status: TreatmentStatus, event: DragEvent): void { if (!this.draggingId()) return; event.preventDefault(); this.dropTarget.set(status); if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'; }
   protected drop(status: TreatmentStatus, event: DragEvent): void { event.preventDefault(); const id = this.draggingId(); this.draggingId.set(null); this.dropTarget.set(null); if (id) this.move(id, status); }

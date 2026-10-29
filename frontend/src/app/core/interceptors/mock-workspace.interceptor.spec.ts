@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { API_CONFIG, DOMAIN_ENDPOINTS, organizationMembersEndpoint } from '../config/api.config';
 import { riskControlSuggestionsEndpoint } from '../../features/treatments/services/control-suggestions.service';
 import { HeatmapApiResponse, SoaEntry, SoaVersion } from '../models/governance.models';
-import { mockWorkspaceInterceptor } from './mock-workspace.interceptor';
+import { createMockScopeSoa, mockWorkspaceInterceptor } from './mock-workspace.interceptor';
 
 const SCOPE_ID = '8f4b8400-e29b-41d4-a716-446655440101';
 
@@ -15,6 +15,20 @@ describe('mockWorkspaceInterceptor', () => {
     const response = await intercept<HeatmapApiResponse>(new HttpRequest('GET', DOMAIN_ENDPOINTS.heatmap, null, { params: scopeParams() }));
     expect(response.body?.matrix).toHaveLength(25);
     expect(response.body?.total_risks).toBe(4);
+    expect(response.body?.matrix.find((cell) => cell.likelihood === 4 && cell.impact === 5)).toMatchObject({ score: 20, severity: 'HIGH', count: 1, risks: [{ id: 'risk-001' }] });
+  });
+
+  it('initialise les 93 entrées SoA d’un nouveau périmètre', async () => {
+    const scopeId = '8f4b8400-e29b-41d4-a716-446655440299';
+    createMockScopeSoa(scopeId);
+    const response = await intercept<Array<SoaEntry & { scope: string }>>(new HttpRequest('GET', DOMAIN_ENDPOINTS.soaEntries, null, { params: new HttpParams().set('scope_id', scopeId) }));
+    expect(response.body).toHaveLength(93);
+    expect(response.body?.every((entry) => entry.scope === scopeId && entry.implementation_status === 'NOT_IMPLEMENTED')).toBe(true);
+  });
+
+  it('exige le périmètre pour consulter la SoA, comme Django', async () => {
+    await expect(intercept(new HttpRequest('GET', DOMAIN_ENDPOINTS.soaEntries))).rejects.toMatchObject({ status: 400 });
+    await expect(intercept(new HttpRequest('GET', DOMAIN_ENDPOINTS.soaVersions))).rejects.toMatchObject({ status: 400 });
   });
 
   it('classe les mesures suggérées selon le risque et l’action saisie', async () => {
@@ -52,6 +66,15 @@ describe('mockWorkspaceInterceptor', () => {
     const novacare = await intercept<Array<{ user: { id: number } }>>(new HttpRequest('GET', organizationMembersEndpoint('8f4b8400-e29b-41d4-a716-446655440002')));
     expect(asteria.body?.map((member) => member.user.id)).toEqual([1, 2, 3]);
     expect(novacare.body?.map((member) => member.user.id)).toEqual([4]);
+  });
+
+  it('supprime une tâche de traitement sans la conserver dans la liste', async () => {
+    const created = await intercept<{ id: string }>(new HttpRequest('POST', DOMAIN_ENDPOINTS.treatments, {
+      risk: 'risk-001', iso_control: 'control-001', assignee: '2', title: 'Tâche temporaire', description: '', due_date: '2026-12-01',
+    }, { params: new HttpParams().set('scope_id', SCOPE_ID).set('risk_code', 'RSK-PAY-001') }));
+    expect((await intercept(new HttpRequest('DELETE', `${DOMAIN_ENDPOINTS.treatments}${created.body?.id}/`))).status).toBe(204);
+    const remaining = await intercept<Array<{ id: string }>>(new HttpRequest('GET', DOMAIN_ENDPOINTS.treatments, null, { params: new HttpParams().set('risk_id', 'risk-001') }));
+    expect(remaining.body?.some((task) => task.id === created.body?.id)).toBe(false);
   });
 });
 

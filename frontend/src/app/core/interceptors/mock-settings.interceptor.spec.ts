@@ -38,6 +38,11 @@ describe('mockSettingsInterceptor', () => {
     expect(response.body?.[0].email_type).toBe('OVERDUE_TASK_ALERT');
   });
 
+  it('renvoie les e-mails de toutes les organisations du compte sans filtre', async () => {
+    const response = await intercept<EmailLog[]>(new HttpRequest('GET', EMAIL_LOGS_ENDPOINT));
+    expect(response.body?.map((log) => log.id)).toEqual(['email-001', 'email-002']);
+  });
+
   it('ne présente pas les e-mails de démonstration à un autre compte', async () => {
     const token = `header.${btoa(JSON.stringify({ user_id: 'another-user' }))}.signature`;
     const request = new HttpRequest('GET', EMAIL_LOGS_ENDPOINT, null, {

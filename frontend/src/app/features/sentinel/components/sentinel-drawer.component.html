@@ -1,0 +1,49 @@
+@if (open()) {
+  <div class="sentinel-drawer-backdrop" (click)="close()" aria-hidden="true"></div>
+  <aside class="sentinel-drawer" role="dialog" aria-modal="true" aria-label="Discussion avec Sentinel" (keydown.escape)="close()">
+    <header class="sentinel-drawer__header">
+      <div class="sentinel-drawer__identity"><svg lucideSparkles class="ui-icon" aria-hidden="true"></svg><strong>Sentinel</strong><span>Assistant IA</span></div>
+      <div class="sentinel-drawer__actions">
+        <button type="button" (click)="historyOpen.set(!historyOpen())" [attr.aria-expanded]="historyOpen()" aria-label="Historique des conversations" title="Historique"><svg lucideMessageCircle class="ui-icon" aria-hidden="true"></svg></button>
+        <button type="button" (click)="startNew()" [disabled]="sending()" aria-label="Nouvelle conversation" title="Nouvelle conversation"><svg lucidePlus class="ui-icon" aria-hidden="true"></svg></button>
+        <button type="button" (click)="close()" aria-label="Fermer Sentinel" title="Fermer"><svg lucideX class="ui-icon" aria-hidden="true"></svg></button>
+      </div>
+    </header>
+    @if (historyOpen()) {
+      <nav class="sentinel-drawer__history" aria-label="Conversations précédentes">
+        @for (conversation of conversations(); track conversation.id) {
+          <button type="button" (click)="selectConversation(conversation.id)"><strong>{{ conversation.title }}</strong><small>{{ conversation.last_activity | date:'dd MMM yyyy' }}</small></button>
+        } @empty { <p>Aucune conversation pour le moment.</p> }
+      </nav>
+    }
+    <div class="sentinel-drawer__content">
+      @if (loading()) { <p class="sentinel-drawer__status" role="status">Chargement de la conversation…</p> }
+      @else if (detail()?.messages?.length) {
+        <div class="sentinel-drawer__messages" role="log" aria-label="Messages de la conversation" aria-live="polite">
+          @for (message of detail()!.messages; track message.id) {
+            <article [class.sentinel-drawer__message--user]="message.role === 'user'"><strong>{{ message.role === 'user' ? 'Vous' : 'Sentinel' }}</strong><p>{{ message.content }}</p></article>
+          }
+          @if (sending()) { <p class="sentinel-drawer__status" role="status">Sentinel prépare sa réponse…</p> }
+        </div>
+      } @else {
+        <div class="sentinel-drawer__welcome">
+          <svg lucideSparkles class="ui-icon" aria-hidden="true"></svg>
+          <h2>Comment puis-je vous aider ?</h2>
+          <p>Posez une question sans quitter votre espace de travail.</p>
+          <button type="button" (click)="suggest('Comment évaluer la criticité d’un risque ?')" [disabled]="sending()">Évaluer un risque <span aria-hidden="true">↗</span></button>
+          <button type="button" (click)="suggest('Explique-moi la déclaration d’applicabilité.')" [disabled]="sending()">Comprendre la SoA <span aria-hidden="true">↗</span></button>
+          @if (sending()) { <p class="sentinel-drawer__status" role="status">Sentinel prépare sa réponse…</p> }
+        </div>
+      }
+    </div>
+    <div class="sentinel-drawer__composer">
+      @if (error()) { <p class="sentinel-drawer__error" role="alert">{{ error() }}</p> }
+      <form (submit)="$event.preventDefault(); send()">
+        <label class="sr-only" for="sentinel-drawer-message">Votre message à Sentinel</label>
+        <textarea id="sentinel-drawer-message" rows="2" maxlength="2000" [value]="draft()" (input)="draft.set($any($event.target).value)" (keydown.control.enter)="send()" (keydown.meta.enter)="send()" placeholder="Demandez à Sentinel…" [disabled]="sending() || loading()"></textarea>
+        <div><small>{{ draft().length }}/2 000</small><button type="submit" [disabled]="sending() || loading() || !draft().trim()" aria-label="Envoyer le message"><svg lucideSend class="ui-icon" aria-hidden="true"></svg></button></div>
+      </form>
+      <p>Vérifiez les réponses importantes avant de les appliquer.</p>
+    </div>
+  </aside>
+}

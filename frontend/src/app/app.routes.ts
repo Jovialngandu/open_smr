@@ -36,6 +36,12 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'sentinel',
+    title: 'Sentinel | OpenSMR',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/sentinel/pages/sentinel-page.component').then((module) => module.SentinelPageComponent),
+  },
+  {
     path: 'assets',
     title: 'Inventaire des actifs | OpenSMR',
     canActivate: [authGuard, roleGuard],
@@ -101,6 +107,18 @@ export const routes: Routes = [
       featureDescription: 'Gestion des comptes, des rôles et des habilitations par périmètre.',
     },
     loadComponent: () => import('./features/users/pages/users-page/users-page.component').then((module) => module.UsersPageComponent),
+  },
+  {
+    path: 'invitations',
+    title: 'Invitation | OpenSMR',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/users/pages/invitation-page/invitation-page.component').then((module) => module.InvitationPageComponent),
+  },
+  {
+    path: 'invitations/accept',
+    title: 'Accepter une invitation | OpenSMR',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/users/pages/invitation-page/invitation-page.component').then((module) => module.InvitationPageComponent),
   },
   {
     path: 'my-tasks',

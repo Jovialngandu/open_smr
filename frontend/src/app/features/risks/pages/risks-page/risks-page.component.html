@@ -70,6 +70,7 @@
                     <td><span class="status-chip" [attr.data-status]="risk.status">{{ statusLabels[risk.status] }}</span></td>
                     @if (editable()) { <td class="row-actions">
                       <button type="button" (click)="openEdit(risk)" [attr.aria-label]="'Modifier ' + risk.code">Modifier</button>
+                      <button type="button" class="danger-link" (click)="riskToDelete.set(risk); actionError.set('')" [attr.aria-label]="'Supprimer ' + risk.code">Supprimer</button>
                     </td> }
                   </tr>
                 }
@@ -84,4 +85,14 @@
 
 @if (modalOpen()) {
   <app-risk-form-modal [risk]="selectedRisk()" (closed)="closeModal()" (saved)="riskSaved($event)" />
+}
+@if (riskToDelete(); as risk) {
+  <div class="modal-backdrop" (click)="!deleting() && riskToDelete.set(null)">
+    <section class="modal-card" role="alertdialog" aria-modal="true" aria-labelledby="delete-risk-title" (click)="$event.stopPropagation()" (keydown.escape)="!deleting() && riskToDelete.set(null)">
+      <header class="modal-card__header"><div><p class="eyebrow">Suppression définitive</p><h2 id="delete-risk-title">Supprimer le risque {{ risk.code }} ?</h2></div></header>
+      <p>Les tâches de traitement et les preuves liées à ce risque peuvent également être supprimées.</p>
+      @if (actionError()) { <p class="inline-error" role="alert">{{ actionError() }}</p> }
+      <footer class="modal-card__actions"><button class="button button--ghost" type="button" (click)="riskToDelete.set(null)" [disabled]="deleting()">Annuler</button><button class="button button--danger" type="button" (click)="deleteRisk()" [disabled]="deleting()">{{ deleting() ? 'Suppression…' : 'Supprimer le risque' }}</button></footer>
+    </section>
+  </div>
 }
