@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OpenSMR ISO 27001 retrieval benchmark case",
+  "type": "object",
+  "required": [
+    "id",
+    "query",
+    "relevance"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "query": {
+      "type": "string",
+      "minLength": 1
+    },
+    "relevance": {
+      "type": "object",
+      "description": "Map ISO/IEC 27001:2022 Annex A control IDs to human-assigned relevance grades.",
+      "patternProperties": {
+        "^A\\.[0-9]+\\.[0-9]+$": {
+          "type": "integer",
+          "enum": [
+            1,
+            2,
+            3
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
